@@ -9,68 +9,55 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as LoginReviewerRouteImport } from './routes/login.reviewer'
-import { Route as LoginEditorRouteImport } from './routes/login.editor'
-import { Route as LoginAuthorRouteImport } from './routes/login.author'
 
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LoginReviewerRoute = LoginReviewerRouteImport.update({
-  id: '/login/reviewer',
-  path: '/login/reviewer',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginEditorRoute = LoginEditorRouteImport.update({
-  id: '/login/editor',
-  path: '/login/editor',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginAuthorRoute = LoginAuthorRouteImport.update({
-  id: '/login/author',
-  path: '/login/author',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/login/author': typeof LoginAuthorRoute
-  '/login/editor': typeof LoginEditorRoute
-  '/login/reviewer': typeof LoginReviewerRoute
+  '/login': typeof LoginRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/login/author': typeof LoginAuthorRoute
-  '/login/editor': typeof LoginEditorRoute
-  '/login/reviewer': typeof LoginReviewerRoute
+  '/login': typeof LoginRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/login/author': typeof LoginAuthorRoute
-  '/login/editor': typeof LoginEditorRoute
-  '/login/reviewer': typeof LoginReviewerRoute
+  '/login': typeof LoginRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login/author' | '/login/editor' | '/login/reviewer'
+  fullPaths: '/' | '/login'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login/author' | '/login/editor' | '/login/reviewer'
-  id: '__root__' | '/' | '/login/author' | '/login/editor' | '/login/reviewer'
+  to: '/' | '/login'
+  id: '__root__' | '/' | '/login'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  LoginAuthorRoute: typeof LoginAuthorRoute
-  LoginEditorRoute: typeof LoginEditorRoute
-  LoginReviewerRoute: typeof LoginReviewerRoute
+  LoginRoute: typeof LoginRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -78,36 +65,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/login/reviewer': {
-      id: '/login/reviewer'
-      path: '/login/reviewer'
-      fullPath: '/login/reviewer'
-      preLoaderRoute: typeof LoginReviewerRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login/editor': {
-      id: '/login/editor'
-      path: '/login/editor'
-      fullPath: '/login/editor'
-      preLoaderRoute: typeof LoginEditorRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login/author': {
-      id: '/login/author'
-      path: '/login/author'
-      fullPath: '/login/author'
-      preLoaderRoute: typeof LoginAuthorRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  LoginAuthorRoute: LoginAuthorRoute,
-  LoginEditorRoute: LoginEditorRoute,
-  LoginReviewerRoute: LoginReviewerRoute,
+  LoginRoute: LoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
