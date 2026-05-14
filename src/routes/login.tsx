@@ -80,17 +80,17 @@ function LoginPage() {
         height={1280}
         className="absolute inset-0 h-full w-full object-cover"
       />
-      <div className="absolute inset-0 bg-black/35" />
+      <div className="absolute inset-0 bg-black/55" />
 
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-6xl flex-col items-center px-6 py-16">
-        <header className="mb-12 flex flex-col items-center text-center">
-          <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-background/40 backdrop-blur">
-            <span className="font-serif text-xl text-foreground">CS</span>
+      <div className="relative z-10 mx-auto flex min-h-screen max-w-4xl flex-col items-center justify-center px-6 py-12">
+        <header className="mb-10 flex flex-col items-center text-center">
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-white/15 bg-white/5 backdrop-blur">
+            <span className="font-serif text-base text-foreground">CS</span>
           </div>
-          <h1 className="font-serif text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+          <h1 className="font-serif text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
             Cambridge Scholars Publishing
           </h1>
-          <p className="mt-2 text-sm tracking-wide text-muted-foreground">
+          <p className="mt-1.5 text-xs tracking-wide text-muted-foreground sm:text-sm">
             Proposal Management Portal
           </p>
         </header>
@@ -107,24 +107,24 @@ function LoginPage() {
 
 function PortalCards({ onSelect }: { onSelect: (role: Role) => void }) {
   return (
-    <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-3">
+    <div className="grid w-full grid-cols-1 gap-5 md:grid-cols-3">
       {portals.map(({ id, title, cardDescription, Icon, toneClass }) => (
         <button
           key={id}
           type="button"
           onClick={() => onSelect(id)}
-          className="group relative flex flex-col rounded-2xl border border-white/15 bg-white/10 p-7 text-left backdrop-blur-md transition-all hover:-translate-y-1 hover:border-white/25 hover:bg-white/15"
+          className="group relative flex flex-col rounded-xl border border-white/10 bg-black/30 p-5 text-left backdrop-blur-md transition-all hover:-translate-y-0.5 hover:border-white/20 hover:bg-black/40"
         >
           <div
-            className={`mb-6 flex h-12 w-12 items-center justify-center rounded-xl ${toneClass} text-white shadow-lg`}
+            className={`mb-5 flex h-10 w-10 items-center justify-center rounded-lg ${toneClass} text-white shadow-md`}
           >
-            <Icon className="h-6 w-6" strokeWidth={2} />
+            <Icon className="h-5 w-5" strokeWidth={2} />
           </div>
-          <h2 className="font-serif text-2xl font-semibold text-foreground">{title}</h2>
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{cardDescription}</p>
-          <span className="mt-8 inline-flex items-center gap-2 font-serif text-base text-foreground/90 transition-all group-hover:gap-3">
+          <h2 className="font-serif text-lg font-semibold text-foreground">{title}</h2>
+          <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{cardDescription}</p>
+          <span className="mt-5 inline-flex items-center gap-2 font-serif text-sm text-foreground/90 transition-all group-hover:gap-3">
             Sign in
-            <ArrowRight className="h-4 w-4" />
+            <ArrowRight className="h-3.5 w-3.5" />
           </span>
         </button>
       ))}
@@ -142,8 +142,8 @@ function PortalLoginForm({ portal, onBack }: { portal: PortalConfig; onBack: () 
   };
 
   return (
-    <div className="w-full max-w-md">
-      <div className="rounded-2xl border border-white/15 bg-white/10 p-8 backdrop-blur-md">
+    <div className="w-full max-w-sm">
+      <div className="rounded-xl border border-white/10 bg-black/30 p-6 backdrop-blur-md">
         <div className="mb-5 flex items-center gap-3">
           <button
             type="button"
