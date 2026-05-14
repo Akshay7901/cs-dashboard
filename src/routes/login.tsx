@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { UserRound, FileText, ClipboardCheck, ArrowRight, ArrowLeft, type LucideIcon } from "lucide-react";
-import libraryBg from "@/assets/library-bg.jpg";
+import libraryBg from "@/assets/library-reference.jpg";
+import cspLogo from "@/assets/csp-logo.png";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -72,25 +73,25 @@ function LoginPage() {
   const portal = portals.find((p) => p.id === selected) ?? null;
 
   return (
-    <main className="relative min-h-screen overflow-hidden font-sans text-foreground">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden font-sans text-foreground">
       <img
         src={libraryBg}
-        alt=""
+        alt="Library"
         width={1920}
         height={1280}
-        className="absolute inset-0 h-full w-full object-cover"
+        className="absolute inset-0 h-full w-full object-cover object-center"
       />
-      <div className="absolute inset-0 bg-black/55" />
+      <div className="absolute inset-0 bg-csp-text/70" />
 
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-4xl flex-col items-center justify-center px-6 py-12">
+      <div className="relative z-10 w-full max-w-4xl px-6 py-12">
         <header className="mb-10 flex flex-col items-center text-center">
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-white/15 bg-white/5 backdrop-blur">
-            <span className="font-serif text-base text-foreground">CS</span>
+          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-foreground/20 bg-foreground/10 backdrop-blur-sm">
+            <img src={cspLogo} alt="CSP" width={36} height={36} className="invert" />
           </div>
-          <h1 className="font-serif text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+          <h1 className="font-serif text-2xl font-bold tracking-tight text-foreground">
             Cambridge Scholars Publishing
           </h1>
-          <p className="mt-1.5 text-xs tracking-wide text-muted-foreground sm:text-sm">
+          <p className="mt-1 text-sm text-foreground/60">
             Proposal Management Portal
           </p>
         </header>
@@ -107,24 +108,24 @@ function LoginPage() {
 
 function PortalCards({ onSelect }: { onSelect: (role: Role) => void }) {
   return (
-    <div className="grid w-full grid-cols-1 gap-5 md:grid-cols-3">
+    <div className="mx-auto grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-3">
       {portals.map(({ id, title, cardDescription, Icon, toneClass }) => (
         <button
           key={id}
           type="button"
           onClick={() => onSelect(id)}
-          className="group relative flex flex-col rounded-xl border border-white/10 bg-black/30 p-5 text-left backdrop-blur-md transition-all hover:-translate-y-0.5 hover:border-white/20 hover:bg-black/40"
+          className="group cursor-pointer rounded-2xl border border-foreground/20 bg-foreground/10 p-7 text-left backdrop-blur-sm transition-all duration-200 hover:border-foreground/40 hover:bg-foreground/20"
         >
           <div
-            className={`mb-5 flex h-10 w-10 items-center justify-center rounded-lg ${toneClass} text-white shadow-md`}
+            className={`mb-4 flex h-10 w-10 items-center justify-center rounded-xl ${toneClass} text-foreground`}
           >
             <Icon className="h-5 w-5" strokeWidth={2} />
           </div>
-          <h2 className="font-serif text-lg font-semibold text-foreground">{title}</h2>
-          <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{cardDescription}</p>
-          <span className="mt-5 inline-flex items-center gap-2 font-serif text-sm text-foreground/90 transition-all group-hover:gap-3">
+          <h2 className="mb-1 font-serif text-lg font-bold text-foreground">{title}</h2>
+          <p className="text-sm leading-relaxed text-foreground/60">{cardDescription}</p>
+          <span className="mt-4 inline-flex items-center gap-1 text-sm text-foreground/50 transition-colors group-hover:text-foreground/80">
             Sign in
-            <ArrowRight className="h-3.5 w-3.5" />
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </span>
         </button>
       ))}
