@@ -113,7 +113,7 @@ function PortalCards({ onSelect }: { onSelect: (role: Role) => void }) {
           key={id}
           type="button"
           onClick={() => onSelect(id)}
-          className="group relative flex flex-col rounded-2xl border border-border bg-background/40 p-7 text-left backdrop-blur-md transition-all hover:-translate-y-1 hover:border-foreground/30 hover:bg-background/55"
+          className="group relative flex flex-col rounded-2xl border border-white/15 bg-white/10 p-7 text-left backdrop-blur-md transition-all hover:-translate-y-1 hover:border-white/25 hover:bg-white/15"
         >
           <div
             className={`mb-6 flex h-12 w-12 items-center justify-center rounded-xl ${toneClass} text-white shadow-lg`}
@@ -143,7 +143,7 @@ function PortalLoginForm({ portal, onBack }: { portal: PortalConfig; onBack: () 
 
   return (
     <div className="w-full max-w-md">
-      <div className="rounded-2xl border border-border bg-background/50 p-8 backdrop-blur-md">
+      <div className="rounded-2xl border border-white/15 bg-white/10 p-8 backdrop-blur-md">
         <div className="mb-5 flex items-center gap-3">
           <button
             type="button"
