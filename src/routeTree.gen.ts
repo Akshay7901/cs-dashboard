@@ -10,33 +10,63 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LoginReviewerRouteImport } from './routes/login.reviewer'
+import { Route as LoginEditorRouteImport } from './routes/login.editor'
+import { Route as LoginAuthorRouteImport } from './routes/login.author'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginReviewerRoute = LoginReviewerRouteImport.update({
+  id: '/login/reviewer',
+  path: '/login/reviewer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginEditorRoute = LoginEditorRouteImport.update({
+  id: '/login/editor',
+  path: '/login/editor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginAuthorRoute = LoginAuthorRouteImport.update({
+  id: '/login/author',
+  path: '/login/author',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/login/author': typeof LoginAuthorRoute
+  '/login/editor': typeof LoginEditorRoute
+  '/login/reviewer': typeof LoginReviewerRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/login/author': typeof LoginAuthorRoute
+  '/login/editor': typeof LoginEditorRoute
+  '/login/reviewer': typeof LoginReviewerRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/login/author': typeof LoginAuthorRoute
+  '/login/editor': typeof LoginEditorRoute
+  '/login/reviewer': typeof LoginReviewerRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/login/author' | '/login/editor' | '/login/reviewer'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/login/author' | '/login/editor' | '/login/reviewer'
+  id: '__root__' | '/' | '/login/author' | '/login/editor' | '/login/reviewer'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  LoginAuthorRoute: typeof LoginAuthorRoute
+  LoginEditorRoute: typeof LoginEditorRoute
+  LoginReviewerRoute: typeof LoginReviewerRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,22 +78,36 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login/reviewer': {
+      id: '/login/reviewer'
+      path: '/login/reviewer'
+      fullPath: '/login/reviewer'
+      preLoaderRoute: typeof LoginReviewerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login/editor': {
+      id: '/login/editor'
+      path: '/login/editor'
+      fullPath: '/login/editor'
+      preLoaderRoute: typeof LoginEditorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login/author': {
+      id: '/login/author'
+      path: '/login/author'
+      fullPath: '/login/author'
+      preLoaderRoute: typeof LoginAuthorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  LoginAuthorRoute: LoginAuthorRoute,
+  LoginEditorRoute: LoginEditorRoute,
+  LoginReviewerRoute: LoginReviewerRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
