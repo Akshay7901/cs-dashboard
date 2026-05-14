@@ -143,30 +143,28 @@ function PortalLoginForm({ portal, onBack }: { portal: PortalConfig; onBack: () 
   };
 
   return (
-    <div className="w-full max-w-sm">
-      <div className="rounded-xl border border-white/10 bg-black/30 p-6 backdrop-blur-md">
-        <div className="mb-5 flex items-center gap-3">
+    <div className="mx-auto max-w-sm">
+      <div className="rounded-2xl border border-foreground/20 bg-foreground/10 p-7 shadow-xl backdrop-blur-md">
+        <div className="mb-6 flex items-center gap-2">
           <button
             type="button"
             onClick={onBack}
-            className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
-            aria-label="Back to portal selection"
+            className="cursor-pointer text-foreground/50 transition-colors hover:text-foreground"
+            aria-label="Back"
           >
             <ArrowLeft className="h-4 w-4" />
           </button>
-          <span className={`rounded-full px-3 py-1 text-xs font-medium ${portal.badgeClass}`}>
+          <div className={`rounded-full px-3 py-1 font-sans text-xs font-medium ${portal.badgeClass}`}>
             {portal.title}
-          </span>
+          </div>
         </div>
 
-        <h2 className="font-serif text-3xl font-semibold tracking-tight text-foreground">
-          Welcome back
-        </h2>
-        <p className="mt-2 text-sm text-muted-foreground">{portal.formSubtitle}</p>
+        <h2 className="mb-1 font-serif text-xl font-bold text-foreground">Welcome back</h2>
+        <p className="mb-6 font-sans text-sm text-foreground/60">{portal.formSubtitle}</p>
 
-        <form onSubmit={onSubmit} className="mt-7 space-y-5">
-          <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium text-foreground">
+        <form onSubmit={onSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="email" className="mb-1.5 block font-sans text-sm font-medium text-foreground/80">
               Email address
             </label>
             <input
@@ -176,11 +174,11 @@ function PortalLoginForm({ portal, onBack }: { portal: PortalConfig; onBack: () 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your.email@university.edu"
-              className="w-full rounded-md border border-border bg-background/40 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/70 outline-none transition-colors focus:border-foreground/50"
+              className="w-full rounded-xl border border-foreground/20 bg-foreground/10 px-3 py-2.5 font-sans text-sm text-foreground placeholder:text-foreground/30 transition-colors focus:outline-none focus:ring-2 focus:ring-foreground/30"
             />
           </div>
-          <div className="space-y-2">
-            <label htmlFor="code" className="text-sm font-medium text-foreground">
+          <div>
+            <label htmlFor="code" className="mb-1.5 block font-sans text-sm font-medium text-foreground/80">
               Access code
             </label>
             <input
@@ -190,28 +188,28 @@ function PortalLoginForm({ portal, onBack }: { portal: PortalConfig; onBack: () 
               value={code}
               onChange={(e) => setCode(e.target.value)}
               placeholder="Enter your code"
-              className="w-full rounded-md border border-border bg-background/40 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/70 outline-none transition-colors focus:border-foreground/50"
+              className="w-full rounded-xl border border-foreground/20 bg-foreground/10 px-3 py-2.5 font-sans text-sm text-foreground placeholder:text-foreground/30 transition-colors focus:outline-none focus:ring-2 focus:ring-foreground/30"
             />
           </div>
 
           <button
             type="submit"
-            className={`mt-2 w-full rounded-md ${portal.toneClass} py-3 font-medium text-white shadow-lg transition-opacity hover:opacity-90`}
+            className={`mt-1 w-full rounded-xl ${portal.toneClass} py-2.5 font-sans text-sm font-medium text-white transition-opacity hover:opacity-90`}
           >
             Log in
           </button>
-        </form>
 
-        <button
-          type="button"
-          className="mt-5 w-full text-center text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          Get new code
-        </button>
+          <button
+            type="button"
+            className="w-full text-center font-sans text-sm text-foreground/40 transition-colors hover:text-foreground/70"
+          >
+            Get new code
+          </button>
+        </form>
       </div>
 
-      <p className="mt-6 text-center text-xs text-muted-foreground">
-        Demo: <span className="text-foreground/80">{portal.demoEmail} / {portal.demoCode}</span>
+      <p className="mt-4 text-center font-sans text-xs text-foreground/30">
+        Demo: <span className="text-foreground/50">{portal.demoEmail} / {portal.demoCode}</span>
       </p>
     </div>
   );
