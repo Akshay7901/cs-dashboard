@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LoginEditorRouteImport } from './routes/login.editor'
 import { Route as LoginAuthorRouteImport } from './routes/login.author'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginEditorRoute = LoginEditorRouteImport.update({
+  id: '/login/editor',
+  path: '/login/editor',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginAuthorRoute = LoginAuthorRouteImport.update({
@@ -26,27 +32,31 @@ const LoginAuthorRoute = LoginAuthorRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login/author': typeof LoginAuthorRoute
+  '/login/editor': typeof LoginEditorRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login/author': typeof LoginAuthorRoute
+  '/login/editor': typeof LoginEditorRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login/author': typeof LoginAuthorRoute
+  '/login/editor': typeof LoginEditorRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login/author'
+  fullPaths: '/' | '/login/author' | '/login/editor'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login/author'
-  id: '__root__' | '/' | '/login/author'
+  to: '/' | '/login/author' | '/login/editor'
+  id: '__root__' | '/' | '/login/author' | '/login/editor'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginAuthorRoute: typeof LoginAuthorRoute
+  LoginEditorRoute: typeof LoginEditorRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -56,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login/editor': {
+      id: '/login/editor'
+      path: '/login/editor'
+      fullPath: '/login/editor'
+      preLoaderRoute: typeof LoginEditorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login/author': {
@@ -71,6 +88,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginAuthorRoute: LoginAuthorRoute,
+  LoginEditorRoute: LoginEditorRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
