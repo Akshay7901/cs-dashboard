@@ -81,7 +81,7 @@ function LoginPage() {
         height={1280}
         className="absolute inset-0 h-full w-full object-cover object-center"
       />
-      <div className="absolute inset-0 bg-csp-text/70" />
+      <div className="absolute inset-0 bg-text/70" />
 
       <div className="relative z-10 w-full max-w-4xl px-6 py-12">
         <header className="mb-10 flex flex-col items-center text-center">
