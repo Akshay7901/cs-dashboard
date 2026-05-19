@@ -8,6 +8,14 @@ import {
   LogOut,
 } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
+import {
+  PROPOSALS,
+  STATUS_META,
+  type StatusKey,
+  formatDate,
+  initialsFromName,
+  displayNameFromEmail,
+} from "@/lib/proposals";
 
 export const Route = createFileRoute("/dashboard/editor")({
   head: () => ({
@@ -15,196 +23,6 @@ export const Route = createFileRoute("/dashboard/editor")({
   }),
   component: EditorDashboard,
 });
-
-type StatusKey =
-  | "submitted"
-  | "revisions"
-  | "in_review"
-  | "review_returned"
-  | "major_revisions"
-  | "question"
-  | "contract"
-  | "signed"
-  | "declined";
-
-interface StatusMeta {
-  key: StatusKey;
-  label: string;
-  filterLabel: string;
-  dot: string;
-  badgeClass: string;
-  rowBar: string;
-}
-
-const STATUS_META: Record<StatusKey, StatusMeta> = {
-  submitted: {
-    key: "submitted",
-    label: "Submitted",
-    filterLabel: "Submitted",
-    dot: "bg-amber-400",
-    badgeClass: "bg-amber-50 text-amber-700 ring-1 ring-amber-200",
-    rowBar: "bg-amber-400",
-  },
-  revisions: {
-    key: "revisions",
-    label: "Revisions Requested",
-    filterLabel: "Revisions",
-    dot: "bg-orange-500",
-    badgeClass: "bg-orange-50 text-orange-700 ring-1 ring-orange-200",
-    rowBar: "bg-orange-500",
-  },
-  in_review: {
-    key: "in_review",
-    label: "Under Review",
-    filterLabel: "In Review",
-    dot: "bg-sky-500",
-    badgeClass: "bg-sky-50 text-sky-700 ring-1 ring-sky-200",
-    rowBar: "bg-sky-500",
-  },
-  review_returned: {
-    key: "review_returned",
-    label: "Review Returned",
-    filterLabel: "Review Returned",
-    dot: "bg-indigo-500",
-    badgeClass: "bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200",
-    rowBar: "bg-indigo-500",
-  },
-  major_revisions: {
-    key: "major_revisions",
-    label: "Major Revisions Required",
-    filterLabel: "Major Revisions",
-    dot: "bg-rose-500",
-    badgeClass: "bg-rose-50 text-rose-700 ring-1 ring-rose-200",
-    rowBar: "bg-rose-500",
-  },
-  question: {
-    key: "question",
-    label: "Question Raised",
-    filterLabel: "Question",
-    dot: "bg-teal-500",
-    badgeClass: "bg-teal-50 text-teal-700 ring-1 ring-teal-200",
-    rowBar: "bg-teal-500",
-  },
-  contract: {
-    key: "contract",
-    label: "Contract Issued",
-    filterLabel: "Contract",
-    dot: "bg-violet-500",
-    badgeClass: "bg-violet-50 text-violet-700 ring-1 ring-violet-200",
-    rowBar: "bg-violet-400",
-  },
-  signed: {
-    key: "signed",
-    label: "Contract Signed",
-    filterLabel: "Signed",
-    dot: "bg-emerald-500",
-    badgeClass: "bg-emerald-600 text-white",
-    rowBar: "bg-emerald-500",
-  },
-  declined: {
-    key: "declined",
-    label: "Declined",
-    filterLabel: "Declined",
-    dot: "bg-stone-400",
-    badgeClass: "bg-stone-100 text-stone-600 ring-1 ring-stone-200",
-    rowBar: "bg-stone-300",
-  },
-};
-
-interface Proposal {
-  id: string;
-  title: string;
-  kind: string;
-  authorName: string;
-  authorAffiliation: string;
-  country: string;
-  submittedAt: string; // ISO
-  status: StatusKey;
-}
-
-// Mock data — replace with API later
-const PROPOSALS: Proposal[] = [
-  {
-    id: "1",
-    title: "Borders, Bodies, and Belonging: Migration and the Politics of Care",
-    kind: "Monograph",
-    authorName: "Dr. Aisha Kamara",
-    authorAffiliation: "University College London",
-    country: "United Kingdom",
-    submittedAt: "2025-03-10",
-    status: "major_revisions",
-  },
-  {
-    id: "2",
-    title: "Gender and Power in Early Modern Europe",
-    kind: "Monograph",
-    authorName: "Dr. Sophie Dubois",
-    authorAffiliation: "Université Libre de Bruxelles",
-    country: "Belgium",
-    submittedAt: "2025-03-01",
-    status: "question",
-  },
-  {
-    id: "3",
-    title: "The Philosophy of Algorithmic Governance",
-    kind: "Monograph",
-    authorName: "Prof. James Mitchell",
-    authorAffiliation: "Stanford University",
-    country: "United States",
-    submittedAt: "2025-02-10",
-    status: "review_returned",
-  },
-  {
-    id: "4",
-    title: "Climate Change and Agricultural Adaptation in Southeast Asia",
-    kind: "Monograph",
-    authorName: "Dr. Sarah Chen",
-    authorAffiliation: "University of Oxford",
-    country: "United Kingdom",
-    submittedAt: "2025-01-28",
-    status: "in_review",
-  },
-  {
-    id: "5",
-    title: "Medieval Trade Routes: A Geographic Analysis",
-    kind: "Edited Collection",
-    authorName: "Dr. Elena Vasquez",
-    authorAffiliation: "Sorbonne University",
-    country: "France",
-    submittedAt: "2024-12-15",
-    status: "revisions",
-  },
-  {
-    id: "6",
-    title: "Contemporary African Literature: Voices and Narratives",
-    kind: "Edited Collection",
-    authorName: "Prof. Kwame Osei",
-    authorAffiliation: "University of Ghana",
-    country: "Ghana",
-    submittedAt: "2024-11-03",
-    status: "contract",
-  },
-  {
-    id: "7",
-    title: "Urban Planning in Post-Industrial Cities",
-    kind: "Monograph",
-    authorName: "Dr. Marie Garcia",
-    authorAffiliation: "École Polytechnique",
-    country: "France",
-    submittedAt: "2024-10-22",
-    status: "declined",
-  },
-  {
-    id: "8",
-    title: "The Digital Archive and Historical Memory",
-    kind: "Monograph",
-    authorName: "Prof. Lena Fischer",
-    authorAffiliation: "Humboldt University",
-    country: "Germany",
-    submittedAt: "2024-09-12",
-    status: "signed",
-  },
-];
 
 const FILTER_ORDER: ("all" | StatusKey)[] = [
   "all",
@@ -218,26 +36,6 @@ const FILTER_ORDER: ("all" | StatusKey)[] = [
   "signed",
   "declined",
 ];
-
-function formatDate(iso: string) {
-  const d = new Date(iso);
-  return d.toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
-
-function initials(name: string) {
-  return name
-    .replace(/(Dr\.|Prof\.|Mr\.|Mrs\.|Ms\.)/g, "")
-    .trim()
-    .split(/\s+/)
-    .map((p) => p[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-}
 
 function EditorDashboard() {
   const navigate = useNavigate();
@@ -304,15 +102,7 @@ function EditorDashboard() {
     navigate({ to: "/login" });
   };
 
-  const displayName = (() => {
-    if (!userEmail) return "Editor";
-    const local = userEmail.split("@")[0] ?? "Editor";
-    return local
-      .split(/[._-]/)
-      .filter(Boolean)
-      .map((p) => p[0]?.toUpperCase() + p.slice(1))
-      .join(" ") || "Editor";
-  })();
+  const displayName = displayNameFromEmail(userEmail);
 
   return (
     <div className="min-h-screen bg-[#FAF6EE] font-sans text-stone-800">
@@ -331,7 +121,7 @@ function EditorDashboard() {
           </div>
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0E3D2F] font-sans text-xs font-semibold text-white">
-              {initials(displayName)}
+              {initialsFromName(displayName)}
             </div>
             <span className="font-sans text-sm font-medium text-stone-800">
               {displayName}
@@ -500,13 +290,14 @@ function EditorDashboard() {
                       {meta.label}
                     </span>
                   </div>
-                  <button
-                    type="button"
+                  <Link
+                    to="/dashboard/editor/submission/$id"
+                    params={{ id: p.id }}
                     className="inline-flex items-center gap-1 justify-self-end font-sans text-sm font-medium text-stone-700 hover:text-stone-900"
                   >
                     Review
                     <ChevronRight className="h-4 w-4" />
-                  </button>
+                  </Link>
                 </li>
               );
             })}
