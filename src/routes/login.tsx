@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { UserRound, FileText, ClipboardCheck, ArrowRight, ArrowLeft, type LucideIcon } from "lucide-react";
 import libraryBg from "@/assets/library-reference.jpg";
@@ -136,10 +136,27 @@ function PortalCards({ onSelect }: { onSelect: (role: Role) => void }) {
 function PortalLoginForm({ portal, onBack }: { portal: PortalConfig; onBack: () => void }) {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
-    console.log("login", { role: portal.id, email, code });
+    const okEmail = email.trim().toLowerCase() === portal.demoEmail.toLowerCase();
+    const okCode = code.trim() === portal.demoCode;
+    if (!okEmail || !okCode) {
+      setError("Invalid email or access code for this portal.");
+      return;
+    }
+    setError(null);
+    try {
+      sessionStorage.setItem(
+        "csp.session",
+        JSON.stringify({ role: portal.id, email: email.trim() }),
+      );
+    } catch {
+      // ignore storage errors
+    }
+    navigate({ to: "/dashboard/$role", params: { role: portal.id } });
   };
 
   return (
@@ -198,6 +215,12 @@ function PortalLoginForm({ portal, onBack }: { portal: PortalConfig; onBack: () 
           >
             Log in
           </button>
+
+          {error && (
+            <p role="alert" className="text-center font-sans text-xs text-red-300">
+              {error}
+            </p>
+          )}
 
           <button
             type="button"
