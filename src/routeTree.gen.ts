@@ -13,6 +13,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardEditorRouteImport } from './routes/dashboard.editor'
 import { Route as DashboardRoleRouteImport } from './routes/dashboard.$role'
+import { Route as DashboardEditorSubmissionIdRouteImport } from './routes/dashboard.editor.submission.$id'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -34,39 +35,64 @@ const DashboardRoleRoute = DashboardRoleRouteImport.update({
   path: '/dashboard/$role',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardEditorSubmissionIdRoute =
+  DashboardEditorSubmissionIdRouteImport.update({
+    id: '/submission/$id',
+    path: '/submission/$id',
+    getParentRoute: () => DashboardEditorRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/dashboard/$role': typeof DashboardRoleRoute
-  '/dashboard/editor': typeof DashboardEditorRoute
+  '/dashboard/editor': typeof DashboardEditorRouteWithChildren
+  '/dashboard/editor/submission/$id': typeof DashboardEditorSubmissionIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/dashboard/$role': typeof DashboardRoleRoute
-  '/dashboard/editor': typeof DashboardEditorRoute
+  '/dashboard/editor': typeof DashboardEditorRouteWithChildren
+  '/dashboard/editor/submission/$id': typeof DashboardEditorSubmissionIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/dashboard/$role': typeof DashboardRoleRoute
-  '/dashboard/editor': typeof DashboardEditorRoute
+  '/dashboard/editor': typeof DashboardEditorRouteWithChildren
+  '/dashboard/editor/submission/$id': typeof DashboardEditorSubmissionIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/dashboard/$role' | '/dashboard/editor'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/dashboard/$role'
+    | '/dashboard/editor'
+    | '/dashboard/editor/submission/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/dashboard/$role' | '/dashboard/editor'
-  id: '__root__' | '/' | '/login' | '/dashboard/$role' | '/dashboard/editor'
+  to:
+    | '/'
+    | '/login'
+    | '/dashboard/$role'
+    | '/dashboard/editor'
+    | '/dashboard/editor/submission/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/login'
+    | '/dashboard/$role'
+    | '/dashboard/editor'
+    | '/dashboard/editor/submission/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
   DashboardRoleRoute: typeof DashboardRoleRoute
-  DashboardEditorRoute: typeof DashboardEditorRoute
+  DashboardEditorRoute: typeof DashboardEditorRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -99,14 +125,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRoleRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/editor/submission/$id': {
+      id: '/dashboard/editor/submission/$id'
+      path: '/submission/$id'
+      fullPath: '/dashboard/editor/submission/$id'
+      preLoaderRoute: typeof DashboardEditorSubmissionIdRouteImport
+      parentRoute: typeof DashboardEditorRoute
+    }
   }
 }
+
+interface DashboardEditorRouteChildren {
+  DashboardEditorSubmissionIdRoute: typeof DashboardEditorSubmissionIdRoute
+}
+
+const DashboardEditorRouteChildren: DashboardEditorRouteChildren = {
+  DashboardEditorSubmissionIdRoute: DashboardEditorSubmissionIdRoute,
+}
+
+const DashboardEditorRouteWithChildren = DashboardEditorRoute._addFileChildren(
+  DashboardEditorRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
   DashboardRoleRoute: DashboardRoleRoute,
-  DashboardEditorRoute: DashboardEditorRoute,
+  DashboardEditorRoute: DashboardEditorRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
