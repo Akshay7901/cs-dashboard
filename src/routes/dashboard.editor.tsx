@@ -250,9 +250,15 @@ function EditorDashboard() {
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem("csp.session");
-      if (!raw) return navigate({ to: "/login" });
+      if (!raw) {
+        navigate({ to: "/login" });
+        return;
+      }
       const session = JSON.parse(raw) as { role: string; email: string };
-      if (session.role !== "editor") return navigate({ to: "/login" });
+      if (session.role !== "editor") {
+        navigate({ to: "/login" });
+        return;
+      }
       setUserEmail(session.email);
     } catch {
       navigate({ to: "/login" });
