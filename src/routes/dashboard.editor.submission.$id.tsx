@@ -19,6 +19,7 @@ import {
   formatDate,
   initialsFromName,
   displayNameFromEmail,
+  type Proposal,
 } from "@/lib/proposals";
 
 export const Route = createFileRoute("/dashboard/editor/submission/$id")({
@@ -50,7 +51,7 @@ export const Route = createFileRoute("/dashboard/editor/submission/$id")({
 });
 
 function SubmissionDetail() {
-  const { proposal } = Route.useLoaderData();
+  const { proposal } = Route.useLoaderData() as { proposal: Proposal };
   const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState("");
   const [notes, setNotes] = useState("");
@@ -59,9 +60,15 @@ function SubmissionDetail() {
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem("csp.session");
-      if (!raw) return navigate({ to: "/login" }) as void;
+      if (!raw) {
+        navigate({ to: "/login" });
+        return;
+      }
       const session = JSON.parse(raw) as { role: string; email: string };
-      if (session.role !== "editor") return navigate({ to: "/login" }) as void;
+      if (session.role !== "editor") {
+        navigate({ to: "/login" });
+        return;
+      }
       setUserEmail(session.email);
     } catch {
       navigate({ to: "/login" });
