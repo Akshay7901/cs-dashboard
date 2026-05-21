@@ -50,10 +50,6 @@ function EditorDashboard() {
     matchRoute({ to: "/dashboard/editor/submission/$id", fuzzy: true }),
   );
 
-  if (isSubmissionDetail) {
-    return <Outlet />;
-  }
-
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem("csp.session");
@@ -112,6 +108,10 @@ function EditorDashboard() {
   };
 
   const displayName = displayNameFromEmail(userEmail);
+
+  if (isSubmissionDetail) {
+    return <Outlet />;
+  }
 
   return (
     <div className="min-h-screen bg-[#FAF6EE] font-sans text-stone-800">
