@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useMatchRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   Search,
@@ -39,11 +39,20 @@ const FILTER_ORDER: ("all" | StatusKey)[] = [
 
 function EditorDashboard() {
   const navigate = useNavigate();
+  const matchRoute = useMatchRoute();
   const [userEmail, setUserEmail] = useState<string>("");
   const [activeFilter, setActiveFilter] = useState<"all" | StatusKey>("all");
   const [search, setSearch] = useState("");
   const [field, setField] = useState<"all" | "title" | "author" | "country">("all");
   const [sort, setSort] = useState<"newest" | "oldest">("newest");
+
+  const isSubmissionDetail = Boolean(
+    matchRoute({ to: "/dashboard/editor/submission/$id", fuzzy: true }),
+  );
+
+  if (isSubmissionDetail) {
+    return <Outlet />;
+  }
 
   useEffect(() => {
     try {
