@@ -238,7 +238,10 @@ function AuthorDashboard() {
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem("csp.session");
-      if (!raw) return navigate({ to: "/login" });
+      if (!raw) {
+        navigate({ to: "/login" });
+        return;
+      }
       const session = JSON.parse(raw) as { role: string };
       if (session.role !== "author") navigate({ to: "/login" });
     } catch {
