@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardEditorRouteImport } from './routes/dashboard.editor'
+import { Route as DashboardAuthorRouteImport } from './routes/dashboard.author'
 import { Route as DashboardRoleRouteImport } from './routes/dashboard.$role'
 import { Route as DashboardEditorSubmissionIdRouteImport } from './routes/dashboard.editor.submission.$id'
 
@@ -30,6 +31,11 @@ const DashboardEditorRoute = DashboardEditorRouteImport.update({
   path: '/dashboard/editor',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardAuthorRoute = DashboardAuthorRouteImport.update({
+  id: '/dashboard/author',
+  path: '/dashboard/author',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoleRoute = DashboardRoleRouteImport.update({
   id: '/dashboard/$role',
   path: '/dashboard/$role',
@@ -46,6 +52,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/dashboard/$role': typeof DashboardRoleRoute
+  '/dashboard/author': typeof DashboardAuthorRoute
   '/dashboard/editor': typeof DashboardEditorRouteWithChildren
   '/dashboard/editor/submission/$id': typeof DashboardEditorSubmissionIdRoute
 }
@@ -53,6 +60,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/dashboard/$role': typeof DashboardRoleRoute
+  '/dashboard/author': typeof DashboardAuthorRoute
   '/dashboard/editor': typeof DashboardEditorRouteWithChildren
   '/dashboard/editor/submission/$id': typeof DashboardEditorSubmissionIdRoute
 }
@@ -61,6 +69,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/dashboard/$role': typeof DashboardRoleRoute
+  '/dashboard/author': typeof DashboardAuthorRoute
   '/dashboard/editor': typeof DashboardEditorRouteWithChildren
   '/dashboard/editor/submission/$id': typeof DashboardEditorSubmissionIdRoute
 }
@@ -70,6 +79,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/dashboard/$role'
+    | '/dashboard/author'
     | '/dashboard/editor'
     | '/dashboard/editor/submission/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -77,6 +87,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/dashboard/$role'
+    | '/dashboard/author'
     | '/dashboard/editor'
     | '/dashboard/editor/submission/$id'
   id:
@@ -84,6 +95,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/dashboard/$role'
+    | '/dashboard/author'
     | '/dashboard/editor'
     | '/dashboard/editor/submission/$id'
   fileRoutesById: FileRoutesById
@@ -92,6 +104,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
   DashboardRoleRoute: typeof DashboardRoleRoute
+  DashboardAuthorRoute: typeof DashboardAuthorRoute
   DashboardEditorRoute: typeof DashboardEditorRouteWithChildren
 }
 
@@ -116,6 +129,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard/editor'
       fullPath: '/dashboard/editor'
       preLoaderRoute: typeof DashboardEditorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/author': {
+      id: '/dashboard/author'
+      path: '/dashboard/author'
+      fullPath: '/dashboard/author'
+      preLoaderRoute: typeof DashboardAuthorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard/$role': {
@@ -151,6 +171,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
   DashboardRoleRoute: DashboardRoleRoute,
+  DashboardAuthorRoute: DashboardAuthorRoute,
   DashboardEditorRoute: DashboardEditorRouteWithChildren,
 }
 export const routeTree = rootRouteImport
