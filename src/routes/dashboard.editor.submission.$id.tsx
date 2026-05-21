@@ -75,7 +75,7 @@ function SubmissionDetail() {
     }
   }, [navigate]);
 
-  const displayName = displayNameFromEmail(userEmail);
+  const displayName = userEmail ? "James Mitchell" : displayNameFromEmail(userEmail);
   const meta = STATUS_META[proposal.status];
 
   const onLogout = () => {
