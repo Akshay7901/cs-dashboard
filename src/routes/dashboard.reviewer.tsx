@@ -146,7 +146,7 @@ function ReviewerDashboard() {
           <h1 className="font-serif text-4xl font-bold tracking-tight text-stone-900">
             Your Reviews
           </h1>
-          <p className="mt-2 font-sans text-base text-stone-600">
+          <p className="mt-2 font-sans text-base text-amber-700/80">
             {REVIEWER_PROFILE.affiliation} ·{" "}
             {REVIEWER_PROFILE.expertise.join(", ")}
           </p>
@@ -218,28 +218,28 @@ function StatCard({
     { wrap: string; value: string; label: string }
   > = {
     sky: {
-      wrap: "bg-sky-50/70 ring-sky-100",
-      value: "text-sky-800",
-      label: "text-sky-700",
+      wrap: "bg-sky-50 ring-2 ring-sky-200",
+      value: "text-sky-900",
+      label: "text-sky-800",
     },
     amber: {
-      wrap: "bg-amber-50/70 ring-amber-100",
-      value: "text-amber-800",
-      label: "text-amber-700",
+      wrap: "bg-amber-50 ring-2 ring-amber-200",
+      value: "text-amber-900",
+      label: "text-amber-800",
     },
     green: {
-      wrap: "bg-emerald-50/70 ring-emerald-100",
-      value: "text-emerald-800",
-      label: "text-emerald-700",
+      wrap: "bg-emerald-50 ring-2 ring-emerald-200",
+      value: "text-emerald-900",
+      label: "text-emerald-800",
     },
   };
   const t = tones[tone];
   return (
-    <div className={`rounded-2xl px-6 py-7 text-center ring-1 ${t.wrap}`}>
-      <div className={`font-serif text-5xl font-bold leading-none ${t.value}`}>
+    <div className={`rounded-2xl px-6 py-8 text-center ${t.wrap}`}>
+      <div className={`font-serif text-6xl font-bold leading-none ${t.value}`}>
         {value}
       </div>
-      <div className={`mt-2 font-sans text-sm font-medium ${t.label}`}>{label}</div>
+      <div className={`mt-3 font-sans text-base font-medium ${t.label}`}>{label}</div>
     </div>
   );
 }
