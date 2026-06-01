@@ -6,6 +6,10 @@ import {
   ChevronRight,
   ArrowUpDown,
   LogOut,
+  Users,
+  Plus,
+  X,
+  Trash2,
 } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
 import {
@@ -45,6 +49,50 @@ function EditorDashboard() {
   const [search, setSearch] = useState("");
   const [field, setField] = useState<"all" | "title" | "author" | "country">("all");
   const [sort, setSort] = useState<"newest" | "oldest">("newest");
+  const [reviewersOpen, setReviewersOpen] = useState(false);
+  type PeerReviewer = {
+    id: string;
+    name: string;
+    email: string;
+    affiliation: string;
+    expertise: string;
+  };
+  const [reviewers, setReviewers] = useState<PeerReviewer[]>(() => {
+    try {
+      const raw = localStorage.getItem("csp.peerReviewers");
+      return raw ? (JSON.parse(raw) as PeerReviewer[]) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [newReviewer, setNewReviewer] = useState({
+    name: "",
+    email: "",
+    affiliation: "",
+    expertise: "",
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("csp.peerReviewers", JSON.stringify(reviewers));
+    } catch {
+      // ignore
+    }
+  }, [reviewers]);
+
+  const addReviewer = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newReviewer.name.trim() || !newReviewer.email.trim()) return;
+    setReviewers((prev) => [
+      ...prev,
+      { id: `pr-${Date.now()}`, ...newReviewer },
+    ]);
+    setNewReviewer({ name: "", email: "", affiliation: "", expertise: "" });
+  };
+
+  const removeReviewer = (id: string) => {
+    setReviewers((prev) => prev.filter((r) => r.id !== id));
+  };
 
   const isSubmissionDetail = Boolean(
     matchRoute({ to: "/dashboard/editor/submission/$id", fuzzy: true }),
@@ -149,13 +197,26 @@ function EditorDashboard() {
       </header>
 
       <main className="mx-auto max-w-7xl px-8 py-10">
-        <div className="mb-8">
-          <h1 className="font-serif text-4xl font-bold tracking-tight text-stone-900">
-            Proposal Intake
-          </h1>
-          <p className="mt-2 font-sans text-base text-stone-600">
-            Review and manage incoming book proposals
-          </p>
+        <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="font-serif text-4xl font-bold tracking-tight text-stone-900">
+              Proposal Intake
+            </h1>
+            <p className="mt-2 font-sans text-base text-stone-600">
+              Review and manage incoming book proposals
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setReviewersOpen(true)}
+            className="inline-flex items-center gap-2 rounded-xl border border-[#0E3D2F] bg-[#0E3D2F] px-4 py-2.5 font-sans text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#0a2e23]"
+          >
+            <Users className="h-4 w-4" />
+            Peer Reviewers
+            <span className="ml-1 inline-flex min-w-5 items-center justify-center rounded-full bg-white/20 px-1.5 py-0.5 font-sans text-xs font-medium">
+              {reviewers.length}
+            </span>
+          </button>
         </div>
 
         {/* Filter pills */}
@@ -322,6 +383,123 @@ function EditorDashboard() {
           </div>
         </div>
       </main>
+
+      {reviewersOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/50 p-4"
+          onClick={() => setReviewersOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between border-b border-stone-200 px-6 py-4">
+              <div>
+                <h2 className="font-serif text-2xl font-bold text-stone-900">
+                  Peer Reviewers
+                </h2>
+                <p className="mt-1 font-sans text-sm text-stone-600">
+                  Add and manage peer reviewers for proposals
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setReviewersOpen(false)}
+                className="rounded-lg p-1.5 text-stone-500 hover:bg-stone-100 hover:text-stone-800"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={addReviewer} className="grid gap-3 border-b border-stone-200 bg-stone-50/60 px-6 py-5 sm:grid-cols-2">
+              <input
+                type="text"
+                required
+                value={newReviewer.name}
+                onChange={(e) => setNewReviewer((r) => ({ ...r, name: e.target.value }))}
+                placeholder="Full name *"
+                className="rounded-lg border border-stone-200 bg-white px-3 py-2 font-sans text-sm focus:outline-none focus:ring-2 focus:ring-stone-300"
+              />
+              <input
+                type="email"
+                required
+                value={newReviewer.email}
+                onChange={(e) => setNewReviewer((r) => ({ ...r, email: e.target.value }))}
+                placeholder="Email *"
+                className="rounded-lg border border-stone-200 bg-white px-3 py-2 font-sans text-sm focus:outline-none focus:ring-2 focus:ring-stone-300"
+              />
+              <input
+                type="text"
+                value={newReviewer.affiliation}
+                onChange={(e) => setNewReviewer((r) => ({ ...r, affiliation: e.target.value }))}
+                placeholder="Affiliation"
+                className="rounded-lg border border-stone-200 bg-white px-3 py-2 font-sans text-sm focus:outline-none focus:ring-2 focus:ring-stone-300"
+              />
+              <input
+                type="text"
+                value={newReviewer.expertise}
+                onChange={(e) => setNewReviewer((r) => ({ ...r, expertise: e.target.value }))}
+                placeholder="Area of expertise"
+                className="rounded-lg border border-stone-200 bg-white px-3 py-2 font-sans text-sm focus:outline-none focus:ring-2 focus:ring-stone-300"
+              />
+              <div className="sm:col-span-2">
+                <button
+                  type="submit"
+                  className="inline-flex items-center gap-2 rounded-lg bg-[#0E3D2F] px-4 py-2 font-sans text-sm font-medium text-white hover:bg-[#0a2e23]"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add reviewer
+                </button>
+              </div>
+            </form>
+
+            <div className="max-h-[40vh] overflow-y-auto">
+              {reviewers.length === 0 ? (
+                <p className="px-6 py-10 text-center font-sans text-sm text-stone-500">
+                  No peer reviewers added yet.
+                </p>
+              ) : (
+                <ul>
+                  {reviewers.map((r) => (
+                    <li
+                      key={r.id}
+                      className="flex items-start justify-between gap-4 border-b border-stone-100 px-6 py-4 last:border-b-0"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#0E3D2F] font-sans text-xs font-semibold text-white">
+                          {initialsFromName(r.name)}
+                        </div>
+                        <div>
+                          <p className="font-sans text-sm font-semibold text-stone-900">
+                            {r.name}
+                          </p>
+                          <p className="font-sans text-xs text-stone-500">{r.email}</p>
+                          {(r.affiliation || r.expertise) && (
+                            <p className="mt-1 font-sans text-xs text-stone-600">
+                              {r.affiliation}
+                              {r.affiliation && r.expertise ? " · " : ""}
+                              {r.expertise}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeReviewer(r.id)}
+                        className="rounded-lg p-1.5 text-stone-400 hover:bg-red-50 hover:text-red-600"
+                        aria-label="Remove reviewer"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
