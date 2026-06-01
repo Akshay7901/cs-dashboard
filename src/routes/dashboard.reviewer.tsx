@@ -140,7 +140,7 @@ function ReviewerDashboard() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-6 py-10">
+      <main className="mx-auto max-w-6xl px-6 py-10">
         {/* Heading */}
         <div className="mb-8">
           <h1 className="font-serif text-4xl font-bold tracking-tight text-stone-900">
