@@ -94,7 +94,9 @@ function ReviewerDashboard() {
     navigate({ to: "/login" });
   };
 
-  const displayName = userEmail ? displayNameFromEmail(userEmail) : REVIEWER_PROFILE.name;
+  // Always show full reviewer profile name to match design
+  void userEmail;
+  const displayName = REVIEWER_PROFILE.name;
 
   const assigned = REVIEWS.length;
   const pending = REVIEWS.filter((r) => r.status === "pending").length;
