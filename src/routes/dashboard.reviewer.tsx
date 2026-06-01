@@ -109,7 +109,7 @@ function ReviewerDashboard() {
     <div className="min-h-screen bg-[#FAF6EE] font-sans text-stone-800">
       {/* Top bar */}
       <header className="border-b border-stone-200 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-4">
           <div className="flex items-center gap-3">
             <Link to="/login" className="flex items-center gap-3">
               <img src={cspLogo} alt="CSP" width={32} height={32} />
@@ -140,7 +140,7 @@ function ReviewerDashboard() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-6 py-10">
+      <main className="mx-auto max-w-5xl px-6 py-10">
         {/* Heading */}
         <div className="mb-8">
           <h1 className="font-serif text-4xl font-bold tracking-tight text-stone-900">
