@@ -109,7 +109,7 @@ function ReviewerDashboard() {
     <div className="min-h-screen bg-[#FAF6EE] font-sans text-stone-800">
       {/* Top bar */}
       <header className="border-b border-stone-200 bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-8 py-4">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4">
           <div className="flex items-center gap-3">
             <Link to="/login" className="flex items-center gap-3">
               <img src={cspLogo} alt="CSP" width={32} height={32} />
@@ -140,7 +140,7 @@ function ReviewerDashboard() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-8 py-10">
+      <main className="mx-auto max-w-6xl px-6 py-10">
         {/* Heading */}
         <div className="mb-8">
           <h1 className="font-serif text-4xl font-bold tracking-tight text-stone-900">
@@ -235,11 +235,11 @@ function StatCard({
   };
   const t = tones[tone];
   return (
-    <div className={`rounded-2xl px-6 py-8 text-center ${t.wrap}`}>
-      <div className={`font-serif text-6xl font-bold leading-none ${t.value}`}>
+    <div className={`rounded-2xl px-5 py-5 text-center ${t.wrap}`}>
+      <div className={`font-serif text-4xl font-bold leading-none ${t.value}`}>
         {value}
       </div>
-      <div className={`mt-3 font-sans text-base font-medium ${t.label}`}>{label}</div>
+      <div className={`mt-2 font-sans text-sm font-medium ${t.label}`}>{label}</div>
     </div>
   );
 }
