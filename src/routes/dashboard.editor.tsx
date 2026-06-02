@@ -429,20 +429,6 @@ function EditorDashboard() {
                 placeholder="Email *"
                 className="rounded-lg border border-stone-200 bg-white px-3 py-2 font-sans text-sm focus:outline-none focus:ring-2 focus:ring-stone-300"
               />
-              <input
-                type="text"
-                value={newReviewer.affiliation}
-                onChange={(e) => setNewReviewer((r) => ({ ...r, affiliation: e.target.value }))}
-                placeholder="Affiliation"
-                className="rounded-lg border border-stone-200 bg-white px-3 py-2 font-sans text-sm focus:outline-none focus:ring-2 focus:ring-stone-300"
-              />
-              <input
-                type="text"
-                value={newReviewer.expertise}
-                onChange={(e) => setNewReviewer((r) => ({ ...r, expertise: e.target.value }))}
-                placeholder="Area of expertise"
-                className="rounded-lg border border-stone-200 bg-white px-3 py-2 font-sans text-sm focus:outline-none focus:ring-2 focus:ring-stone-300"
-              />
               <div className="sm:col-span-2">
                 <button
                   type="submit"
