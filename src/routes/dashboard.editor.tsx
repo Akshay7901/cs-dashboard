@@ -149,11 +149,11 @@ function EditorDashboard() {
   );
 
   const counts = useMemo(() => {
-    const map: Record<string, number> = { all: PROPOSALS.length };
+    const map: Record<string, number> = { all: mergedProposals.length };
     for (const k of Object.keys(STATUS_META)) map[k] = 0;
-    for (const p of PROPOSALS) map[p.status] = (map[p.status] ?? 0) + 1;
+    for (const p of mergedProposals) map[p.status] = (map[p.status] ?? 0) + 1;
     return map;
-  }, []);
+  }, [mergedProposals]);
 
   const filtered = useMemo(() => {
     let list = PROPOSALS.slice();
