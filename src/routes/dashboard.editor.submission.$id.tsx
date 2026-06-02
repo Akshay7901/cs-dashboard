@@ -64,6 +64,7 @@ function SubmissionDetail() {
   const [reviewNotes, setReviewNotes] = useState("");
   const [assignedReviewerName, setAssignedReviewerName] = useState<string | null>(null);
   const [assignedReviewer, setAssignedReviewer] = useState<PoolReviewer | null>(null);
+  const [effectiveStatus, setEffectiveStatus] = useState<Proposal["status"]>(proposal.status);
 
   type PoolReviewer = {
     id: string;
@@ -138,6 +139,7 @@ function SubmissionDetail() {
     const r = reviewerPool.find((x) => x.id === selectedReviewerId);
     if (r) {
       setAssignedReviewer(r);
+      setEffectiveStatus("in_review");
       try {
         const raw = localStorage.getItem("csp.assignments");
         const list: Array<Record<string, unknown>> = raw ? JSON.parse(raw) : [];
@@ -166,6 +168,10 @@ function SubmissionDetail() {
           },
         });
         localStorage.setItem("csp.assignments", JSON.stringify(filtered));
+        const sRaw = localStorage.getItem("csp.proposalStatusOverrides");
+        const overrides: Record<string, string> = sRaw ? JSON.parse(sRaw) : {};
+        overrides[proposal.id] = "in_review";
+        localStorage.setItem("csp.proposalStatusOverrides", JSON.stringify(overrides));
       } catch {
         // ignore
       }
@@ -211,11 +217,22 @@ function SubmissionDetail() {
     } catch {
       // ignore
     }
+    try {
+      const sRaw = localStorage.getItem("csp.proposalStatusOverrides");
+      if (sRaw) {
+        const overrides = JSON.parse(sRaw) as Record<string, Proposal["status"]>;
+        if (overrides[proposal.id]) {
+          setEffectiveStatus(overrides[proposal.id]);
+        }
+      }
+    } catch {
+      // ignore
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [proposal.id]);
 
   const displayName = userEmail ? "James Mitchell" : displayNameFromEmail(userEmail);
-  const meta = STATUS_META[proposal.status];
+  const meta = STATUS_META[effectiveStatus];
 
   const onLogout = () => {
     try {
@@ -284,7 +301,7 @@ function SubmissionDetail() {
             >
               <span
                 className={`h-1.5 w-1.5 rounded-full ${
-                  proposal.status === "signed" ? "bg-white" : meta.dot
+                  effectiveStatus === "signed" ? "bg-white" : meta.dot
                 }`}
               />
               {meta.label}
@@ -560,7 +577,7 @@ function SubmissionDetail() {
                 <p className="mt-2 font-sans text-sm text-stone-600">
                   {assignedReviewer
                     ? "With peer reviewer"
-                    : proposal.status === "submitted"
+                    : effectiveStatus === "submitted"
                       ? "Awaiting initial assessment"
                       : proposal.decisionSummary}
                 </p>
@@ -607,7 +624,7 @@ function SubmissionDetail() {
                       </span>
                     </button>
                   </>
-                ) : proposal.status === "submitted" ? (
+                ) : effectiveStatus === "submitted" ? (
                   <>
                     <button
                       type="button"

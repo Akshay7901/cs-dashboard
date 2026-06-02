@@ -50,6 +50,7 @@ function EditorDashboard() {
   const [field, setField] = useState<"all" | "title" | "author" | "country">("all");
   const [sort, setSort] = useState<"newest" | "oldest">("newest");
   const [reviewersOpen, setReviewersOpen] = useState(false);
+  const [statusOverrides, setStatusOverrides] = useState<Record<string, StatusKey>>({});
   type PeerReviewer = {
     id: string;
     name: string;
@@ -129,15 +130,33 @@ function EditorDashboard() {
     }
   }, [navigate]);
 
-  const counts = useMemo(() => {
-    const map: Record<string, number> = { all: PROPOSALS.length };
-    for (const k of Object.keys(STATUS_META)) map[k] = 0;
-    for (const p of PROPOSALS) map[p.status] = (map[p.status] ?? 0) + 1;
-    return map;
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("csp.proposalStatusOverrides");
+      if (raw) setStatusOverrides(JSON.parse(raw));
+    } catch {
+      // ignore
+    }
   }, []);
 
+  const mergedProposals = useMemo(
+    () =>
+      PROPOSALS.map((p) => ({
+        ...p,
+        status: statusOverrides[p.id] ?? p.status,
+      })),
+    [statusOverrides],
+  );
+
+  const counts = useMemo(() => {
+    const map: Record<string, number> = { all: mergedProposals.length };
+    for (const k of Object.keys(STATUS_META)) map[k] = 0;
+    for (const p of mergedProposals) map[p.status] = (map[p.status] ?? 0) + 1;
+    return map;
+  }, [mergedProposals]);
+
   const filtered = useMemo(() => {
-    let list = PROPOSALS.slice();
+    let list = mergedProposals.slice();
     if (activeFilter !== "all") list = list.filter((p) => p.status === activeFilter);
     const q = search.trim().toLowerCase();
     if (q) {
@@ -157,7 +176,7 @@ function EditorDashboard() {
       return sort === "newest" ? db - da : da - db;
     });
     return list;
-  }, [activeFilter, search, field, sort]);
+  }, [mergedProposals, activeFilter, search, field, sort]);
 
   const onLogout = () => {
     try {
