@@ -232,7 +232,7 @@ function SubmissionDetail() {
   }, [proposal.id]);
 
   const displayName = userEmail ? "James Mitchell" : displayNameFromEmail(userEmail);
-  const meta = STATUS_META[proposal.status];
+  const meta = STATUS_META[effectiveStatus];
 
   const onLogout = () => {
     try {
