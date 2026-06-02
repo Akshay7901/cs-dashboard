@@ -490,6 +490,11 @@ function SubmissionDetail() {
                     ? "Awaiting initial assessment"
                     : proposal.decisionSummary}
                 </p>
+                {assignedReviewerName && (
+                  <p className="mt-2 rounded-md bg-emerald-50 px-3 py-2 font-sans text-xs text-emerald-800 ring-1 ring-emerald-200">
+                    Assigned to <span className="font-semibold">{assignedReviewerName}</span>
+                  </p>
+                )}
               </div>
               <div className="space-y-3 px-6 pb-6 pt-5">
                 {proposal.status === "submitted" ? (
