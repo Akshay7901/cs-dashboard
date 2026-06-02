@@ -130,6 +130,24 @@ function EditorDashboard() {
     }
   }, [navigate]);
 
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("csp.proposalStatusOverrides");
+      if (raw) setStatusOverrides(JSON.parse(raw));
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const mergedProposals = useMemo(
+    () =>
+      PROPOSALS.map((p) => ({
+        ...p,
+        status: statusOverrides[p.id] ?? p.status,
+      })),
+    [statusOverrides],
+  );
+
   const counts = useMemo(() => {
     const map: Record<string, number> = { all: PROPOSALS.length };
     for (const k of Object.keys(STATUS_META)) map[k] = 0;
