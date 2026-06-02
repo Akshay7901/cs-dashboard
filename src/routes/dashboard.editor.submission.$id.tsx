@@ -558,18 +558,56 @@ function SubmissionDetail() {
                   Editorial Decision
                 </h2>
                 <p className="mt-2 font-sans text-sm text-stone-600">
-                  {proposal.status === "submitted"
-                    ? "Awaiting initial assessment"
-                    : proposal.decisionSummary}
+                  {assignedReviewer
+                    ? "With peer reviewer"
+                    : proposal.status === "submitted"
+                      ? "Awaiting initial assessment"
+                      : proposal.decisionSummary}
                 </p>
-                {assignedReviewerName && (
+                {assignedReviewerName && !assignedReviewer && (
                   <p className="mt-2 rounded-md bg-emerald-50 px-3 py-2 font-sans text-xs text-emerald-800 ring-1 ring-emerald-200">
                     Assigned to <span className="font-semibold">{assignedReviewerName}</span>
                   </p>
                 )}
               </div>
               <div className="space-y-3 px-6 pb-6 pt-5">
-                {proposal.status === "submitted" ? (
+                {assignedReviewer ? (
+                  <>
+                    <div className="rounded-xl border border-sky-200 bg-sky-50/60 p-4">
+                      <p className="font-sans text-[11px] font-semibold uppercase tracking-wider text-sky-700">
+                        Assigned Reviewer
+                      </p>
+                      <p className="mt-2 font-serif text-base font-bold text-stone-900">
+                        {assignedReviewer.name}
+                      </p>
+                      <p className="font-sans text-sm text-stone-600">
+                        {assignedReviewer.affiliation}
+                      </p>
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {assignedReviewer.expertise.map((tag) => (
+                          <span
+                            key={tag}
+                            className="rounded-md bg-sky-100 px-2 py-0.5 font-sans text-[11px] font-medium text-sky-800"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-left font-sans text-sm text-stone-800 hover:bg-stone-50"
+                    >
+                      <span className="flex items-center gap-2 font-semibold">
+                        <X className="h-4 w-4" />
+                        Decline
+                      </span>
+                      <span className="mt-1 block text-xs text-stone-500">
+                        Not moving forward
+                      </span>
+                    </button>
+                  </>
+                ) : proposal.status === "submitted" ? (
                   <>
                     <button
                       type="button"
