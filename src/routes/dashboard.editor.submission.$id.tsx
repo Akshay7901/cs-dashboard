@@ -612,6 +612,163 @@ function SubmissionDetail() {
           </aside>
         </div>
       </main>
+
+      {reviewModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-stone-900/50 p-4 sm:p-8"
+          onClick={() => setReviewModalOpen(false)}
+        >
+          <div
+            className="relative my-8 w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-3 border-b border-stone-200 px-6 py-5">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#1F4D3A] text-white">
+                <CheckCircle2 className="h-5 w-5" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-serif text-lg font-bold text-stone-900">
+                  Submit for Peer Review
+                </h3>
+                <p className="mt-0.5 font-sans text-sm text-stone-600">
+                  Assign a reviewer and set expectations before sending.
+                </p>
+                <p className="mt-1 font-sans text-xs italic text-stone-500">
+                  &ldquo;{proposal.title}&rdquo;
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setReviewModalOpen(false)}
+                className="rounded-md p-1 text-stone-500 hover:bg-stone-100 hover:text-stone-700"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <form onSubmit={onConfirmAssign}>
+              <div className="max-h-[55vh] space-y-3 overflow-y-auto px-6 py-5">
+                <p className="font-sans text-sm font-semibold text-stone-900">
+                  Assign Reviewer <span className="text-rose-500">*</span>
+                </p>
+                {reviewerPool.map((r) => {
+                  const selected = selectedReviewerId === r.id;
+                  return (
+                    <label
+                      key={r.id}
+                      className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors ${
+                        selected
+                          ? "border-[#1F4D3A] bg-[#1F4D3A]/5"
+                          : "border-stone-200 hover:bg-stone-50"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="reviewer"
+                        value={r.id}
+                        checked={selected}
+                        onChange={() => setSelectedReviewerId(r.id)}
+                        className="mt-1 h-4 w-4 accent-[#1F4D3A]"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="font-sans text-sm font-semibold text-stone-900">
+                              {r.name}
+                            </p>
+                            <p className="font-sans text-xs text-stone-600">
+                              {r.affiliation}
+                            </p>
+                          </div>
+                          <span
+                            className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                              r.badge.tone === "emerald"
+                                ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
+                                : "bg-amber-50 text-amber-700 ring-1 ring-amber-200"
+                            }`}
+                          >
+                            {r.badge.label}
+                          </span>
+                        </div>
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {r.expertise.map((tag) => (
+                            <span
+                              key={tag}
+                              className="rounded-md bg-stone-100 px-2 py-0.5 font-sans text-[11px] text-stone-700"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </label>
+                  );
+                })}
+
+                <div className="pt-2">
+                  <div className="flex items-baseline justify-between">
+                    <label
+                      htmlFor="due-date"
+                      className="font-sans text-sm font-semibold text-stone-900"
+                    >
+                      Review Due Date
+                    </label>
+                    <span className="font-sans text-xs text-stone-500">
+                      (approx. 4 weeks)
+                    </span>
+                  </div>
+                  <div className="mt-2 grid gap-3 sm:grid-cols-2">
+                    <input
+                      id="due-date"
+                      type="date"
+                      value={reviewDueDate}
+                      onChange={(e) => setReviewDueDate(e.target.value)}
+                      className="rounded-lg border border-stone-300 bg-white px-3 py-2 font-sans text-sm text-stone-900 focus:border-[#1F4D3A] focus:outline-none"
+                    />
+                    <p className="self-center font-sans text-xs text-stone-500">
+                      Reviewer will be notified by email with the proposal details.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <label
+                    htmlFor="review-notes"
+                    className="font-sans text-sm font-semibold text-stone-900"
+                  >
+                    Notes for Reviewer{" "}
+                    <span className="font-normal text-stone-500">(optional)</span>
+                  </label>
+                  <textarea
+                    id="review-notes"
+                    rows={3}
+                    value={reviewNotes}
+                    onChange={(e) => setReviewNotes(e.target.value)}
+                    placeholder="Any specific areas to focus on, context, or guidance..."
+                    className="mt-2 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 font-sans text-sm text-stone-900 focus:border-[#1F4D3A] focus:outline-none"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center justify-end gap-2 border-t border-stone-200 bg-stone-50 px-6 py-4">
+                <button
+                  type="button"
+                  onClick={() => setReviewModalOpen(false)}
+                  className="rounded-lg border border-stone-300 bg-white px-4 py-2 font-sans text-sm font-medium text-stone-700 hover:bg-stone-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={!selectedReviewerId}
+                  className="rounded-lg bg-[#1F4D3A] px-4 py-2 font-sans text-sm font-semibold text-white hover:bg-[#173A2C] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Confirm &amp; Assign Reviewer
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
