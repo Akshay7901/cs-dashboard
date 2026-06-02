@@ -192,6 +192,28 @@ function SubmissionDetail() {
     }
   }, [navigate]);
 
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("csp.assignments");
+      if (!raw) return;
+      const list = JSON.parse(raw) as Array<{
+        proposalId: string;
+        reviewerId: string;
+      }>;
+      const mine = list.find((a) => a.proposalId === proposal.id);
+      if (mine) {
+        const r = reviewerPool.find((x) => x.id === mine.reviewerId);
+        if (r) {
+          setAssignedReviewer(r);
+          setAssignedReviewerName(r.name);
+        }
+      }
+    } catch {
+      // ignore
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [proposal.id]);
+
   const displayName = userEmail ? "James Mitchell" : displayNameFromEmail(userEmail);
   const meta = STATUS_META[proposal.status];
 
