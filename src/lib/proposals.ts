@@ -548,6 +548,67 @@ export const PROPOSALS: Proposal[] = [
     ],
     decisionSummary: "Contract signed",
   },
+  {
+    id: "sub-009",
+    ref: "sub-009",
+    title: "Quantum Cognition: New Frontiers in Decision Theory",
+    kind: "Monograph",
+    status: "submitted",
+    authorName: "Dr. Liam O'Connor",
+    authorEmail: "l.oconnor@tcd.ie",
+    authorAffiliation: "Trinity College Dublin",
+    country: "Ireland",
+    mailingAddress: "College Green, Dublin 2, D02 PN40, Ireland",
+    biography:
+      "Dr. Liam O'Connor is an Assistant Professor of Cognitive Science at Trinity College Dublin. His work spans decision theory, quantum probability, and the philosophy of mind.",
+    submittedAt: "2026-06-01",
+    updatedAt: "2026-06-01",
+    wordCount: 75000,
+    illustrations: 12,
+    nonEnglish: false,
+    estCompletion: "March 2027",
+    discipline: "Cognitive Science",
+    subdiscipline: "Decision Theory / Quantum Cognition",
+    overview:
+      "This monograph introduces quantum probability frameworks to model human decision-making under uncertainty, challenging classical Bayesian assumptions and proposing a unified theory of cognition.",
+    keywords: ["quantum cognition", "decision theory", "probability", "cognitive science"],
+    keyFeatures:
+      "First accessible introduction to quantum cognition for a broad academic audience, combining formal theory with empirical case studies.",
+    intendedAudience:
+      "Cognitive scientists, philosophers of mind, decision theorists, advanced students",
+    tableOfContents: [
+      "Introduction: Why Quantum Cognition?",
+      "Classical Probability and Its Limits",
+      "Quantum Probability Primer",
+      "Modeling Order Effects",
+      "Empirical Evidence",
+      "Towards a Unified Theory",
+      "Conclusion",
+    ],
+    whyNeeded:
+      "No current textbook bridges quantum probability and cognitive decision-making for a non-specialist academic readership.",
+    competingTitles:
+      "Quantum Models of Cognition and Decision (CUP, 2012) — highly technical, dated.",
+    suggestedReviewers: [
+      {
+        name: "Prof. Jerome Busemeyer",
+        affiliation: "Indiana University",
+        email: "jbusemey@indiana.edu",
+      },
+      {
+        name: "Dr. Emmanuel Pothos",
+        affiliation: "City, University of London",
+        email: "emmanuel.pothos.1@city.ac.uk",
+      },
+    ],
+    additionalNotes: "Newly submitted — awaiting initial editorial review.",
+    supportingDocs: [
+      { name: "Proposal.pdf", sizeLabel: "1.9 MB" },
+      { name: "Sample Chapter.pdf", sizeLabel: "1.1 MB" },
+      { name: "CV – Dr. O'Connor.pdf", sizeLabel: "280 KB" },
+    ],
+    decisionSummary: "Newly submitted — pending review",
+  },
 ];
 
 export function formatDate(iso: string) {
