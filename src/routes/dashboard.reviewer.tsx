@@ -66,6 +66,7 @@ const SUBJECT_STYLES: Record<string, string> = {
 function ReviewerDashboard() {
   const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState<string>("");
+  const [assigned, setAssigned] = useState<ReviewItem[]>([]);
 
   useEffect(() => {
     try {
@@ -80,6 +81,53 @@ function ReviewerDashboard() {
         return;
       }
       setUserEmail(session.email);
+      try {
+        const aRaw = localStorage.getItem("csp.assignments");
+        if (aRaw) {
+          const list = JSON.parse(aRaw) as Array<{
+            id: string;
+            reviewerEmail: string;
+            dueDate: string | null;
+            assignedAt: string;
+            proposal: {
+              id: string;
+              title: string;
+              kind: string;
+              subject: string;
+              subtitle?: string;
+              authorName: string;
+              authorAffiliation: string;
+              wordCount: number;
+              overview: string;
+            };
+          }>;
+          const mine = list
+            .filter(
+              (a) =>
+                a.reviewerEmail.toLowerCase() === session.email.toLowerCase(),
+            )
+            .map<ReviewItem>((a) => ({
+              id: a.id,
+              subject: a.proposal.subject,
+              kind: a.proposal.kind,
+              title: a.proposal.title,
+              subtitle: a.proposal.subtitle,
+              authorName: a.proposal.authorName,
+              authorAffiliation: a.proposal.authorAffiliation,
+              wordCount: `${a.proposal.wordCount.toLocaleString()} words`,
+              assignedAt: new Date(a.assignedAt).toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              }),
+              abstract: a.proposal.overview,
+              status: "pending",
+            }));
+          setAssigned(mine);
+        }
+      } catch {
+        // ignore
+      }
     } catch {
       navigate({ to: "/login" });
     }
@@ -98,12 +146,13 @@ function ReviewerDashboard() {
   void userEmail;
   const displayName = REVIEWER_PROFILE.name;
 
-  const assigned = REVIEWS.length;
-  const pending = REVIEWS.filter((r) => r.status === "pending").length;
-  const completed = REVIEWS.filter((r) => r.status === "completed").length;
+  const allReviews = [...assigned, ...REVIEWS];
+  const assignedCount = allReviews.length;
+  const pending = allReviews.filter((r) => r.status === "pending").length;
+  const completed = allReviews.filter((r) => r.status === "completed").length;
 
-  const pendingItems = REVIEWS.filter((r) => r.status === "pending");
-  const completedItems = REVIEWS.filter((r) => r.status === "completed");
+  const pendingItems = allReviews.filter((r) => r.status === "pending");
+  const completedItems = allReviews.filter((r) => r.status === "completed");
 
   return (
     <div className="min-h-screen bg-[#FAF6EE] font-sans text-stone-800">
@@ -154,7 +203,7 @@ function ReviewerDashboard() {
 
         {/* Stat cards */}
         <div className="mb-10 grid grid-cols-1 gap-5 sm:grid-cols-3">
-          <StatCard label="Assigned" value={assigned} tone="sky" />
+          <StatCard label="Assigned" value={assignedCount} tone="sky" />
           <StatCard label="Pending" value={pending} tone="amber" />
           <StatCard label="Completed" value={completed} tone="green" />
         </div>
