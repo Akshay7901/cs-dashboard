@@ -58,6 +58,71 @@ function SubmissionDetail() {
   const [userEmail, setUserEmail] = useState("");
   const [notes, setNotes] = useState("");
   const [savedAt, setSavedAt] = useState<string | null>(null);
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [selectedReviewerId, setSelectedReviewerId] = useState<string | null>(null);
+  const [reviewDueDate, setReviewDueDate] = useState("");
+  const [reviewNotes, setReviewNotes] = useState("");
+  const [assignedReviewerName, setAssignedReviewerName] = useState<string | null>(null);
+
+  type PoolReviewer = {
+    id: string;
+    name: string;
+    affiliation: string;
+    expertise: string[];
+    badge: { label: string; tone: "amber" | "emerald" };
+  };
+  const reviewerPool: PoolReviewer[] = [
+    {
+      id: "pr-okafor",
+      name: "Prof. David Okafor",
+      affiliation: "University of Cambridge",
+      expertise: ["African Studies", "Literary Studies", "Postcolonial Theory"],
+      badge: { label: "1 active", tone: "amber" },
+    },
+    {
+      id: "pr-hoffmann",
+      name: "Dr. Anna Hoffmann",
+      affiliation: "Freie Universität Berlin",
+      expertise: ["Environmental Policy", "Agricultural Economics", "Climate Studies"],
+      badge: { label: "Available", tone: "emerald" },
+    },
+    {
+      id: "pr-obrien",
+      name: "Prof. Liam O'Brien",
+      affiliation: "Trinity College Dublin",
+      expertise: ["Medieval History", "Historical Geography", "Trade Networks"],
+      badge: { label: "2 active", tone: "amber" },
+    },
+    {
+      id: "pr-nair",
+      name: "Dr. Priya Nair",
+      affiliation: "London School of Economics",
+      expertise: ["Political Philosophy", "Technology Ethics", "AI Governance"],
+      badge: { label: "Available", tone: "emerald" },
+    },
+    {
+      id: "pr-santini",
+      name: "Prof. Marco Santini",
+      affiliation: "Sapienza University of Rome",
+      expertise: ["Gender Studies", "Early Modern Europe", "Social History"],
+      badge: { label: "1 active", tone: "amber" },
+    },
+    {
+      id: "pr-tanaka",
+      name: "Dr. Yuki Tanaka",
+      affiliation: "Kyoto University",
+      expertise: ["Urban Studies", "Architecture", "City Planning"],
+      badge: { label: "Available", tone: "emerald" },
+    },
+  ];
+
+  const onConfirmAssign = (e: FormEvent) => {
+    e.preventDefault();
+    if (!selectedReviewerId) return;
+    const r = reviewerPool.find((x) => x.id === selectedReviewerId);
+    setAssignedReviewerName(r?.name ?? null);
+    setReviewModalOpen(false);
+  };
 
   useEffect(() => {
     try {
@@ -431,6 +496,7 @@ function SubmissionDetail() {
                   <>
                     <button
                       type="button"
+                      onClick={() => setReviewModalOpen(true)}
                       className="w-full rounded-xl bg-[#1F4D3A] px-4 py-3 text-left font-sans text-sm text-white shadow-sm transition-colors hover:bg-[#173A2C]"
                     >
                       <span className="flex items-center gap-2 font-semibold">
