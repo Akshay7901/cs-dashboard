@@ -64,6 +64,7 @@ function SubmissionDetail() {
   const [reviewNotes, setReviewNotes] = useState("");
   const [assignedReviewerName, setAssignedReviewerName] = useState<string | null>(null);
   const [assignedReviewer, setAssignedReviewer] = useState<PoolReviewer | null>(null);
+  const [effectiveStatus, setEffectiveStatus] = useState<Proposal["status"]>(proposal.status);
 
   type PoolReviewer = {
     id: string;
