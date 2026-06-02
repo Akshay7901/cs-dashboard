@@ -63,6 +63,7 @@ function SubmissionDetail() {
   const [reviewDueDate, setReviewDueDate] = useState("");
   const [reviewNotes, setReviewNotes] = useState("");
   const [assignedReviewerName, setAssignedReviewerName] = useState<string | null>(null);
+  const [assignedReviewer, setAssignedReviewer] = useState<PoolReviewer | null>(null);
 
   type PoolReviewer = {
     id: string;
@@ -136,6 +137,7 @@ function SubmissionDetail() {
     if (!selectedReviewerId) return;
     const r = reviewerPool.find((x) => x.id === selectedReviewerId);
     if (r) {
+      setAssignedReviewer(r);
       try {
         const raw = localStorage.getItem("csp.assignments");
         const list: Array<Record<string, unknown>> = raw ? JSON.parse(raw) : [];
