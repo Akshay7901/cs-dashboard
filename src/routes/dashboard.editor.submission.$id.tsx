@@ -600,6 +600,53 @@ function SubmissionDetail() {
               </form>
             </Card>
 
+            {/* Peer Reviewer Pool */}
+            <Card>
+              <div className="px-6 pt-6">
+                <h2 className="font-serif text-xl font-bold text-stone-900">
+                  Peer Reviewer Pool
+                </h2>
+                <p className="mt-1 font-sans text-sm text-stone-500">
+                  {reviewerPool.length} reviewers available
+                </p>
+              </div>
+              <ul className="divide-y divide-stone-100">
+                {reviewerPool.map((r) => (
+                  <li key={r.id} className="px-6 py-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="font-sans text-sm font-semibold text-stone-900">
+                          {r.name}
+                        </p>
+                        <p className="font-sans text-xs text-stone-600">
+                          {r.affiliation}
+                        </p>
+                      </div>
+                      <span
+                        className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                          r.badge.tone === "emerald"
+                            ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
+                            : "bg-amber-50 text-amber-700 ring-1 ring-amber-200"
+                        }`}
+                      >
+                        {r.badge.label}
+                      </span>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {r.expertise.map((tag) => (
+                        <span
+                          key={tag}
+                          className="rounded-md bg-stone-100 px-2 py-0.5 font-sans text-[11px] text-stone-700"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+
             {/* Submission Info */}
             <Card>
               <div className="px-6 pt-6">
