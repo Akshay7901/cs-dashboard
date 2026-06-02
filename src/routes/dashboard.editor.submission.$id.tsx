@@ -11,6 +11,8 @@ import {
   Download,
   LogOut,
   X,
+  CheckCircle2,
+  Edit3,
 } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
 import {
@@ -419,32 +421,79 @@ function SubmissionDetail() {
                   Editorial Decision
                 </h2>
                 <p className="mt-2 font-sans text-sm text-stone-600">
-                  {proposal.decisionSummary}
+                  {proposal.status === "submitted"
+                    ? "Awaiting initial assessment"
+                    : proposal.decisionSummary}
                 </p>
               </div>
               <div className="space-y-3 px-6 pb-6 pt-5">
-                <button
-                  type="button"
-                  className="w-full rounded-xl bg-[#7C3AED] px-4 py-3 text-left font-sans text-sm text-white shadow-sm transition-colors hover:bg-[#6D28D9]"
-                >
-                  <span className="flex items-center gap-2 font-semibold">
-                    <FileText className="h-4 w-4" />
-                    Issue Contract
-                  </span>
-                  <span className="mt-1 block text-xs text-white/85">
-                    Send contract &amp; review comments to author
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  className="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-left font-sans text-sm text-stone-800 hover:bg-stone-50"
-                >
-                  <span className="flex items-center gap-2 font-semibold">
-                    <X className="h-4 w-4" />
-                    Decline
-                  </span>
-                  <span className="mt-1 block text-xs text-stone-500">Not moving forward</span>
-                </button>
+                {proposal.status === "submitted" ? (
+                  <>
+                    <button
+                      type="button"
+                      className="w-full rounded-xl bg-[#1F4D3A] px-4 py-3 text-left font-sans text-sm text-white shadow-sm transition-colors hover:bg-[#173A2C]"
+                    >
+                      <span className="flex items-center gap-2 font-semibold">
+                        <CheckCircle2 className="h-4 w-4" />
+                        Move to Review
+                      </span>
+                      <span className="mt-1 block text-xs text-white/85">
+                        Assign a peer reviewer
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className="w-full rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-left font-sans text-sm text-amber-900 hover:bg-amber-100"
+                    >
+                      <span className="flex items-center gap-2 font-semibold">
+                        <Edit3 className="h-4 w-4" />
+                        Request Revisions
+                      </span>
+                      <span className="mt-1 block text-xs text-amber-800/80">
+                        Needs more info before review
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-left font-sans text-sm text-stone-800 hover:bg-stone-50"
+                    >
+                      <span className="flex items-center gap-2 font-semibold">
+                        <X className="h-4 w-4" />
+                        Decline
+                      </span>
+                      <span className="mt-1 block text-xs text-stone-500">
+                        Not moving forward
+                      </span>
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      className="w-full rounded-xl bg-[#7C3AED] px-4 py-3 text-left font-sans text-sm text-white shadow-sm transition-colors hover:bg-[#6D28D9]"
+                    >
+                      <span className="flex items-center gap-2 font-semibold">
+                        <FileText className="h-4 w-4" />
+                        Issue Contract
+                      </span>
+                      <span className="mt-1 block text-xs text-white/85">
+                        Send contract &amp; review comments to author
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-left font-sans text-sm text-stone-800 hover:bg-stone-50"
+                    >
+                      <span className="flex items-center gap-2 font-semibold">
+                        <X className="h-4 w-4" />
+                        Decline
+                      </span>
+                      <span className="mt-1 block text-xs text-stone-500">
+                        Not moving forward
+                      </span>
+                    </button>
+                  </>
+                )}
               </div>
             </Card>
 
