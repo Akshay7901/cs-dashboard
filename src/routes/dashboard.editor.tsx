@@ -50,6 +50,7 @@ function EditorDashboard() {
   const [field, setField] = useState<"all" | "title" | "author" | "country">("all");
   const [sort, setSort] = useState<"newest" | "oldest">("newest");
   const [reviewersOpen, setReviewersOpen] = useState(false);
+  const [statusOverrides, setStatusOverrides] = useState<Record<string, StatusKey>>({});
   type PeerReviewer = {
     id: string;
     name: string;
