@@ -139,6 +139,7 @@ function SubmissionDetail() {
     const r = reviewerPool.find((x) => x.id === selectedReviewerId);
     if (r) {
       setAssignedReviewer(r);
+      setEffectiveStatus("in_review");
       try {
         const raw = localStorage.getItem("csp.assignments");
         const list: Array<Record<string, unknown>> = raw ? JSON.parse(raw) : [];
@@ -167,6 +168,10 @@ function SubmissionDetail() {
           },
         });
         localStorage.setItem("csp.assignments", JSON.stringify(filtered));
+        const sRaw = localStorage.getItem("csp.proposalStatusOverrides");
+        const overrides: Record<string, string> = sRaw ? JSON.parse(sRaw) : {};
+        overrides[proposal.id] = "in_review";
+        localStorage.setItem("csp.proposalStatusOverrides", JSON.stringify(overrides));
       } catch {
         // ignore
       }
