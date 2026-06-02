@@ -11,6 +11,8 @@ import {
   Download,
   LogOut,
   X,
+  CheckCircle2,
+  Edit3,
 } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
 import {
