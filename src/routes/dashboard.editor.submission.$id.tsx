@@ -217,6 +217,17 @@ function SubmissionDetail() {
     } catch {
       // ignore
     }
+    try {
+      const sRaw = localStorage.getItem("csp.proposalStatusOverrides");
+      if (sRaw) {
+        const overrides = JSON.parse(sRaw) as Record<string, Proposal["status"]>;
+        if (overrides[proposal.id]) {
+          setEffectiveStatus(overrides[proposal.id]);
+        }
+      }
+    } catch {
+      // ignore
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [proposal.id]);
 
