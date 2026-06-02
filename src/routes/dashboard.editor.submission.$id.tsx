@@ -67,6 +67,7 @@ function SubmissionDetail() {
   type PoolReviewer = {
     id: string;
     name: string;
+    email: string;
     affiliation: string;
     expertise: string[];
     badge: { label: string; tone: "amber" | "emerald" };
@@ -75,6 +76,7 @@ function SubmissionDetail() {
     {
       id: "pr-okafor",
       name: "Prof. David Okafor",
+      email: "d.okafor@cam.ac.uk",
       affiliation: "University of Cambridge",
       expertise: ["African Studies", "Literary Studies", "Postcolonial Theory"],
       badge: { label: "1 active", tone: "amber" },
@@ -82,6 +84,7 @@ function SubmissionDetail() {
     {
       id: "pr-hoffmann",
       name: "Dr. Anna Hoffmann",
+      email: "a.hoffmann@fu-berlin.de",
       affiliation: "Freie Universität Berlin",
       expertise: ["Environmental Policy", "Agricultural Economics", "Climate Studies"],
       badge: { label: "Available", tone: "emerald" },
@@ -89,6 +92,7 @@ function SubmissionDetail() {
     {
       id: "pr-obrien",
       name: "Prof. Liam O'Brien",
+      email: "l.obrien@tcd.ie",
       affiliation: "Trinity College Dublin",
       expertise: ["Medieval History", "Historical Geography", "Trade Networks"],
       badge: { label: "2 active", tone: "amber" },
@@ -96,6 +100,7 @@ function SubmissionDetail() {
     {
       id: "pr-nair",
       name: "Dr. Priya Nair",
+      email: "p.nair@lse.ac.uk",
       affiliation: "London School of Economics",
       expertise: ["Political Philosophy", "Technology Ethics", "AI Governance"],
       badge: { label: "Available", tone: "emerald" },
@@ -103,6 +108,7 @@ function SubmissionDetail() {
     {
       id: "pr-santini",
       name: "Prof. Marco Santini",
+      email: "m.santini@uniroma1.it",
       affiliation: "Sapienza University of Rome",
       expertise: ["Gender Studies", "Early Modern Europe", "Social History"],
       badge: { label: "1 active", tone: "amber" },
@@ -110,6 +116,7 @@ function SubmissionDetail() {
     {
       id: "pr-tanaka",
       name: "Dr. Yuki Tanaka",
+      email: "y.tanaka@kyoto-u.ac.jp",
       affiliation: "Kyoto University",
       expertise: ["Urban Studies", "Architecture", "City Planning"],
       badge: { label: "Available", tone: "emerald" },
@@ -117,6 +124,7 @@ function SubmissionDetail() {
     {
       id: "pr-9012",
       name: "Dr. Test Reviewer",
+      email: "reviewer@cambridge.ac.uk",
       affiliation: "University of Cambridge",
       expertise: ["Testing", "Peer Review"],
       badge: { label: "Available", tone: "emerald" },
@@ -127,6 +135,39 @@ function SubmissionDetail() {
     e.preventDefault();
     if (!selectedReviewerId) return;
     const r = reviewerPool.find((x) => x.id === selectedReviewerId);
+    if (r) {
+      try {
+        const raw = localStorage.getItem("csp.assignments");
+        const list: Array<Record<string, unknown>> = raw ? JSON.parse(raw) : [];
+        const filtered = list.filter(
+          (a) => !(a.proposalId === proposal.id && a.reviewerEmail === r.email),
+        );
+        filtered.push({
+          id: `asg-${proposal.id}-${r.id}-${Date.now()}`,
+          proposalId: proposal.id,
+          reviewerId: r.id,
+          reviewerEmail: r.email,
+          reviewerName: r.name,
+          dueDate: reviewDueDate || null,
+          notes: reviewNotes || "",
+          assignedAt: new Date().toISOString(),
+          proposal: {
+            id: proposal.id,
+            title: proposal.title,
+            kind: proposal.kind,
+            subject: proposal.discipline,
+            subtitle: proposal.subdiscipline,
+            authorName: proposal.authorName,
+            authorAffiliation: proposal.authorAffiliation,
+            wordCount: proposal.wordCount,
+            overview: proposal.overview,
+          },
+        });
+        localStorage.setItem("csp.assignments", JSON.stringify(filtered));
+      } catch {
+        // ignore
+      }
+    }
     setAssignedReviewerName(r?.name ?? null);
     setReviewModalOpen(false);
   };
