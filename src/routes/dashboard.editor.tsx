@@ -58,11 +58,24 @@ function EditorDashboard() {
     expertise: string;
   };
   const [reviewers, setReviewers] = useState<PeerReviewer[]>(() => {
+    const seed: PeerReviewer[] = [
+      {
+        id: "pr-9012",
+        name: "Dr. Test Reviewer",
+        email: "reviewer@cambridge.ac.uk",
+        affiliation: "University of Cambridge",
+        expertise: "Testing, Peer Review",
+      },
+    ];
     try {
       const raw = localStorage.getItem("csp.peerReviewers");
-      return raw ? (JSON.parse(raw) as PeerReviewer[]) : [];
+      if (!raw) return seed;
+      const parsed = JSON.parse(raw) as PeerReviewer[];
+      return parsed.some((r) => r.email === "reviewer@cambridge.ac.uk")
+        ? parsed
+        : [...seed, ...parsed];
     } catch {
-      return [];
+      return seed;
     }
   });
   const [newReviewer, setNewReviewer] = useState({
