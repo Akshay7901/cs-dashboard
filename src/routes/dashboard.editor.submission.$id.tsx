@@ -624,7 +624,7 @@ function SubmissionDetail() {
                       </span>
                     </button>
                   </>
-                ) : proposal.status === "submitted" ? (
+                ) : effectiveStatus === "submitted" ? (
                   <>
                     <button
                       type="button"
