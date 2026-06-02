@@ -301,7 +301,7 @@ function SubmissionDetail() {
             >
               <span
                 className={`h-1.5 w-1.5 rounded-full ${
-                  proposal.status === "signed" ? "bg-white" : meta.dot
+                  effectiveStatus === "signed" ? "bg-white" : meta.dot
                 }`}
               />
               {meta.label}
