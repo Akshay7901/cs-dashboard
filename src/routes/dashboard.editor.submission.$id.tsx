@@ -114,6 +114,13 @@ function SubmissionDetail() {
       expertise: ["Urban Studies", "Architecture", "City Planning"],
       badge: { label: "Available", tone: "emerald" },
     },
+    {
+      id: "pr-9012",
+      name: "Dr. Test Reviewer",
+      affiliation: "University of Cambridge",
+      expertise: ["Testing", "Peer Review"],
+      badge: { label: "Available", tone: "emerald" },
+    },
   ];
 
   const onConfirmAssign = (e: FormEvent) => {
