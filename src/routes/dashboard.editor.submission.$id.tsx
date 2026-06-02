@@ -577,7 +577,7 @@ function SubmissionDetail() {
                 <p className="mt-2 font-sans text-sm text-stone-600">
                   {assignedReviewer
                     ? "With peer reviewer"
-                    : proposal.status === "submitted"
+                    : effectiveStatus === "submitted"
                       ? "Awaiting initial assessment"
                       : proposal.decisionSummary}
                 </p>
