@@ -156,7 +156,7 @@ function EditorDashboard() {
   }, [mergedProposals]);
 
   const filtered = useMemo(() => {
-    let list = PROPOSALS.slice();
+    let list = mergedProposals.slice();
     if (activeFilter !== "all") list = list.filter((p) => p.status === activeFilter);
     const q = search.trim().toLowerCase();
     if (q) {
@@ -176,7 +176,7 @@ function EditorDashboard() {
       return sort === "newest" ? db - da : da - db;
     });
     return list;
-  }, [activeFilter, search, field, sort]);
+  }, [mergedProposals, activeFilter, search, field, sort]);
 
   const onLogout = () => {
     try {
