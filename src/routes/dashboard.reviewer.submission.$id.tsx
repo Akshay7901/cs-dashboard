@@ -302,7 +302,7 @@ function ReviewerSubmission() {
           ) : null}
 
           {showAdd ? (
-            <div className="mt-4 rounded-xl bg-transparent p-0">
+            <div className="mt-4 rounded-2xl border border-stone-200 bg-white p-4">
               <div className="flex items-start gap-2">
                 <select
                   value={draftType}
