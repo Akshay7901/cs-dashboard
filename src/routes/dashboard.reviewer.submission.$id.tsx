@@ -221,7 +221,7 @@ function ReviewerSubmission() {
       </header>
 
       {/* Two-pane layout */}
-      <div className="grid min-h-0 w-full flex-1 grid-cols-1 gap-6 pl-4 pr-0 py-4 lg:grid-cols-[minmax(0,480px)_1fr]">
+      <div className="grid min-h-0 w-full flex-1 grid-cols-1 gap-6 px-0 py-0 lg:grid-cols-[minmax(0,480px)_1fr]">
         {/* LEFT — Review form */}
         <section className="min-h-0 overflow-y-auto bg-white pl-6 pr-6 py-2">
           <Link
