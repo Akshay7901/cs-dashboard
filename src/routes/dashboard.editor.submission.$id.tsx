@@ -66,6 +66,17 @@ function SubmissionDetail() {
   const [assignedReviewer, setAssignedReviewer] = useState<PoolReviewer | null>(null);
   const [effectiveStatus, setEffectiveStatus] = useState<Proposal["status"]>(proposal.status);
 
+  type SubmittedReview = {
+    id: string;
+    proposalId: string;
+    reviewerName: string;
+    recommendation: "proceed" | "minor" | "major" | "reject";
+    summary: string;
+    comments: Array<{ type: string; section: string; page: string; text: string }>;
+    submittedAt: string;
+  };
+  const [submittedReview, setSubmittedReview] = useState<SubmittedReview | null>(null);
+
   type PoolReviewer = {
     id: string;
     name: string;
@@ -225,6 +236,16 @@ function SubmissionDetail() {
         if (overrides[proposal.id]) {
           setEffectiveStatus(overrides[proposal.id]);
         }
+      }
+    } catch {
+      // ignore
+    }
+    try {
+      const rRaw = localStorage.getItem("csp.reviews");
+      if (rRaw) {
+        const reviews = JSON.parse(rRaw) as SubmittedReview[];
+        const mine = reviews.find((r) => r.proposalId === proposal.id);
+        if (mine) setSubmittedReview(mine);
       }
     } catch {
       // ignore
