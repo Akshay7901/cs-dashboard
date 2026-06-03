@@ -327,6 +327,11 @@ function ReviewCard({
         </div>
         <button
           type="button"
+          onClick={() => {
+            if (ctaTone === "sky") {
+              window.location.href = `/dashboard/reviewer/submission/${item.proposalId}`;
+            }
+          }}
           className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 font-sans text-sm font-semibold transition-colors ${ctaClass}`}
         >
           {ctaTone === "muted" && <CheckCircle2 className="h-4 w-4 text-emerald-600" />}
