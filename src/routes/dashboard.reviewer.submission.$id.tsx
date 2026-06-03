@@ -144,28 +144,17 @@ function ReviewerSubmission() {
   const [summary, setSummary] = useState("");
   const [recommendation, setRecommendation] = useState<RecKey | null>(null);
   const [comments, setComments] = useState<CommentEntry[]>([]);
-  const [showAdd, setShowAdd] = useState(false);
-  const [draftType, setDraftType] = useState<CommentType>("General");
-  const [draftSection, setDraftSection] = useState("");
-  const [draftPage, setDraftPage] = useState("");
-  const [draft, setDraft] = useState("");
-
-  const resetDraft = () => {
-    setDraftType("General");
-    setDraftSection("");
-    setDraftPage("");
-    setDraft("");
-  };
 
   const addComment = () => {
-    const text = draft.trim();
-    if (!text) return;
-    setComments((c) => [
-      ...c,
-      { type: draftType, section: draftSection.trim(), page: draftPage.trim(), text },
-    ]);
-    resetDraft();
-    setShowAdd(false);
+    setComments((c) => [...c, { type: "General", section: "", page: "", text: "" }]);
+  };
+
+  const updateComment = (i: number, patch: Partial<CommentEntry>) => {
+    setComments((c) => c.map((item, idx) => (idx === i ? { ...item, ...patch } : item)));
+  };
+
+  const removeComment = (i: number) => {
+    setComments((c) => c.filter((_, idx) => idx !== i));
   };
 
   useEffect(() => {
