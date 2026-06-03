@@ -370,7 +370,7 @@ function ReviewerSubmission() {
               <Plus className="h-4 w-4" />
               Add comment
             </button>
-          )}
+          ) : null}
 
           {/* Overall summary */}
           <div className="mt-8">
