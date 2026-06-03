@@ -138,17 +138,33 @@ function ReviewerSubmission() {
         })(),
   );
 
+  type CommentType = "General" | "Major Concern" | "Minor Concern" | "Suggestion" | "Question";
+  type CommentEntry = { type: CommentType; section: string; page: string; text: string };
+
   const [summary, setSummary] = useState("");
   const [recommendation, setRecommendation] = useState<RecKey | null>(null);
-  const [comments, setComments] = useState<string[]>([]);
+  const [comments, setComments] = useState<CommentEntry[]>([]);
   const [showAdd, setShowAdd] = useState(false);
+  const [draftType, setDraftType] = useState<CommentType>("General");
+  const [draftSection, setDraftSection] = useState("");
+  const [draftPage, setDraftPage] = useState("");
   const [draft, setDraft] = useState("");
+
+  const resetDraft = () => {
+    setDraftType("General");
+    setDraftSection("");
+    setDraftPage("");
+    setDraft("");
+  };
 
   const addComment = () => {
     const text = draft.trim();
     if (!text) return;
-    setComments((c) => [...c, text]);
-    setDraft("");
+    setComments((c) => [
+      ...c,
+      { type: draftType, section: draftSection.trim(), page: draftPage.trim(), text },
+    ]);
+    resetDraft();
     setShowAdd(false);
   };
 
