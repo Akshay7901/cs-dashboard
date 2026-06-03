@@ -108,6 +108,7 @@ export interface Proposal {
   id: string;
   ref: string;
   title: string;
+  subtitle?: string;
   kind: string;
   status: StatusKey;
   // Author
@@ -317,25 +318,26 @@ export const PROPOSALS: Proposal[] = [
     id: "sub-004",
     ref: "sub-004",
     title: "Climate Change and Agricultural Adaptation in Southeast Asia",
+    subtitle: "Smallholder Strategies and Policy Frameworks",
     kind: "Monograph",
     status: "in_review",
     authorName: "Dr. Sarah Chen",
-    authorEmail: "sarah.chen@ouce.ox.ac.uk",
+    authorEmail: "s.chen@oxford.ac.uk",
     authorAffiliation: "University of Oxford",
     country: "United Kingdom",
     mailingAddress: "South Parks Road, Oxford OX1 3QY, United Kingdom",
     biography:
-      "Dr. Sarah Chen is a climate geographer focusing on smallholder adaptation in Southeast Asia.",
+      "Dr. Sarah Chen is a Senior Research Fellow at the Environmental Change Institute, University of Oxford. Her research focuses on the intersections of climate policy, food systems, and smallholder livelihoods across Asia. She has conducted extensive fieldwork in Thailand, Vietnam, and Indonesia, and has published widely in leading journals including Nature Climate Change and Global Food Security.",
     submittedAt: "2025-01-28",
     updatedAt: "2025-03-20",
-    wordCount: 84000,
+    wordCount: 90000,
     illustrations: 18,
     nonEnglish: false,
-    estCompletion: "September 2025",
-    discipline: "Geography",
+    estCompletion: "August 2025",
+    discipline: "Life Sciences",
     subdiscipline: "Climate Adaptation",
     overview:
-      "Examines smallholder farmer adaptation strategies across Vietnam, Indonesia, and the Philippines.",
+      "This monograph examines the impact of climate change on agricultural practices across Southeast Asia, with a particular focus on smallholder strategies and policy frameworks that support adaptation. Drawing on multi-country fieldwork in Vietnam, Indonesia, and the Philippines, it synthesises lessons for both researchers and policymakers.",
     keywords: ["climate", "agriculture", "Southeast Asia", "adaptation"],
     keyFeatures:
       "Multi-country comparative fieldwork over five years.",
