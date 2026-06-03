@@ -221,9 +221,9 @@ function ReviewerSubmission() {
       </header>
 
       {/* Two-pane layout */}
-      <div className="grid w-full grid-cols-1 gap-6 px-0 py-6 lg:grid-cols-2 lg:pr-6">
+      <div className="grid w-full grid-cols-1 gap-4 px-4 py-4 lg:grid-cols-2">
         {/* LEFT — Review form */}
-        <section className="max-h-[calc(100vh-7rem)] overflow-y-auto pl-6 pr-2">
+        <section className="max-h-[calc(100vh-6rem)] overflow-y-auto pr-2">
           <Link
             to="/dashboard/reviewer"
             className="inline-flex items-center gap-1 font-sans text-sm text-sky-700 hover:underline"
@@ -402,7 +402,7 @@ function ReviewerSubmission() {
         </section>
 
         {/* RIGHT — Proposal context */}
-        <section className="max-h-[calc(100vh-7rem)] space-y-5 overflow-y-auto pr-2">
+        <section className="max-h-[calc(100vh-6rem)] space-y-4 overflow-y-auto pr-2">
           {/* Title card */}
           <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
             <h2 className="font-serif text-2xl font-bold leading-snug text-stone-900">
