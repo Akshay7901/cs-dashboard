@@ -186,7 +186,7 @@ function ReviewerSubmission() {
   const canSubmit = recommendation !== null;
 
   return (
-    <div className="min-h-screen bg-[#FAF6EE] font-sans text-stone-800">
+    <div className="flex h-screen flex-col overflow-hidden bg-[#FAF6EE] font-sans text-stone-800">
       {/* Header */}
       <header className="border-b border-stone-200 bg-white">
         <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-4 px-6 py-4">
@@ -221,9 +221,9 @@ function ReviewerSubmission() {
       </header>
 
       {/* Two-pane layout */}
-      <div className="grid w-full grid-cols-1 gap-6 px-4 py-4 lg:grid-cols-[minmax(0,480px)_minmax(0,900px)]">
+      <div className="grid min-h-0 w-full flex-1 grid-cols-1 gap-6 px-4 py-4 lg:grid-cols-[minmax(0,480px)_minmax(0,900px)]">
         {/* LEFT — Review form */}
-        <section className="max-h-[calc(100vh-6rem)] overflow-y-auto pl-0 pr-6 py-2">
+        <section className="min-h-0 overflow-y-auto pl-0 pr-6 py-2">
           <Link
             to="/dashboard/reviewer"
             className="inline-flex items-center gap-1 font-sans text-sm text-sky-700 hover:underline"
@@ -402,7 +402,7 @@ function ReviewerSubmission() {
         </section>
 
         {/* RIGHT — Proposal context */}
-        <section className="max-h-[calc(100vh-6rem)] space-y-4 overflow-y-auto px-6 py-2">
+        <section className="min-h-0 space-y-4 overflow-y-auto px-6 py-2">
           {/* Title card */}
           <div className="rounded-2xl border border-stone-200 bg-white p-6">
             <h2 className="font-serif text-2xl font-bold leading-snug text-stone-900">
