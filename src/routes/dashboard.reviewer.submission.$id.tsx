@@ -220,9 +220,9 @@ function ReviewerSubmission() {
       </header>
 
       {/* Two-pane layout */}
-      <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-6 px-6 py-6 lg:grid-cols-2">
+      <div className="grid w-full grid-cols-1 gap-6 px-0 py-6 lg:grid-cols-2 lg:pr-6">
         {/* LEFT — Review form */}
-        <section className="max-h-[calc(100vh-7rem)] overflow-y-auto pr-2">
+        <section className="max-h-[calc(100vh-7rem)] overflow-y-auto pl-6 pr-2">
           <Link
             to="/dashboard/reviewer"
             className="inline-flex items-center gap-1 font-sans text-sm text-sky-700 hover:underline"
