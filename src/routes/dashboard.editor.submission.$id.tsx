@@ -779,6 +779,8 @@ function SubmissionDetail() {
                 ))}
               </ul>
             </Card>
+              </>
+            )}
           </div>
 
           {/* Sidebar */}
