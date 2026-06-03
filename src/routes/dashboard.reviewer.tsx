@@ -110,6 +110,7 @@ function ReviewerDashboard() {
             )
             .map<ReviewItem>((a) => ({
               id: a.id,
+              proposalId: a.proposal.id,
               subject: a.proposal.subject,
               kind: a.proposal.kind,
               title: a.proposal.title,
