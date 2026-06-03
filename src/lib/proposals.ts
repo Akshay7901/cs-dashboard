@@ -108,6 +108,7 @@ export interface Proposal {
   id: string;
   ref: string;
   title: string;
+  subtitle?: string;
   kind: string;
   status: StatusKey;
   // Author
