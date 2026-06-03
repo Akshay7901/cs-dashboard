@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useMatchRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   ChevronRight,
@@ -67,8 +67,13 @@ const SUBJECT_STYLES: Record<string, string> = {
 
 function ReviewerDashboard() {
   const navigate = useNavigate();
+  const matchRoute = useMatchRoute();
   const [userEmail, setUserEmail] = useState<string>("");
   const [assigned, setAssigned] = useState<ReviewItem[]>([]);
+
+  const isSubmissionDetail = Boolean(
+    matchRoute({ to: "/dashboard/reviewer/submission/$id", fuzzy: true }),
+  );
 
   useEffect(() => {
     try {
@@ -156,6 +161,10 @@ function ReviewerDashboard() {
 
   const pendingItems = allReviews.filter((r) => r.status === "pending");
   const completedItems = allReviews.filter((r) => r.status === "completed");
+
+  if (isSubmissionDetail) {
+    return <Outlet />;
+  }
 
   return (
     <div className="min-h-screen bg-[#FAF6EE] font-sans text-stone-800">
