@@ -398,11 +398,11 @@ function ReviewerSubmission() {
         <section className="min-h-0 space-y-4 overflow-y-auto px-6 py-4">
           {/* Title card */}
           <div className="rounded-2xl border border-stone-200 bg-white p-6">
-            <h2 className="font-serif text-2xl font-bold leading-snug text-stone-900">
+            <h2 className="font-serif text-xl font-bold leading-tight text-[#2C1A0E]">
               {proposal.title}
             </h2>
             {proposal.subtitle && (
-              <p className="mt-1 font-sans text-base text-sky-700">{proposal.subtitle}</p>
+              <p className="mt-1 font-sans text-sm font-medium text-[#A6814A]">{proposal.subtitle}</p>
             )}
             <div className="mt-4 flex flex-wrap gap-2">
               <Pill>{proposal.kind}</Pill>
@@ -415,7 +415,7 @@ function ReviewerSubmission() {
 
           {/* Primary Author */}
           <div className="rounded-2xl border border-stone-200 bg-white p-6">
-            <h3 className="font-serif text-xl font-bold text-stone-900">Primary Author</h3>
+            <h3 className="font-serif text-sm font-bold text-[#2C1A0E]">Primary Author</h3>
             <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
               <Field label="Name" value={proposal.authorName} />
               <Field label="Email" value={proposal.authorEmail} />
@@ -433,7 +433,7 @@ function ReviewerSubmission() {
           {/* Summary & Description */}
           <div className="rounded-2xl border border-stone-200 bg-white p-6">
             <div className="flex items-baseline gap-2">
-              <h3 className="font-serif text-xl font-bold text-stone-900">
+              <h3 className="font-serif text-sm font-bold text-[#2C1A0E]">
                 Summary &amp; Description
               </h3>
               <span className="font-sans text-sm text-emerald-700">{proposal.discipline}</span>
