@@ -95,6 +95,7 @@ function ReviewerSubmission() {
       ? {
           id: loaded.id,
           title: loaded.title,
+          subtitle: loaded.subtitle,
           kind: loaded.kind,
           authorName: loaded.authorName,
           authorAffiliation: loaded.authorAffiliation,
