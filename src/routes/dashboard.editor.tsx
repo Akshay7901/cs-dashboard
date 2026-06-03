@@ -98,10 +98,7 @@ function EditorDashboard() {
   const addReviewer = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newReviewer.name.trim() || !newReviewer.email.trim()) return;
-    setReviewers((prev) => [
-      ...prev,
-      { id: `pr-${Date.now()}`, ...newReviewer },
-    ]);
+    setReviewers((prev) => [...prev, { id: `pr-${Date.now()}`, ...newReviewer }]);
     setNewReviewer({ name: "", email: "", affiliation: "", expertise: "" });
   };
 
@@ -154,10 +151,7 @@ function EditorDashboard() {
         const status = statusOverrides[p.id] ?? p.status;
         return {
           ...p,
-          status:
-            status === "submitted" && assignedProposalIds.has(p.id)
-              ? "in_review"
-              : status,
+          status: status === "submitted" && assignedProposalIds.has(p.id) ? "in_review" : status,
         };
       }),
     [assignedProposalIds, statusOverrides],
@@ -227,9 +221,7 @@ function EditorDashboard() {
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0E3D2F] font-sans text-xs font-semibold text-white">
               {initialsFromName(displayName)}
             </div>
-            <span className="font-sans text-sm font-medium text-stone-800">
-              {displayName}
-            </span>
+            <span className="font-sans text-sm font-medium text-stone-800">{displayName}</span>
             <span className="h-5 w-px bg-stone-300" />
             <button
               type="button"
@@ -286,19 +278,13 @@ function EditorDashboard() {
               >
                 <span
                   className={`h-2 w-2 rounded-full ${
-                    isAll
-                      ? active
-                        ? "bg-white"
-                        : "bg-stone-400"
-                      : meta!.dot
+                    isAll ? (active ? "bg-white" : "bg-stone-400") : meta!.dot
                   }`}
                 />
                 <span className="font-medium">{isAll ? "All" : meta!.filterLabel}</span>
                 <span
                   className={`ml-1 inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 font-sans text-xs font-medium ${
-                    active
-                      ? "bg-white/20 text-white"
-                      : "bg-stone-100 text-stone-600"
+                    active ? "bg-white/20 text-white" : "bg-stone-100 text-stone-600"
                   }`}
                 >
                   {count}
@@ -313,9 +299,7 @@ function EditorDashboard() {
           <div className="relative">
             <select
               value={field}
-              onChange={(e) =>
-                setField(e.target.value as "all" | "title" | "author" | "country")
-              }
+              onChange={(e) => setField(e.target.value as "all" | "title" | "author" | "country")}
               className="appearance-none rounded-xl border border-stone-200 bg-white py-2.5 pl-4 pr-9 font-sans text-sm text-stone-700 focus:outline-none focus:ring-2 focus:ring-stone-300"
             >
               <option value="all">All fields</option>
@@ -350,9 +334,7 @@ function EditorDashboard() {
           </div>
         </div>
 
-        <p className="mb-3 font-sans text-sm text-stone-600">
-          {filtered.length} proposals
-        </p>
+        <p className="mb-3 font-sans text-sm text-stone-600">{filtered.length} proposals</p>
 
         {/* Table */}
         <div className="overflow-hidden rounded-2xl border border-stone-200 bg-white">
@@ -384,12 +366,8 @@ function EditorDashboard() {
                     <p className="mt-1 font-sans text-xs text-stone-500">{p.kind}</p>
                   </div>
                   <div>
-                    <p className="font-sans text-sm font-semibold text-stone-900">
-                      {p.authorName}
-                    </p>
-                    <p className="mt-0.5 font-sans text-xs text-stone-500">
-                      {p.authorAffiliation}
-                    </p>
+                    <p className="font-sans text-sm font-semibold text-stone-900">{p.authorName}</p>
+                    <p className="mt-0.5 font-sans text-xs text-stone-500">{p.authorAffiliation}</p>
                   </div>
                   <div className="font-sans text-sm text-stone-700">{p.country}</div>
                   <div className="font-sans text-sm text-stone-700">
@@ -442,9 +420,7 @@ function EditorDashboard() {
           >
             <div className="flex items-start justify-between border-b border-stone-200 px-6 py-4">
               <div>
-                <h2 className="font-serif text-2xl font-bold text-stone-900">
-                  Peer Reviewers
-                </h2>
+                <h2 className="font-serif text-2xl font-bold text-stone-900">Peer Reviewers</h2>
                 <p className="mt-1 font-sans text-sm text-stone-600">
                   Add and manage peer reviewers for proposals
                 </p>
@@ -459,7 +435,10 @@ function EditorDashboard() {
               </button>
             </div>
 
-            <form onSubmit={addReviewer} className="grid gap-3 border-b border-stone-200 bg-stone-50/60 px-6 py-5 sm:grid-cols-2">
+            <form
+              onSubmit={addReviewer}
+              className="grid gap-3 border-b border-stone-200 bg-stone-50/60 px-6 py-5 sm:grid-cols-2"
+            >
               <input
                 type="text"
                 required
@@ -504,9 +483,7 @@ function EditorDashboard() {
                           {initialsFromName(r.name)}
                         </div>
                         <div>
-                          <p className="font-sans text-sm font-semibold text-stone-900">
-                            {r.name}
-                          </p>
+                          <p className="font-sans text-sm font-semibold text-stone-900">{r.name}</p>
                           <p className="font-sans text-xs text-stone-500">{r.email}</p>
                           {(r.affiliation || r.expertise) && (
                             <p className="mt-1 font-sans text-xs text-stone-600">
@@ -549,9 +526,7 @@ function HeaderCell({
   return (
     <button
       type="button"
-      className={`inline-flex items-center gap-1.5 ${
-        active ? "text-stone-700" : "text-stone-500"
-      }`}
+      className={`inline-flex items-center gap-1.5 ${active ? "text-stone-700" : "text-stone-500"}`}
     >
       {label}
       <ArrowUpDown className="h-3 w-3 opacity-60" />
