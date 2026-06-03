@@ -792,11 +792,13 @@ function SubmissionDetail() {
                   Editorial Decision
                 </h2>
                 <p className="mt-2 font-sans text-sm text-stone-600">
-                  {assignedReviewer
-                    ? "With peer reviewer"
-                    : effectiveStatus === "submitted"
-                      ? "Awaiting initial assessment"
-                      : proposal.decisionSummary}
+                  {isReviewReturned
+                    ? "Review returned — add notes and send to author"
+                    : assignedReviewer
+                      ? "With peer reviewer"
+                      : effectiveStatus === "submitted"
+                        ? "Awaiting initial assessment"
+                        : proposal.decisionSummary}
                 </p>
                 {assignedReviewerName && !assignedReviewer && (
                   <p className="mt-2 rounded-md bg-emerald-50 px-3 py-2 font-sans text-xs text-emerald-800 ring-1 ring-emerald-200">
@@ -805,7 +807,46 @@ function SubmissionDetail() {
                 )}
               </div>
               <div className="space-y-3 px-6 pb-6 pt-5">
-                {assignedReviewer ? (
+                {isReviewReturned ? (
+                  <>
+                    <button
+                      type="button"
+                      className="w-full rounded-xl bg-[#7C3AED] px-4 py-3 text-left font-sans text-sm text-white shadow-sm transition-colors hover:bg-[#6D28D9]"
+                    >
+                      <span className="flex items-center gap-2 font-semibold">
+                        <FileText className="h-4 w-4" />
+                        Issue Contract
+                      </span>
+                      <span className="mt-1 block text-xs text-white/85">
+                        Send contract &amp; review comments to author
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className="w-full rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-left font-sans text-sm text-rose-900 hover:bg-rose-100"
+                    >
+                      <span className="flex items-center gap-2 font-semibold">
+                        <Edit3 className="h-4 w-4" />
+                        Request Major Revisions
+                      </span>
+                      <span className="mt-1 block text-xs text-rose-800/80">
+                        Send review comments back to author
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-left font-sans text-sm text-stone-800 hover:bg-stone-50"
+                    >
+                      <span className="flex items-center gap-2 font-semibold">
+                        <X className="h-4 w-4" />
+                        Decline
+                      </span>
+                      <span className="mt-1 block text-xs text-stone-500">
+                        Not moving forward
+                      </span>
+                    </button>
+                  </>
+                ) : assignedReviewer ? (
                   <>
                     <div className="rounded-xl border border-sky-200 bg-sky-50/60 p-4">
                       <p className="font-sans text-[11px] font-semibold uppercase tracking-wider text-sky-700">
