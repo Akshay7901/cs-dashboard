@@ -223,7 +223,7 @@ function ReviewerSubmission() {
       {/* Two-pane layout */}
       <div className="grid w-full grid-cols-1 gap-4 px-4 py-4 lg:grid-cols-2">
         {/* LEFT — Review form */}
-        <section className="max-h-[calc(100vh-6rem)] overflow-y-auto pr-2">
+        <section className="max-h-[calc(100vh-6rem)] overflow-y-auto px-6 py-2">
           <Link
             to="/dashboard/reviewer"
             className="inline-flex items-center gap-1 font-sans text-sm text-sky-700 hover:underline"
