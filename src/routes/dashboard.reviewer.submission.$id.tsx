@@ -404,7 +404,7 @@ function ReviewerSubmission() {
         {/* RIGHT — Proposal context */}
         <section className="max-h-[calc(100vh-6rem)] space-y-4 overflow-y-auto pr-2">
           {/* Title card */}
-          <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-stone-200 bg-white p-6">
             <h2 className="font-serif text-2xl font-bold leading-snug text-stone-900">
               {proposal.title}
             </h2>
@@ -421,7 +421,7 @@ function ReviewerSubmission() {
           </div>
 
           {/* Primary Author */}
-          <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-stone-200 bg-white p-6">
             <h3 className="font-serif text-xl font-bold text-stone-900">Primary Author</h3>
             <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
               <Field label="Name" value={proposal.authorName} />
@@ -438,7 +438,7 @@ function ReviewerSubmission() {
           </div>
 
           {/* Summary & Description */}
-          <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-stone-200 bg-white p-6">
             <div className="flex items-baseline gap-2">
               <h3 className="font-serif text-xl font-bold text-stone-900">
                 Summary &amp; Description
