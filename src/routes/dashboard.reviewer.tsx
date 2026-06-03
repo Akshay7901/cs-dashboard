@@ -20,6 +20,7 @@ type ReviewStatus = "pending" | "completed";
 
 interface ReviewItem {
   id: string;
+  proposalId: string;
   subject: string;
   kind: string;
   title: string;
@@ -37,6 +38,7 @@ interface ReviewItem {
 const REVIEWS: ReviewItem[] = [
   {
     id: "rev-001",
+    proposalId: "sub-004",
     subject: "Life Sciences",
     kind: "Monograph",
     title: "Climate Change and Agricultural Adaptation in Southeast Asia",
