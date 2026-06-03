@@ -364,13 +364,13 @@ function SubmissionDetail() {
             {isReviewReturned && submittedReview && (
               <>
                 {/* Review Returned summary */}
-                <section className="rounded-2xl border border-stone-200 bg-white px-8 py-7">
-                  <div className="flex items-start justify-between gap-4">
+                <section className="overflow-hidden rounded-xl border border-indigo-200 bg-white shadow-sm">
+                  <div className="flex items-center justify-between gap-4 border-b border-indigo-200 bg-indigo-50 px-5 py-3.5">
                     <div>
-                      <h2 className="font-serif text-xl font-bold text-stone-900">
+                      <h2 className="font-serif text-lg font-bold text-indigo-900">
                         Review Returned
                       </h2>
-                      <p className="mt-1 font-sans text-sm text-stone-600">
+                      <p className="mt-0.5 font-sans text-sm text-indigo-700">
                         {submittedReview.reviewerName} · London School of Economics
                       </p>
                     </div>
@@ -381,7 +381,7 @@ function SubmissionDetail() {
                     </span>
                   </div>
                   {submittedReview.summary && (
-                    <div className="mt-5">
+                    <div className="px-5 py-4">
                       <p className="font-sans text-xs font-semibold uppercase tracking-wide text-stone-500">
                         Reviewer Summary
                       </p>
