@@ -82,6 +82,10 @@ function SubmissionDetail() {
   const [editorComments, setEditorComments] = useState<EditorComment[]>([]);
   const [editorialSummary, setEditorialSummary] = useState("");
   const [proposalDetailsOpen, setProposalDetailsOpen] = useState(false);
+  const [revisionModalOpen, setRevisionModalOpen] = useState(false);
+  const [revisionAreas, setRevisionAreas] = useState<string[]>([]);
+  const [revisionFeedback, setRevisionFeedback] = useState("");
+  const [revisionDeadline, setRevisionDeadline] = useState("");
 
   useEffect(() => {
     if (submittedReview) {
@@ -823,6 +827,7 @@ function SubmissionDetail() {
                     </button>
                     <button
                       type="button"
+                      onClick={() => setRevisionModalOpen(true)}
                       className="w-full rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-left font-sans text-sm text-rose-900 hover:bg-rose-100"
                     >
                       <span className="flex items-center gap-2 font-semibold">
