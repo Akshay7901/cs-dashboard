@@ -341,6 +341,77 @@ function SubmissionDetail() {
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
           {/* Main column */}
           <div className="space-y-6">
+            {submittedReview && (
+              <Card>
+                <div className="flex items-start justify-between gap-4 px-7 pt-6">
+                  <div>
+                    <h2 className="font-serif text-xl font-bold text-stone-900">
+                      Peer Review Submitted
+                    </h2>
+                    <p className="mt-1 font-sans text-sm text-stone-500">
+                      {submittedReview.reviewerName} ·{" "}
+                      {formatDate(submittedReview.submittedAt)}
+                    </p>
+                  </div>
+                  <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1.5 font-sans text-xs font-medium text-indigo-700 ring-1 ring-indigo-200">
+                    {(() => {
+                      const map: Record<string, string> = {
+                        proceed: "Proceed without changes",
+                        minor: "Minor revisions needed",
+                        major: "Major revisions needed",
+                        reject: "Reject",
+                      };
+                      return map[submittedReview.recommendation] ?? submittedReview.recommendation;
+                    })()}
+                  </span>
+                </div>
+                <Divider />
+                {submittedReview.summary && (
+                  <div className="px-7 py-6">
+                    <p className="font-sans text-xs font-semibold uppercase tracking-wide text-stone-500">
+                      Overall Summary
+                    </p>
+                    <p className="mt-2 font-sans text-sm leading-relaxed text-stone-800">
+                      {submittedReview.summary}
+                    </p>
+                  </div>
+                )}
+                {submittedReview.comments.length > 0 && (
+                  <>
+                    {submittedReview.summary && <Divider />}
+                    <div className="space-y-3 px-7 py-6">
+                      <p className="font-sans text-xs font-semibold uppercase tracking-wide text-stone-500">
+                        Comments ({submittedReview.comments.length})
+                      </p>
+                      {submittedReview.comments.map((c, i) => (
+                        <div
+                          key={i}
+                          className="rounded-xl border border-stone-200 bg-[#FAF6EE] p-4"
+                        >
+                          <div className="flex flex-wrap items-center gap-2 font-sans text-xs">
+                            <span className="rounded-md bg-sky-100 px-2 py-0.5 font-medium text-sky-800">
+                              {c.type}
+                            </span>
+                            {c.section && (
+                              <span className="text-stone-600">{c.section}</span>
+                            )}
+                            {c.page && (
+                              <span className="text-stone-500">p. {c.page}</span>
+                            )}
+                          </div>
+                          {c.text && (
+                            <p className="mt-2 font-sans text-sm leading-relaxed text-stone-800">
+                              {c.text}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </Card>
+            )}
+
             {/* Primary Author / Editor */}
             <Card>
               <div className="flex flex-wrap items-start justify-between gap-6 px-7 pt-6">
