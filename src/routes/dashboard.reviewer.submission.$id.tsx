@@ -301,7 +301,18 @@ function ReviewerSubmission() {
             </ul>
           ) : null}
 
-          {showAdd ? (
+          {!showAdd && (
+            <button
+              type="button"
+              onClick={() => setShowAdd(true)}
+              className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-4 py-2 font-sans text-sm font-semibold text-white hover:bg-sky-700"
+            >
+              <Plus className="h-4 w-4" />
+              Add comment
+            </button>
+          )}
+
+          {showAdd && (
             <div className="mt-4 rounded-2xl border border-stone-200 bg-white p-4">
               <div className="flex items-start gap-2">
                 <select
@@ -349,8 +360,17 @@ function ReviewerSubmission() {
                 placeholder="Enter your comment…"
                 className="mt-2 w-full resize-y rounded-lg border border-stone-300 bg-white px-3 py-2 font-sans text-sm text-stone-800 placeholder:text-stone-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
               />
+              <div className="mt-3 flex justify-end">
+                <button
+                  type="button"
+                  onClick={addComment}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-4 py-2 font-sans text-sm font-semibold text-white hover:bg-sky-700"
+                >
+                  Add comment
+                </button>
+              </div>
             </div>
-          ) : null}
+          )}
 
           {/* Overall summary */}
           <div className="mt-8">
