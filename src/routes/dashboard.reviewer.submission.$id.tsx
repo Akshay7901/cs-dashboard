@@ -106,7 +106,35 @@ function ReviewerSubmission() {
           discipline: loaded.discipline,
           estCompletion: loaded.estCompletion,
         }
-      : null,
+      : (() => {
+          if (typeof window === "undefined") return null;
+          try {
+            const aRaw = localStorage.getItem("csp.assignments");
+            if (!aRaw) return null;
+            const list = JSON.parse(aRaw) as AssignmentSnapshot[];
+            const found = list.find(
+              (a) => a.id === id || a.proposalId === id,
+            );
+            if (!found) return null;
+            return {
+              id: found.proposal.id,
+              title: found.proposal.title,
+              subtitle: found.proposal.subtitle,
+              kind: found.proposal.kind,
+              authorName: found.proposal.authorName,
+              authorAffiliation: found.proposal.authorAffiliation,
+              authorEmail: "—",
+              country: "—",
+              biography: "—",
+              wordCount: found.proposal.wordCount,
+              overview: found.proposal.overview,
+              discipline: found.proposal.subject,
+              estCompletion: "—",
+            };
+          } catch {
+            return null;
+          }
+        })(),
   );
 
   const [summary, setSummary] = useState("");
@@ -124,37 +152,10 @@ function ReviewerSubmission() {
         navigate({ to: "/login" });
         return;
       }
-      // Fallback: try to load proposal snapshot from assignments if id is an assignment id
-      if (!proposal) {
-        const aRaw = localStorage.getItem("csp.assignments");
-        if (aRaw) {
-          const list = JSON.parse(aRaw) as AssignmentSnapshot[];
-          const found = list.find(
-            (a) => a.id === id || a.proposalId === id,
-          );
-          if (found) {
-            setProposal({
-              id: found.proposal.id,
-              title: found.proposal.title,
-              subtitle: found.proposal.subtitle,
-              kind: found.proposal.kind,
-              authorName: found.proposal.authorName,
-              authorAffiliation: found.proposal.authorAffiliation,
-              authorEmail: "—",
-              country: "—",
-              biography: "—",
-              wordCount: found.proposal.wordCount,
-              overview: found.proposal.overview,
-              discipline: found.proposal.subject,
-              estCompletion: "—",
-            });
-          }
-        }
-      }
     } catch {
       navigate({ to: "/login" });
     }
-  }, [navigate, id, proposal]);
+  }, [navigate]);
 
   const onLogout = () => {
     try {
