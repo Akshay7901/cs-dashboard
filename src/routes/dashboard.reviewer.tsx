@@ -223,7 +223,18 @@ function ReviewerDashboard() {
           ) : (
             <ul className="space-y-4">
               {pendingItems.map((r) => (
-                <ReviewCard key={r.id} item={r} ctaLabel="Start Review" ctaTone="sky" />
+              <ReviewCard
+                key={r.id}
+                item={r}
+                ctaLabel="Start Review"
+                ctaTone="sky"
+                onCta={() =>
+                  navigate({
+                    to: "/dashboard/reviewer/submission/$id",
+                    params: { id: r.proposalId || r.id },
+                  })
+                }
+              />
               ))}
             </ul>
           )}
@@ -246,6 +257,12 @@ function ReviewerDashboard() {
                   item={r}
                   ctaLabel="View Review"
                   ctaTone="muted"
+                onCta={() =>
+                  navigate({
+                    to: "/dashboard/reviewer/submission/$id",
+                    params: { id: r.proposalId || r.id },
+                  })
+                }
                 />
               ))}
             </ul>
@@ -300,10 +317,12 @@ function ReviewCard({
   item,
   ctaLabel,
   ctaTone,
+  onCta,
 }: {
   item: ReviewItem;
   ctaLabel: string;
   ctaTone: "sky" | "muted";
+  onCta?: () => void;
 }) {
   const subjectClass =
     SUBJECT_STYLES[item.subject] ??
@@ -327,11 +346,7 @@ function ReviewCard({
         </div>
         <button
           type="button"
-          onClick={() => {
-            if (ctaTone === "sky") {
-              window.location.href = `/dashboard/reviewer/submission/${item.proposalId}`;
-            }
-          }}
+          onClick={onCta}
           className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 font-sans text-sm font-semibold transition-colors ${ctaClass}`}
         >
           {ctaTone === "muted" && <CheckCircle2 className="h-4 w-4 text-emerald-600" />}
