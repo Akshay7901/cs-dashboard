@@ -438,7 +438,7 @@ function ReviewerSubmission() {
           </div>
 
           {/* Summary & Description */}
-          <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-stone-200 bg-white p-6">
             <div className="flex items-baseline gap-2">
               <h3 className="font-serif text-xl font-bold text-stone-900">
                 Summary &amp; Description
