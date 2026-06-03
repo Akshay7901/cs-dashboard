@@ -210,7 +210,7 @@ function ReviewerSubmission() {
       localStorage.setItem("csp.reviews", JSON.stringify(filtered));
       const sRaw = localStorage.getItem("csp.proposalStatusOverrides");
       const overrides: Record<string, string> = sRaw ? JSON.parse(sRaw) : {};
-      overrides[proposal.id] = "reviewed";
+      overrides[proposal.id] = "review_returned";
       localStorage.setItem("csp.proposalStatusOverrides", JSON.stringify(overrides));
     } catch {
       // ignore
