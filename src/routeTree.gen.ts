@@ -15,6 +15,7 @@ import { Route as DashboardReviewerRouteImport } from './routes/dashboard.review
 import { Route as DashboardEditorRouteImport } from './routes/dashboard.editor'
 import { Route as DashboardAuthorRouteImport } from './routes/dashboard.author'
 import { Route as DashboardRoleRouteImport } from './routes/dashboard.$role'
+import { Route as DashboardReviewerSubmissionIdRouteImport } from './routes/dashboard.reviewer.submission.$id'
 import { Route as DashboardEditorSubmissionIdRouteImport } from './routes/dashboard.editor.submission.$id'
 
 const LoginRoute = LoginRouteImport.update({
@@ -47,6 +48,12 @@ const DashboardRoleRoute = DashboardRoleRouteImport.update({
   path: '/dashboard/$role',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardReviewerSubmissionIdRoute =
+  DashboardReviewerSubmissionIdRouteImport.update({
+    id: '/submission/$id',
+    path: '/submission/$id',
+    getParentRoute: () => DashboardReviewerRoute,
+  } as any)
 const DashboardEditorSubmissionIdRoute =
   DashboardEditorSubmissionIdRouteImport.update({
     id: '/submission/$id',
@@ -60,8 +67,9 @@ export interface FileRoutesByFullPath {
   '/dashboard/$role': typeof DashboardRoleRoute
   '/dashboard/author': typeof DashboardAuthorRoute
   '/dashboard/editor': typeof DashboardEditorRouteWithChildren
-  '/dashboard/reviewer': typeof DashboardReviewerRoute
+  '/dashboard/reviewer': typeof DashboardReviewerRouteWithChildren
   '/dashboard/editor/submission/$id': typeof DashboardEditorSubmissionIdRoute
+  '/dashboard/reviewer/submission/$id': typeof DashboardReviewerSubmissionIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -69,8 +77,9 @@ export interface FileRoutesByTo {
   '/dashboard/$role': typeof DashboardRoleRoute
   '/dashboard/author': typeof DashboardAuthorRoute
   '/dashboard/editor': typeof DashboardEditorRouteWithChildren
-  '/dashboard/reviewer': typeof DashboardReviewerRoute
+  '/dashboard/reviewer': typeof DashboardReviewerRouteWithChildren
   '/dashboard/editor/submission/$id': typeof DashboardEditorSubmissionIdRoute
+  '/dashboard/reviewer/submission/$id': typeof DashboardReviewerSubmissionIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -79,8 +88,9 @@ export interface FileRoutesById {
   '/dashboard/$role': typeof DashboardRoleRoute
   '/dashboard/author': typeof DashboardAuthorRoute
   '/dashboard/editor': typeof DashboardEditorRouteWithChildren
-  '/dashboard/reviewer': typeof DashboardReviewerRoute
+  '/dashboard/reviewer': typeof DashboardReviewerRouteWithChildren
   '/dashboard/editor/submission/$id': typeof DashboardEditorSubmissionIdRoute
+  '/dashboard/reviewer/submission/$id': typeof DashboardReviewerSubmissionIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -92,6 +102,7 @@ export interface FileRouteTypes {
     | '/dashboard/editor'
     | '/dashboard/reviewer'
     | '/dashboard/editor/submission/$id'
+    | '/dashboard/reviewer/submission/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -101,6 +112,7 @@ export interface FileRouteTypes {
     | '/dashboard/editor'
     | '/dashboard/reviewer'
     | '/dashboard/editor/submission/$id'
+    | '/dashboard/reviewer/submission/$id'
   id:
     | '__root__'
     | '/'
@@ -110,6 +122,7 @@ export interface FileRouteTypes {
     | '/dashboard/editor'
     | '/dashboard/reviewer'
     | '/dashboard/editor/submission/$id'
+    | '/dashboard/reviewer/submission/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -118,7 +131,7 @@ export interface RootRouteChildren {
   DashboardRoleRoute: typeof DashboardRoleRoute
   DashboardAuthorRoute: typeof DashboardAuthorRoute
   DashboardEditorRoute: typeof DashboardEditorRouteWithChildren
-  DashboardReviewerRoute: typeof DashboardReviewerRoute
+  DashboardReviewerRoute: typeof DashboardReviewerRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -165,6 +178,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRoleRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/reviewer/submission/$id': {
+      id: '/dashboard/reviewer/submission/$id'
+      path: '/submission/$id'
+      fullPath: '/dashboard/reviewer/submission/$id'
+      preLoaderRoute: typeof DashboardReviewerSubmissionIdRouteImport
+      parentRoute: typeof DashboardReviewerRoute
+    }
     '/dashboard/editor/submission/$id': {
       id: '/dashboard/editor/submission/$id'
       path: '/submission/$id'
@@ -187,24 +207,25 @@ const DashboardEditorRouteWithChildren = DashboardEditorRoute._addFileChildren(
   DashboardEditorRouteChildren,
 )
 
+interface DashboardReviewerRouteChildren {
+  DashboardReviewerSubmissionIdRoute: typeof DashboardReviewerSubmissionIdRoute
+}
+
+const DashboardReviewerRouteChildren: DashboardReviewerRouteChildren = {
+  DashboardReviewerSubmissionIdRoute: DashboardReviewerSubmissionIdRoute,
+}
+
+const DashboardReviewerRouteWithChildren =
+  DashboardReviewerRoute._addFileChildren(DashboardReviewerRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
   DashboardRoleRoute: DashboardRoleRoute,
   DashboardAuthorRoute: DashboardAuthorRoute,
   DashboardEditorRoute: DashboardEditorRouteWithChildren,
-  DashboardReviewerRoute: DashboardReviewerRoute,
+  DashboardReviewerRoute: DashboardReviewerRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
