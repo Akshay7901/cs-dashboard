@@ -364,13 +364,13 @@ function SubmissionDetail() {
             {isReviewReturned && submittedReview && (
               <>
                 {/* Review Returned summary */}
-                <div className="rounded-2xl border border-indigo-100 bg-indigo-50/40 px-7 py-6">
+                <section className="rounded-2xl border border-stone-200 bg-white px-8 py-7">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <h2 className="font-serif text-xl font-bold text-indigo-900">
+                      <h2 className="font-serif text-xl font-bold text-stone-900">
                         Review Returned
                       </h2>
-                      <p className="mt-1 font-sans text-sm text-indigo-700">
+                      <p className="mt-1 font-sans text-sm text-stone-600">
                         {submittedReview.reviewerName} · London School of Economics
                       </p>
                     </div>
@@ -381,7 +381,7 @@ function SubmissionDetail() {
                     </span>
                   </div>
                   {submittedReview.summary && (
-                    <div className="mt-5 rounded-xl bg-white px-5 py-4 ring-1 ring-indigo-100">
+                    <div className="mt-5">
                       <p className="font-sans text-xs font-semibold uppercase tracking-wide text-stone-500">
                         Reviewer Summary
                       </p>
@@ -390,7 +390,7 @@ function SubmissionDetail() {
                       </p>
                     </div>
                   )}
-                </div>
+                </section>
 
                 {/* Peer Review Comments (editable) */}
                 <Card>
