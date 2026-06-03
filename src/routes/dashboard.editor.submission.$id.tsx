@@ -364,7 +364,7 @@ function SubmissionDetail() {
             {isReviewReturned && submittedReview && (
               <>
                 {/* Review Returned summary */}
-                <section className="overflow-hidden rounded-xl border border-indigo-200 bg-white shadow-sm">
+                <section className="overflow-hidden rounded-xl border border-indigo-200 bg-[#F9F7F2] shadow-sm">
                   <div className="flex items-center justify-between gap-4 border-b border-indigo-200 bg-indigo-50 px-5 py-3.5">
                     <div>
                       <h2 className="font-serif text-lg font-bold text-indigo-900">
