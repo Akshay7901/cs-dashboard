@@ -305,7 +305,7 @@ function ReviewerSubmission() {
             <button
               type="button"
               onClick={() => setShowAdd(true)}
-              className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-4 py-2 font-sans text-sm font-semibold text-white hover:bg-sky-700"
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-sky-300 bg-white px-4 py-4 font-sans text-sm font-semibold text-sky-600 hover:border-sky-400 hover:bg-sky-50"
             >
               <Plus className="h-4 w-4" />
               Add comment
