@@ -51,6 +51,7 @@ function EditorDashboard() {
   const [sort, setSort] = useState<"newest" | "oldest">("newest");
   const [reviewersOpen, setReviewersOpen] = useState(false);
   const [statusOverrides, setStatusOverrides] = useState<Record<string, StatusKey>>({});
+  const [assignedProposalIds, setAssignedProposalIds] = useState<Set<string>>(new Set());
   type PeerReviewer = {
     id: string;
     name: string;
@@ -131,21 +132,35 @@ function EditorDashboard() {
   }, [navigate]);
 
   useEffect(() => {
+    if (isSubmissionDetail) return;
     try {
       const raw = localStorage.getItem("csp.proposalStatusOverrides");
-      if (raw) setStatusOverrides(JSON.parse(raw));
+      setStatusOverrides(raw ? JSON.parse(raw) : {});
     } catch {
-      // ignore
+      setStatusOverrides({});
     }
-  }, []);
+    try {
+      const raw = localStorage.getItem("csp.assignments");
+      const list = raw ? (JSON.parse(raw) as Array<{ proposalId?: string }>) : [];
+      setAssignedProposalIds(new Set(list.map((a) => a.proposalId).filter(Boolean) as string[]));
+    } catch {
+      setAssignedProposalIds(new Set());
+    }
+  }, [isSubmissionDetail]);
 
   const mergedProposals = useMemo(
     () =>
-      PROPOSALS.map((p) => ({
-        ...p,
-        status: statusOverrides[p.id] ?? p.status,
-      })),
-    [statusOverrides],
+      PROPOSALS.map((p) => {
+        const status = statusOverrides[p.id] ?? p.status;
+        return {
+          ...p,
+          status:
+            status === "submitted" && assignedProposalIds.has(p.id)
+              ? "in_review"
+              : status,
+        };
+      }),
+    [assignedProposalIds, statusOverrides],
   );
 
   const counts = useMemo(() => {
