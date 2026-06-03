@@ -402,7 +402,7 @@ function ReviewerSubmission() {
         </section>
 
         {/* RIGHT — Proposal context */}
-        <section className="max-h-[calc(100vh-7rem)] space-y-5 overflow-y-auto pr-2">
+        <section className="max-h-[calc(100vh-6rem)] space-y-4 overflow-y-auto pr-2">
           {/* Title card */}
           <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
             <h2 className="font-serif text-2xl font-bold leading-snug text-stone-900">
