@@ -95,6 +95,7 @@ function ReviewerSubmission() {
       ? {
           id: loaded.id,
           title: loaded.title,
+          subtitle: loaded.subtitle,
           kind: loaded.kind,
           authorName: loaded.authorName,
           authorAffiliation: loaded.authorAffiliation,
@@ -240,6 +241,9 @@ function ReviewerSubmission() {
           <hr className="my-6 border-stone-200" />
 
           {/* Comments */}
+          <div className="mb-3 font-sans text-xs font-semibold uppercase tracking-wider text-stone-700">
+            Comments
+          </div>
           {comments.length === 0 ? (
             <div className="rounded-xl border border-dashed border-stone-300 bg-white/60 px-6 py-10 text-center">
               <p className="font-sans text-sm font-medium text-stone-700">No comments yet</p>
