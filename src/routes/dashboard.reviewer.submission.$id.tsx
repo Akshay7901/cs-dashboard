@@ -349,27 +349,7 @@ function ReviewerSubmission() {
                 placeholder="Enter your comment…"
                 className="mt-2 w-full resize-y rounded-lg border border-stone-300 bg-white px-3 py-2 font-sans text-sm text-stone-800 placeholder:text-stone-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
               />
-              <div className="mt-2 flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={addComment}
-                  disabled={!draft.trim()}
-                  className="rounded-lg bg-sky-600 px-3 py-1.5 font-sans text-sm font-semibold text-white hover:bg-sky-700 disabled:bg-sky-300"
-                >
-                  Save comment
-                </button>
-              </div>
             </div>
-          ) : null}
-          {!showAdd ? (
-            <button
-              type="button"
-              onClick={() => setShowAdd(true)}
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-sky-300 bg-sky-50/30 px-4 py-3 font-sans text-sm font-medium text-sky-700 transition-colors hover:bg-sky-50"
-            >
-              <Plus className="h-4 w-4" />
-              Add comment
-            </button>
           ) : null}
 
           {/* Overall summary */}
