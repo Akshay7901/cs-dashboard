@@ -203,7 +203,7 @@ function ReviewerSubmission() {
               </span>
             </Link>
             <span className="mx-2 h-5 w-px bg-stone-300" />
-            <span className="font-sans text-base text-[#0E3D2F]">Reviewer Portal</span>
+            <span className="font-sans text-sm font-medium text-sky-600">Reviewer Portal</span>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-100 font-sans text-xs font-semibold text-sky-700">
