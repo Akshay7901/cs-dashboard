@@ -986,6 +986,7 @@ function SubmissionDetail() {
             </Card>
 
             {/* Peer Reviewer Pool */}
+            {!isReviewReturned && (
             <Card>
               <div className="px-6 pt-6">
                 <h2 className="font-serif text-xl font-bold text-stone-900">
@@ -1031,6 +1032,7 @@ function SubmissionDetail() {
                 ))}
               </ul>
             </Card>
+            )}
 
             {/* Submission Info */}
             <Card>
