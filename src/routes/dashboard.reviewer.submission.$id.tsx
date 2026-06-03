@@ -190,6 +190,34 @@ function ReviewerSubmission() {
   const reviewerName = "Dr. Anna Hoffmann";
   const canSubmit = recommendation !== null;
 
+  const onSubmitReview = () => {
+    if (!canSubmit || !proposal) return;
+    try {
+      const raw = localStorage.getItem("csp.reviews");
+      const list: Array<Record<string, unknown>> = raw ? JSON.parse(raw) : [];
+      const filtered = list.filter(
+        (r) => !(r.proposalId === proposal.id && r.reviewerName === reviewerName),
+      );
+      filtered.push({
+        id: `rev-${proposal.id}-${Date.now()}`,
+        proposalId: proposal.id,
+        reviewerName,
+        recommendation,
+        summary,
+        comments,
+        submittedAt: new Date().toISOString(),
+      });
+      localStorage.setItem("csp.reviews", JSON.stringify(filtered));
+      const sRaw = localStorage.getItem("csp.proposalStatusOverrides");
+      const overrides: Record<string, string> = sRaw ? JSON.parse(sRaw) : {};
+      overrides[proposal.id] = "reviewed";
+      localStorage.setItem("csp.proposalStatusOverrides", JSON.stringify(overrides));
+    } catch {
+      // ignore
+    }
+    navigate({ to: "/dashboard/reviewer" });
+  };
+
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-[#FAF6EE] font-sans text-stone-800">
       {/* Header */}
@@ -382,6 +410,7 @@ function ReviewerSubmission() {
             <button
               type="button"
               disabled={!canSubmit}
+              onClick={onSubmitReview}
               className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-sans text-sm font-semibold transition-colors ${
                 canSubmit
                   ? "bg-sky-600 text-white hover:bg-sky-700"
