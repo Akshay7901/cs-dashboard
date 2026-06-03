@@ -260,14 +260,14 @@ function ReviewerSubmission() {
           <div className="mb-3 font-sans text-xs font-semibold uppercase tracking-wider text-stone-700">
             Comments{comments.length > 0 ? ` (${comments.length})` : ""}
           </div>
-          {comments.length === 0 ? (
+          {comments.length === 0 && !showAdd ? (
             <div className="rounded-xl border border-dashed border-stone-300 bg-white/60 px-6 py-10 text-center">
               <p className="font-sans text-sm font-medium text-stone-700">No comments yet</p>
               <p className="mt-1 font-sans text-xs text-stone-500">
                 Add your first comment below
               </p>
             </div>
-          ) : (
+          ) : comments.length > 0 ? (
             <ul className="space-y-2">
               {comments.map((c, i) => (
                 <li
@@ -299,7 +299,7 @@ function ReviewerSubmission() {
                 </li>
               ))}
             </ul>
-          )}
+          ) : null}
 
           {showAdd ? (
             <div className="mt-4 rounded-xl border border-stone-200 bg-stone-50/60 p-3">
