@@ -13,6 +13,8 @@ import {
   X,
   CheckCircle2,
   Edit3,
+  ChevronDown,
+  Plus,
 } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
 import {
@@ -76,6 +78,24 @@ function SubmissionDetail() {
     submittedAt: string;
   };
   const [submittedReview, setSubmittedReview] = useState<SubmittedReview | null>(null);
+  type EditorComment = { type: string; section: string; page: string; text: string };
+  const [editorComments, setEditorComments] = useState<EditorComment[]>([]);
+  const [editorialSummary, setEditorialSummary] = useState("");
+  const [proposalDetailsOpen, setProposalDetailsOpen] = useState(false);
+
+  useEffect(() => {
+    if (submittedReview) {
+      setEditorComments(submittedReview.comments.map((c) => ({ ...c })));
+    }
+  }, [submittedReview]);
+
+  const isReviewReturned = effectiveStatus === "review_returned" && !!submittedReview;
+  const recommendationLabel: Record<string, string> = {
+    proceed: "Proceed without changes",
+    minor: "Minor Revisions",
+    major: "Major Revisions",
+    reject: "Reject",
+  };
 
   type PoolReviewer = {
     id: string;
@@ -341,77 +361,179 @@ function SubmissionDetail() {
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
           {/* Main column */}
           <div className="space-y-6">
-            {submittedReview && (
-              <Card>
-                <div className="flex items-start justify-between gap-4 px-7 pt-6">
-                  <div>
+            {isReviewReturned && submittedReview && (
+              <>
+                {/* Review Returned summary */}
+                <div className="rounded-2xl border border-indigo-100 bg-indigo-50/40 px-7 py-6">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h2 className="font-serif text-xl font-bold text-indigo-900">
+                        Review Returned
+                      </h2>
+                      <p className="mt-1 font-sans text-sm text-indigo-700">
+                        {submittedReview.reviewerName} · London School of Economics
+                      </p>
+                    </div>
+                    <span className="inline-flex shrink-0 items-center rounded-full bg-amber-50 px-3 py-1.5 font-sans text-xs font-semibold text-amber-800 ring-1 ring-amber-200">
+                      Recommended:{" "}
+                      {recommendationLabel[submittedReview.recommendation] ??
+                        submittedReview.recommendation}
+                    </span>
+                  </div>
+                  {submittedReview.summary && (
+                    <div className="mt-5 rounded-xl bg-white px-5 py-4 ring-1 ring-indigo-100">
+                      <p className="font-sans text-xs font-semibold uppercase tracking-wide text-stone-500">
+                        Reviewer Summary
+                      </p>
+                      <p className="mt-2 font-sans text-sm leading-relaxed text-stone-800">
+                        {submittedReview.summary}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Peer Review Comments (editable) */}
+                <Card>
+                  <div className="px-7 pt-6">
                     <h2 className="font-serif text-xl font-bold text-stone-900">
-                      Peer Review Submitted
+                      Peer Review Comments
                     </h2>
                     <p className="mt-1 font-sans text-sm text-stone-500">
-                      {submittedReview.reviewerName} ·{" "}
-                      {formatDate(submittedReview.submittedAt)}
+                      Edit before sending — {editorComments.length} comments
                     </p>
                   </div>
-                  <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1.5 font-sans text-xs font-medium text-indigo-700 ring-1 ring-indigo-200">
-                    {(() => {
-                      const map: Record<string, string> = {
-                        proceed: "Proceed without changes",
-                        minor: "Minor revisions needed",
-                        major: "Major revisions needed",
-                        reject: "Reject",
-                      };
-                      return map[submittedReview.recommendation] ?? submittedReview.recommendation;
-                    })()}
-                  </span>
-                </div>
-                <Divider />
-                {submittedReview.summary && (
-                  <div className="px-7 py-6">
-                    <p className="font-sans text-xs font-semibold uppercase tracking-wide text-stone-500">
-                      Overall Summary
-                    </p>
-                    <p className="mt-2 font-sans text-sm leading-relaxed text-stone-800">
-                      {submittedReview.summary}
-                    </p>
-                  </div>
-                )}
-                {submittedReview.comments.length > 0 && (
-                  <>
-                    {submittedReview.summary && <Divider />}
-                    <div className="space-y-3 px-7 py-6">
-                      <p className="font-sans text-xs font-semibold uppercase tracking-wide text-stone-500">
-                        Comments ({submittedReview.comments.length})
-                      </p>
-                      {submittedReview.comments.map((c, i) => (
-                        <div
-                          key={i}
-                          className="rounded-xl border border-stone-200 bg-[#FAF6EE] p-4"
-                        >
-                          <div className="flex flex-wrap items-center gap-2 font-sans text-xs">
-                            <span className="rounded-md bg-sky-100 px-2 py-0.5 font-medium text-sky-800">
-                              {c.type}
-                            </span>
-                            {c.section && (
-                              <span className="text-stone-600">{c.section}</span>
-                            )}
-                            {c.page && (
-                              <span className="text-stone-500">p. {c.page}</span>
-                            )}
-                          </div>
-                          {c.text && (
-                            <p className="mt-2 font-sans text-sm leading-relaxed text-stone-800">
-                              {c.text}
-                            </p>
-                          )}
+                  <div className="space-y-4 px-7 py-6">
+                    {editorComments.map((c, i) => (
+                      <div
+                        key={i}
+                        className="rounded-2xl border border-stone-200 bg-white p-4"
+                      >
+                        <div className="flex items-start gap-2">
+                          <select
+                            value={c.type}
+                            onChange={(e) =>
+                              setEditorComments((arr) =>
+                                arr.map((it, idx) =>
+                                  idx === i ? { ...it, type: e.target.value } : it,
+                                ),
+                              )
+                            }
+                            className="cursor-pointer rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5 font-sans text-xs font-medium text-amber-800 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-100"
+                          >
+                            <option>General</option>
+                            <option>Major Concern</option>
+                            <option>Minor Concern</option>
+                            <option>Suggestion</option>
+                            <option>Question</option>
+                          </select>
+                          <input
+                            type="text"
+                            value={c.section}
+                            onChange={(e) =>
+                              setEditorComments((arr) =>
+                                arr.map((it, idx) =>
+                                  idx === i ? { ...it, section: e.target.value } : it,
+                                ),
+                              )
+                            }
+                            placeholder="Section / Chapter"
+                            className="flex-1 rounded-lg border border-stone-200 bg-white px-2.5 py-1.5 font-sans text-xs font-medium text-stone-700 placeholder:text-stone-400 focus:border-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-100"
+                          />
+                          <input
+                            type="text"
+                            value={c.page}
+                            onChange={(e) =>
+                              setEditorComments((arr) =>
+                                arr.map((it, idx) =>
+                                  idx === i ? { ...it, page: e.target.value } : it,
+                                ),
+                              )
+                            }
+                            placeholder="Page"
+                            className="w-24 rounded-lg border border-stone-200 bg-white px-2.5 py-1.5 font-sans text-xs font-medium text-stone-700 placeholder:text-stone-400 focus:border-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-100"
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setEditorComments((arr) => arr.filter((_, idx) => idx !== i))
+                            }
+                            className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 hover:bg-stone-100 hover:text-stone-700"
+                            aria-label="Remove comment"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
                         </div>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </Card>
+                        <textarea
+                          value={c.text}
+                          onChange={(e) =>
+                            setEditorComments((arr) =>
+                              arr.map((it, idx) =>
+                                idx === i ? { ...it, text: e.target.value } : it,
+                              ),
+                            )
+                          }
+                          rows={3}
+                          className="mt-2 w-full resize-y rounded-lg border border-stone-200 bg-white px-3 py-2 font-sans text-xs leading-relaxed text-stone-700 focus:border-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-100"
+                        />
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setEditorComments((arr) => [
+                          ...arr,
+                          { type: "General", section: "", page: "", text: "" },
+                        ])
+                      }
+                      className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-stone-300 bg-white px-4 py-4 font-sans text-sm font-semibold text-stone-600 hover:border-stone-400 hover:bg-stone-50"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add comment
+                    </button>
+                  </div>
+                </Card>
+
+                {/* Your Editorial Notes */}
+                <Card>
+                  <div className="px-7 pt-6">
+                    <h2 className="font-serif text-xl font-bold text-stone-900">
+                      Your Editorial Notes
+                    </h2>
+                    <p className="mt-1 font-sans text-sm text-stone-500">
+                      These will be sent to the author along with the review comments
+                    </p>
+                  </div>
+                  <div className="px-7 py-6">
+                    <textarea
+                      value={editorialSummary}
+                      onChange={(e) => setEditorialSummary(e.target.value)}
+                      rows={6}
+                      placeholder="Add your editorial summary, guidance, or context for the author before sending…"
+                      className="w-full resize-y rounded-xl border border-[#0E3D2F]/50 bg-white px-4 py-3 font-sans text-sm leading-relaxed text-stone-800 placeholder:text-stone-400 focus:border-[#0E3D2F] focus:outline-none focus:ring-2 focus:ring-[#0E3D2F]/20"
+                    />
+                  </div>
+                </Card>
+
+                {/* Collapsible: View original proposal details */}
+                <Card>
+                  <button
+                    type="button"
+                    onClick={() => setProposalDetailsOpen((v) => !v)}
+                    className="flex w-full items-center justify-between px-7 py-5 text-left"
+                  >
+                    <span className="font-serif text-base font-bold text-stone-900">
+                      View original proposal details
+                    </span>
+                    <ChevronDown
+                      className={`h-5 w-5 text-stone-500 transition-transform ${proposalDetailsOpen ? "rotate-180" : ""}`}
+                    />
+                  </button>
+                </Card>
+              </>
             )}
 
+            {(!isReviewReturned || proposalDetailsOpen) && (
+              <>
             {/* Primary Author / Editor */}
             <Card>
               <div className="flex flex-wrap items-start justify-between gap-6 px-7 pt-6">
@@ -657,6 +779,8 @@ function SubmissionDetail() {
                 ))}
               </ul>
             </Card>
+              </>
+            )}
           </div>
 
           {/* Sidebar */}
@@ -668,11 +792,13 @@ function SubmissionDetail() {
                   Editorial Decision
                 </h2>
                 <p className="mt-2 font-sans text-sm text-stone-600">
-                  {assignedReviewer
-                    ? "With peer reviewer"
-                    : effectiveStatus === "submitted"
-                      ? "Awaiting initial assessment"
-                      : proposal.decisionSummary}
+                  {isReviewReturned
+                    ? "Review returned — add notes and send to author"
+                    : assignedReviewer
+                      ? "With peer reviewer"
+                      : effectiveStatus === "submitted"
+                        ? "Awaiting initial assessment"
+                        : proposal.decisionSummary}
                 </p>
                 {assignedReviewerName && !assignedReviewer && (
                   <p className="mt-2 rounded-md bg-emerald-50 px-3 py-2 font-sans text-xs text-emerald-800 ring-1 ring-emerald-200">
@@ -681,7 +807,46 @@ function SubmissionDetail() {
                 )}
               </div>
               <div className="space-y-3 px-6 pb-6 pt-5">
-                {assignedReviewer ? (
+                {isReviewReturned ? (
+                  <>
+                    <button
+                      type="button"
+                      className="w-full rounded-xl bg-[#7C3AED] px-4 py-3 text-left font-sans text-sm text-white shadow-sm transition-colors hover:bg-[#6D28D9]"
+                    >
+                      <span className="flex items-center gap-2 font-semibold">
+                        <FileText className="h-4 w-4" />
+                        Issue Contract
+                      </span>
+                      <span className="mt-1 block text-xs text-white/85">
+                        Send contract &amp; review comments to author
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className="w-full rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-left font-sans text-sm text-rose-900 hover:bg-rose-100"
+                    >
+                      <span className="flex items-center gap-2 font-semibold">
+                        <Edit3 className="h-4 w-4" />
+                        Request Major Revisions
+                      </span>
+                      <span className="mt-1 block text-xs text-rose-800/80">
+                        Send review comments back to author
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-left font-sans text-sm text-stone-800 hover:bg-stone-50"
+                    >
+                      <span className="flex items-center gap-2 font-semibold">
+                        <X className="h-4 w-4" />
+                        Decline
+                      </span>
+                      <span className="mt-1 block text-xs text-stone-500">
+                        Not moving forward
+                      </span>
+                    </button>
+                  </>
+                ) : assignedReviewer ? (
                   <>
                     <div className="rounded-xl border border-sky-200 bg-sky-50/60 p-4">
                       <p className="font-sans text-[11px] font-semibold uppercase tracking-wider text-sky-700">
@@ -821,6 +986,7 @@ function SubmissionDetail() {
             </Card>
 
             {/* Peer Reviewer Pool */}
+            {!isReviewReturned && (
             <Card>
               <div className="px-6 pt-6">
                 <h2 className="font-serif text-xl font-bold text-stone-900">
@@ -866,6 +1032,7 @@ function SubmissionDetail() {
                 ))}
               </ul>
             </Card>
+            )}
 
             {/* Submission Info */}
             <Card>
