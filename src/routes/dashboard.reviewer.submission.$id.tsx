@@ -264,7 +264,7 @@ function ReviewerSubmission() {
                     <select
                       value={c.type}
                       onChange={(e) => updateComment(i, { type: e.target.value as CommentType })}
-                      className="h-10 rounded-lg border border-stone-300 bg-white px-2 font-sans text-sm text-stone-800 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
+                      className="cursor-pointer rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 font-sans text-xs font-medium text-slate-600 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
                     >
                       <option>General</option>
                       <option>Major Concern</option>
@@ -277,19 +277,19 @@ function ReviewerSubmission() {
                       value={c.section}
                       onChange={(e) => updateComment(i, { section: e.target.value })}
                       placeholder="Section / Chapter"
-                      className="h-10 flex-1 rounded-lg border border-stone-300 bg-white px-3 font-sans text-sm text-stone-800 placeholder:text-stone-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
+                      className="flex-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 font-sans text-xs font-medium text-slate-700 placeholder:text-slate-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
                     />
                     <input
                       type="text"
                       value={c.page}
                       onChange={(e) => updateComment(i, { page: e.target.value })}
                       placeholder="Page"
-                      className="h-10 w-20 rounded-lg border border-stone-300 bg-white px-3 font-sans text-sm text-stone-800 placeholder:text-stone-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
+                      className="w-20 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 font-sans text-xs font-medium text-slate-700 placeholder:text-slate-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
                     />
                     <button
                       type="button"
                       onClick={() => removeComment(i)}
-                      className="flex h-10 w-10 items-center justify-center rounded-lg text-stone-400 hover:bg-stone-100 hover:text-stone-700"
+                      className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 hover:bg-stone-100 hover:text-stone-700"
                       aria-label="Remove comment"
                     >
                       <X className="h-4 w-4" />
@@ -300,7 +300,7 @@ function ReviewerSubmission() {
                     onChange={(e) => updateComment(i, { text: e.target.value })}
                     rows={4}
                     placeholder="Enter your comment…"
-                    className="mt-2 w-full resize-y rounded-lg border border-stone-300 bg-white px-3 py-2 font-sans text-sm text-stone-800 placeholder:text-stone-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
+                    className="mt-2 w-full resize-y rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 font-sans text-xs text-slate-700 placeholder:text-slate-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
                   />
                 </div>
               ))}
@@ -318,16 +318,16 @@ function ReviewerSubmission() {
 
           {/* Overall summary */}
           <div className="mt-8">
-            <label className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-700">
+            <label className="block mb-2 font-sans text-xs font-semibold uppercase tracking-wide text-[#7A6A5A]">
               Overall Summary{" "}
-              <span className="font-normal normal-case text-stone-500">(optional)</span>
+              <span className="font-normal normal-case text-[#7A6A5A]/70">(optional)</span>
             </label>
             <textarea
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
               rows={5}
               placeholder="Summarise your overall assessment of the manuscript — strengths, weaknesses, and your key recommendation…"
-              className="mt-2 w-full resize-y rounded-xl border border-stone-300 bg-white px-4 py-3 font-sans text-sm text-stone-800 placeholder:text-stone-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
+              className="w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 font-sans text-xs text-slate-700 placeholder:text-slate-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
             />
           </div>
 
