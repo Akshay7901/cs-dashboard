@@ -78,6 +78,24 @@ function SubmissionDetail() {
     submittedAt: string;
   };
   const [submittedReview, setSubmittedReview] = useState<SubmittedReview | null>(null);
+  type EditorComment = { type: string; section: string; page: string; text: string };
+  const [editorComments, setEditorComments] = useState<EditorComment[]>([]);
+  const [editorialSummary, setEditorialSummary] = useState("");
+  const [proposalDetailsOpen, setProposalDetailsOpen] = useState(false);
+
+  useEffect(() => {
+    if (submittedReview) {
+      setEditorComments(submittedReview.comments.map((c) => ({ ...c })));
+    }
+  }, [submittedReview]);
+
+  const isReviewReturned = effectiveStatus === "review_returned" && !!submittedReview;
+  const recommendationLabel: Record<string, string> = {
+    proceed: "Proceed without changes",
+    minor: "Minor Revisions",
+    major: "Major Revisions",
+    reject: "Reject",
+  };
 
   type PoolReviewer = {
     id: string;
