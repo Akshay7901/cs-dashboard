@@ -213,6 +213,7 @@ function SubmissionDetail() {
           setAssignedReviewer(r);
           setAssignedReviewerName(r.name);
         }
+        setEffectiveStatus((prev) => (prev === "submitted" ? "in_review" : prev));
       }
     } catch {
       // ignore
