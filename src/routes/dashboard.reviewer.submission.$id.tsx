@@ -421,7 +421,7 @@ function ReviewerSubmission() {
           </div>
 
           {/* Primary Author */}
-          <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-stone-200 bg-white p-6">
             <h3 className="font-serif text-xl font-bold text-stone-900">Primary Author</h3>
             <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
               <Field label="Name" value={proposal.authorName} />
