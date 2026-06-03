@@ -82,6 +82,10 @@ function SubmissionDetail() {
   const [editorComments, setEditorComments] = useState<EditorComment[]>([]);
   const [editorialSummary, setEditorialSummary] = useState("");
   const [proposalDetailsOpen, setProposalDetailsOpen] = useState(false);
+  const [revisionModalOpen, setRevisionModalOpen] = useState(false);
+  const [revisionAreas, setRevisionAreas] = useState<string[]>([]);
+  const [revisionFeedback, setRevisionFeedback] = useState("");
+  const [revisionDeadline, setRevisionDeadline] = useState("");
 
   useEffect(() => {
     if (submittedReview) {
@@ -823,6 +827,7 @@ function SubmissionDetail() {
                     </button>
                     <button
                       type="button"
+                      onClick={() => setRevisionModalOpen(true)}
                       className="w-full rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-left font-sans text-sm text-rose-900 hover:bg-rose-100"
                     >
                       <span className="flex items-center gap-2 font-semibold">
@@ -1202,6 +1207,145 @@ function SubmissionDetail() {
                   className="rounded-lg bg-[#1F4D3A] px-4 py-2 font-sans text-sm font-semibold text-white hover:bg-[#173A2C] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Confirm &amp; Assign Reviewer
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {revisionModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-stone-900/50 p-4 sm:p-8"
+          onClick={() => setRevisionModalOpen(false)}
+        >
+          <div
+            className="relative my-8 w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-3 border-b border-stone-200 px-6 py-5">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-rose-100 text-rose-700">
+                <Edit3 className="h-5 w-5" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-serif text-lg font-bold text-stone-900">
+                  Request Revisions
+                </h3>
+                <p className="mt-0.5 font-sans text-sm text-stone-600">
+                  Specify what needs to be updated before the proposal can move forward.
+                </p>
+                <p className="mt-1 font-sans text-xs italic text-stone-500">
+                  &ldquo;{proposal.title}&rdquo;
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRevisionModalOpen(false)}
+                className="rounded-md p-1 text-stone-500 hover:bg-stone-100 hover:text-stone-700"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                setRevisionModalOpen(false);
+              }}
+            >
+              <div className="max-h-[55vh] space-y-5 overflow-y-auto px-6 py-5">
+                <div>
+                  <p className="font-sans text-sm font-semibold text-stone-900">
+                    Areas Requiring Revision <span className="text-rose-500">*</span>
+                  </p>
+                  <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    {[
+                      "Abstract / Blurb",
+                      "Table of Contents",
+                      "Supporting Materials",
+                      "Author Credentials",
+                      "Market Analysis",
+                      "Scope / Framing",
+                      "Word Count / Length",
+                      "Other",
+                    ].map((area) => {
+                      const checked = revisionAreas.includes(area);
+                      return (
+                        <label
+                          key={area}
+                          className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 font-sans text-sm transition-colors ${
+                            checked
+                              ? "border-rose-300 bg-rose-50 text-rose-900"
+                              : "border-stone-200 bg-white text-stone-800 hover:bg-stone-50"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() =>
+                              setRevisionAreas((prev) =>
+                                prev.includes(area)
+                                  ? prev.filter((a) => a !== area)
+                                  : [...prev, area],
+                              )
+                            }
+                            className="h-4 w-4 accent-rose-600"
+                          />
+                          {area}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="revision-feedback"
+                    className="font-sans text-sm font-semibold text-stone-900"
+                  >
+                    Editorial Feedback <span className="text-rose-500">*</span>
+                  </label>
+                  <textarea
+                    id="revision-feedback"
+                    rows={5}
+                    value={revisionFeedback}
+                    onChange={(e) => setRevisionFeedback(e.target.value)}
+                    placeholder="Explain what needs to be updated and why — this will be shared with the author..."
+                    className="mt-2 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 font-sans text-sm text-stone-900 focus:border-rose-500 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="revision-deadline"
+                    className="font-sans text-sm font-semibold text-stone-900"
+                  >
+                    Resubmission Deadline{" "}
+                    <span className="font-normal text-stone-500">(optional)</span>
+                  </label>
+                  <input
+                    id="revision-deadline"
+                    type="date"
+                    value={revisionDeadline}
+                    onChange={(e) => setRevisionDeadline(e.target.value)}
+                    className="mt-2 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 font-sans text-sm text-stone-900 focus:border-rose-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center justify-between gap-2 border-t border-stone-200 bg-stone-50 px-6 py-4">
+                <button
+                  type="button"
+                  onClick={() => setRevisionModalOpen(false)}
+                  className="rounded-lg border border-stone-300 bg-white px-4 py-2 font-sans text-sm font-medium text-stone-700 hover:bg-stone-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={revisionAreas.length === 0 || !revisionFeedback.trim()}
+                  className="rounded-lg bg-rose-600 px-5 py-2 font-sans text-sm font-semibold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Send Revision Request
                 </button>
               </div>
             </form>
