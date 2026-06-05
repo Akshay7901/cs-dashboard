@@ -112,6 +112,10 @@ function DecisionReviewerDashboard() {
     fetchReviewers();
   };
 
+  useEffect(() => {
+    fetchReviewers();
+  }, []);
+
   const addReviewer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newReviewer.name.trim() || !newReviewer.email.trim()) return;
