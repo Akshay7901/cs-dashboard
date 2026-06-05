@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
 import {
-  PROPOSALS,
   STATUS_META,
   type StatusKey,
   formatDate,
@@ -30,6 +29,52 @@ type PeerReviewer = {
   assigned_proposals_count?: number;
   created_at?: string;
 };
+
+type ApiProposal = {
+  ticket_number: string;
+  corresponding_author: string;
+  email: string;
+  country: string;
+  title: string;
+  submitted_at: string;
+  status: string;
+  display_status?: string;
+};
+
+type ProposalRow = {
+  id: string;
+  title: string;
+  kind: string;
+  authorName: string;
+  authorAffiliation: string;
+  country: string;
+  submittedAt: string;
+  status: StatusKey;
+};
+
+const STATUS_MAP: Record<string, StatusKey> = {
+  new: "submitted",
+  in_review: "in_review",
+  review_returned: "review_returned",
+  contract_issued: "contract",
+  queries_raised: "question",
+  awaiting_author_approval: "contract",
+  author_approved: "signed",
+  locked: "signed",
+  declined: "declined",
+  awaiting_more_info: "revisions",
+};
+
+const mapApiProposal = (p: ApiProposal): ProposalRow => ({
+  id: p.ticket_number,
+  title: p.title,
+  kind: "Proposal",
+  authorName: p.corresponding_author || displayNameFromEmail(p.email || ""),
+  authorAffiliation: p.email || "",
+  country: p.country || "—",
+  submittedAt: p.submitted_at,
+  status: STATUS_MAP[p.status] ?? "submitted",
+});
 
 export const Route = createFileRoute("/dashboard/decision_reviewer")({
   head: () => ({
@@ -62,6 +107,9 @@ function DecisionReviewerDashboard() {
   const [sort, setSort] = useState<"newest" | "oldest">("newest");
   const [statusOverrides, setStatusOverrides] = useState<Record<string, StatusKey>>({});
   const [assignedProposalIds, setAssignedProposalIds] = useState<Set<string>>(new Set());
+  const [apiProposals, setApiProposals] = useState<ProposalRow[]>([]);
+  const [proposalsLoading, setProposalsLoading] = useState(false);
+  const [proposalsError, setProposalsError] = useState<string | null>(null);
   const [reviewersOpen, setReviewersOpen] = useState(false);
   const [reviewers, setReviewers] = useState<PeerReviewer[]>([]);
   const [reviewersLoading, setReviewersLoading] = useState(false);
@@ -114,6 +162,32 @@ function DecisionReviewerDashboard() {
 
   useEffect(() => {
     fetchReviewers();
+  }, []);
+
+  const fetchProposals = async () => {
+    setProposalsLoading(true);
+    setProposalsError(null);
+    try {
+      const res = await fetch(`${API_BASE}?limit=100&sort_order=desc`, {
+        headers: authHeaders(),
+      });
+      const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!res.ok) {
+        setProposalsError((data.error as string) || "Failed to load proposals.");
+        return;
+      }
+      const list = (data.proposals as ApiProposal[]) || [];
+      setApiProposals(list.map(mapApiProposal));
+    } catch {
+      setProposalsError("Network error. Please try again.");
+    } finally {
+      setProposalsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProposals();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const addReviewer = async (e: React.FormEvent) => {
@@ -217,16 +291,15 @@ function DecisionReviewerDashboard() {
     }
   }, [isSubmissionDetail]);
 
-  const mergedProposals = useMemo(
+  const mergedProposals = useMemo<ProposalRow[]>(
     () =>
-      PROPOSALS.map((p) => {
-        const status = statusOverrides[p.id] ?? p.status;
-        return {
-          ...p,
-          status: status === "submitted" && assignedProposalIds.has(p.id) ? "in_review" : status,
-        };
+      apiProposals.map((p) => {
+        const override = statusOverrides[p.id];
+        let status: StatusKey = override ?? p.status;
+        if (status === "submitted" && assignedProposalIds.has(p.id)) status = "in_review";
+        return { ...p, status };
       }),
-    [assignedProposalIds, statusOverrides],
+    [apiProposals, assignedProposalIds, statusOverrides],
   );
 
   const counts = useMemo(() => {
@@ -473,7 +546,11 @@ function DecisionReviewerDashboard() {
             })}
             {filtered.length === 0 && (
               <li className="px-6 py-10 text-center font-sans text-sm text-stone-500">
-                No proposals match your filters.
+                {proposalsLoading
+                  ? "Loading proposals…"
+                  : proposalsError
+                    ? proposalsError
+                    : "No proposals match your filters."}
               </li>
             )}
           </ul>
