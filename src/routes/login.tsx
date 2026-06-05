@@ -4,6 +4,31 @@ import { UserRound, FileText, ClipboardCheck, ArrowRight, ArrowLeft, type Lucide
 import libraryBg from "@/assets/library-reference.jpg";
 import cspLogo from "@/assets/csp-logo.png";
 
+const API_BASE = "https://api.cambridgescholars.com/api/proposals";
+
+type ApiRole = "admin" | "editor" | "reviewer" | "author" | string;
+
+function roleToPortal(apiRole: ApiRole): Role {
+  const r = (apiRole || "").toLowerCase();
+  if (r === "editor" || r === "admin") return "editor";
+  if (r === "reviewer") return "reviewer";
+  return "author";
+}
+
+function persistSession(payload: {
+  token: string;
+  email: string;
+  name?: string;
+  role: Role;
+}) {
+  try {
+    sessionStorage.setItem("csp.session", JSON.stringify(payload));
+    sessionStorage.setItem("csp.token", payload.token);
+  } catch {
+    // ignore
+  }
+}
+
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
@@ -134,29 +159,158 @@ function PortalCards({ onSelect }: { onSelect: (role: Role) => void }) {
 }
 
 function PortalLoginForm({ portal, onBack }: { portal: PortalConfig; onBack: () => void }) {
+  type Step = "password" | "otp" | "set-password";
+  const [step, setStep] = useState<Step>("password");
   const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
+  const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [tempToken, setTempToken] = useState<string | null>(null);
+  const [otpPurpose, setOtpPurpose] = useState<string>("first_login");
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const onSubmit = (e: FormEvent) => {
+  const goToDashboard = (apiRole: ApiRole, token: string, userEmail: string, name?: string) => {
+    const role = roleToPortal(apiRole);
+    persistSession({ token, email: userEmail, name, role });
+    navigate({ to: "/dashboard/$role", params: { role } });
+  };
+
+  const onSubmitLogin = async (e: FormEvent) => {
     e.preventDefault();
-    const okEmail = email.trim().toLowerCase() === portal.demoEmail.toLowerCase();
-    const okCode = code.trim() === portal.demoCode;
-    if (!okEmail || !okCode) {
-      setError("Invalid email or access code for this portal.");
+    setError(null);
+    setInfo(null);
+    setLoading(true);
+    try {
+      const body: Record<string, string> = { email: email.trim() };
+      if (password) body.password = password;
+      const res = await fetch(`${API_BASE}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!res.ok) {
+        setError((data.error as string) || "Invalid credentials.");
+        return;
+      }
+      if (data.requires_otp) {
+        setOtpPurpose((data.purpose as string) || "first_login");
+        setStep("otp");
+        setInfo("A verification code has been sent to your email.");
+        return;
+      }
+      if (data.token) {
+        goToDashboard(
+          (data.role as ApiRole) || "author",
+          data.token as string,
+          (data.email as string) || email.trim(),
+          data.name as string | undefined,
+        );
+      } else {
+        setError("Unexpected response from server.");
+      }
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onSubmitOtp = async (e: FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/auth/verify-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), otp: otp.trim() }),
+      });
+      const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!res.ok) {
+        setError((data.error as string) || "Invalid or expired code.");
+        return;
+      }
+      setTempToken((data.temp_token as string) || null);
+      setOtpPurpose((data.purpose as string) || otpPurpose);
+      setStep("set-password");
+      setInfo("Code verified. Please set your password.");
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onSubmitSetPassword = async (e: FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    if (newPassword.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+    if (!tempToken) {
+      setError("Missing verification token. Please restart.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/auth/set-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ temp_token: tempToken, password: newPassword }),
+      });
+      const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!res.ok) {
+        setError((data.error as string) || "Unable to set password.");
+        return;
+      }
+      if (data.token) {
+        goToDashboard(
+          (data.role as ApiRole) || "author",
+          data.token as string,
+          (data.email as string) || email.trim(),
+          data.name as string | undefined,
+        );
+      } else {
+        setError("Unexpected response from server.");
+      }
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onForgotPassword = async () => {
+    if (!email.trim()) {
+      setError("Enter your email first.");
       return;
     }
     setError(null);
+    setLoading(true);
     try {
-      sessionStorage.setItem(
-        "csp.session",
-        JSON.stringify({ role: portal.id, email: email.trim() }),
-      );
+      await fetch(`${API_BASE}/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      setOtpPurpose("password_reset");
+      setStep("otp");
+      setInfo("If that email is registered, a verification code has been sent.");
     } catch {
-      // ignore storage errors
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
     }
-    navigate({ to: "/dashboard/$role", params: { role: portal.id } });
   };
 
   return (
@@ -165,7 +319,14 @@ function PortalLoginForm({ portal, onBack }: { portal: PortalConfig; onBack: () 
         <div className="mb-6 flex items-center gap-2">
           <button
             type="button"
-            onClick={onBack}
+            onClick={() => {
+              if (step === "password") onBack();
+              else {
+                setStep("password");
+                setError(null);
+                setInfo(null);
+              }
+            }}
             className="cursor-pointer text-foreground/50 transition-colors hover:text-foreground"
             aria-label="Back"
           >
@@ -176,64 +337,140 @@ function PortalLoginForm({ portal, onBack }: { portal: PortalConfig; onBack: () 
           </div>
         </div>
 
-        <h2 className="mb-1 font-serif text-xl font-bold text-foreground">Welcome back</h2>
-        <p className="mb-6 font-sans text-sm text-foreground/60">{portal.formSubtitle}</p>
+        <h2 className="mb-1 font-serif text-xl font-bold text-foreground">
+          {step === "password" && "Welcome back"}
+          {step === "otp" && "Verify your email"}
+          {step === "set-password" && "Set your password"}
+        </h2>
+        <p className="mb-6 font-sans text-sm text-foreground/60">
+          {step === "password" && portal.formSubtitle}
+          {step === "otp" && "Enter the 6-digit code we just sent you."}
+          {step === "set-password" && "Choose a password of at least 8 characters."}
+        </p>
 
-        <form onSubmit={onSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="email" className="mb-1.5 block font-sans text-sm font-medium text-foreground/80">
-              Email address
-            </label>
-            <input
-              id="email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="your.email@university.edu"
-              className="w-full rounded-xl border border-foreground/20 bg-foreground/10 px-3 py-2.5 font-sans text-sm text-foreground placeholder:text-foreground/30 transition-colors focus:outline-none focus:ring-2 focus:ring-foreground/30"
-            />
-          </div>
-          <div>
-            <label htmlFor="code" className="mb-1.5 block font-sans text-sm font-medium text-foreground/80">
-              Access code
-            </label>
-            <input
-              id="code"
-              type="text"
-              required
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              placeholder="Enter your code"
-              className="w-full rounded-xl border border-foreground/20 bg-foreground/10 px-3 py-2.5 font-sans text-sm text-foreground placeholder:text-foreground/30 transition-colors focus:outline-none focus:ring-2 focus:ring-foreground/30"
-            />
-          </div>
+        {step === "password" && (
+          <form onSubmit={onSubmitLogin} className="space-y-4">
+            <div>
+              <label htmlFor="email" className="mb-1.5 block font-sans text-sm font-medium text-foreground/80">
+                Email address
+              </label>
+              <input
+                id="email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="your.email@university.edu"
+                className="w-full rounded-xl border border-foreground/20 bg-foreground/10 px-3 py-2.5 font-sans text-sm text-foreground placeholder:text-foreground/30 transition-colors focus:outline-none focus:ring-2 focus:ring-foreground/30"
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="mb-1.5 block font-sans text-sm font-medium text-foreground/80">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Leave blank if first-time login"
+                className="w-full rounded-xl border border-foreground/20 bg-foreground/10 px-3 py-2.5 font-sans text-sm text-foreground placeholder:text-foreground/30 transition-colors focus:outline-none focus:ring-2 focus:ring-foreground/30"
+              />
+            </div>
 
-          <button
-            type="submit"
-            className={`mt-1 w-full rounded-xl ${portal.toneClass} py-2.5 font-sans text-sm font-medium text-white transition-opacity hover:opacity-90`}
-          >
-            Log in
-          </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className={`mt-1 w-full rounded-xl ${portal.toneClass} py-2.5 font-sans text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50`}
+            >
+              {loading ? "Signing in…" : "Log in"}
+            </button>
 
-          {error && (
-            <p role="alert" className="text-center font-sans text-xs text-red-300">
-              {error}
-            </p>
-          )}
+            {error && <p role="alert" className="text-center font-sans text-xs text-red-300">{error}</p>}
+            {info && !error && <p className="text-center font-sans text-xs text-foreground/60">{info}</p>}
 
-          <button
-            type="button"
-            className="w-full text-center font-sans text-sm text-foreground/40 transition-colors hover:text-foreground/70"
-          >
-            Get new code
-          </button>
-        </form>
+            <button
+              type="button"
+              onClick={onForgotPassword}
+              disabled={loading}
+              className="w-full text-center font-sans text-sm text-foreground/40 transition-colors hover:text-foreground/70 disabled:opacity-50"
+            >
+              Forgot password?
+            </button>
+          </form>
+        )}
+
+        {step === "otp" && (
+          <form onSubmit={onSubmitOtp} className="space-y-4">
+            <div>
+              <label htmlFor="otp" className="mb-1.5 block font-sans text-sm font-medium text-foreground/80">
+                Verification code
+              </label>
+              <input
+                id="otp"
+                type="text"
+                inputMode="numeric"
+                required
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                placeholder="6-digit code"
+                className="w-full rounded-xl border border-foreground/20 bg-foreground/10 px-3 py-2.5 font-sans text-sm tracking-widest text-foreground placeholder:text-foreground/30 transition-colors focus:outline-none focus:ring-2 focus:ring-foreground/30"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className={`mt-1 w-full rounded-xl ${portal.toneClass} py-2.5 font-sans text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50`}
+            >
+              {loading ? "Verifying…" : "Verify code"}
+            </button>
+            {error && <p role="alert" className="text-center font-sans text-xs text-red-300">{error}</p>}
+            {info && !error && <p className="text-center font-sans text-xs text-foreground/60">{info}</p>}
+          </form>
+        )}
+
+        {step === "set-password" && (
+          <form onSubmit={onSubmitSetPassword} className="space-y-4">
+            <div>
+              <label htmlFor="new-password" className="mb-1.5 block font-sans text-sm font-medium text-foreground/80">
+                New password
+              </label>
+              <input
+                id="new-password"
+                type="password"
+                required
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="At least 8 characters"
+                className="w-full rounded-xl border border-foreground/20 bg-foreground/10 px-3 py-2.5 font-sans text-sm text-foreground placeholder:text-foreground/30 transition-colors focus:outline-none focus:ring-2 focus:ring-foreground/30"
+              />
+            </div>
+            <div>
+              <label htmlFor="confirm-password" className="mb-1.5 block font-sans text-sm font-medium text-foreground/80">
+                Confirm password
+              </label>
+              <input
+                id="confirm-password"
+                type="password"
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Repeat password"
+                className="w-full rounded-xl border border-foreground/20 bg-foreground/10 px-3 py-2.5 font-sans text-sm text-foreground placeholder:text-foreground/30 transition-colors focus:outline-none focus:ring-2 focus:ring-foreground/30"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className={`mt-1 w-full rounded-xl ${portal.toneClass} py-2.5 font-sans text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50`}
+            >
+              {loading ? "Saving…" : "Set password & continue"}
+            </button>
+            {error && <p role="alert" className="text-center font-sans text-xs text-red-300">{error}</p>}
+            {info && !error && <p className="text-center font-sans text-xs text-foreground/60">{info}</p>}
+          </form>
+        )}
       </div>
-
-      <p className="mt-4 text-center font-sans text-xs text-foreground/30">
-        Demo: <span className="text-foreground/50">{portal.demoEmail} / {portal.demoCode}</span>
-      </p>
     </div>
   );
 }
