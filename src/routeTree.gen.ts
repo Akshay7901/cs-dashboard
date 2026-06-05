@@ -13,6 +13,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardReviewerRouteImport } from './routes/dashboard.reviewer'
 import { Route as DashboardEditorRouteImport } from './routes/dashboard.editor'
+import { Route as DashboardDecision_reviewerRouteImport } from './routes/dashboard.decision_reviewer'
 import { Route as DashboardAuthorRouteImport } from './routes/dashboard.author'
 import { Route as DashboardRoleRouteImport } from './routes/dashboard.$role'
 import { Route as DashboardReviewerSubmissionIdRouteImport } from './routes/dashboard.reviewer.submission.$id'
@@ -38,6 +39,12 @@ const DashboardEditorRoute = DashboardEditorRouteImport.update({
   path: '/dashboard/editor',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardDecision_reviewerRoute =
+  DashboardDecision_reviewerRouteImport.update({
+    id: '/dashboard/decision_reviewer',
+    path: '/dashboard/decision_reviewer',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const DashboardAuthorRoute = DashboardAuthorRouteImport.update({
   id: '/dashboard/author',
   path: '/dashboard/author',
@@ -66,6 +73,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/dashboard/$role': typeof DashboardRoleRoute
   '/dashboard/author': typeof DashboardAuthorRoute
+  '/dashboard/decision_reviewer': typeof DashboardDecision_reviewerRoute
   '/dashboard/editor': typeof DashboardEditorRouteWithChildren
   '/dashboard/reviewer': typeof DashboardReviewerRouteWithChildren
   '/dashboard/editor/submission/$id': typeof DashboardEditorSubmissionIdRoute
@@ -76,6 +84,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/dashboard/$role': typeof DashboardRoleRoute
   '/dashboard/author': typeof DashboardAuthorRoute
+  '/dashboard/decision_reviewer': typeof DashboardDecision_reviewerRoute
   '/dashboard/editor': typeof DashboardEditorRouteWithChildren
   '/dashboard/reviewer': typeof DashboardReviewerRouteWithChildren
   '/dashboard/editor/submission/$id': typeof DashboardEditorSubmissionIdRoute
@@ -87,6 +96,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/dashboard/$role': typeof DashboardRoleRoute
   '/dashboard/author': typeof DashboardAuthorRoute
+  '/dashboard/decision_reviewer': typeof DashboardDecision_reviewerRoute
   '/dashboard/editor': typeof DashboardEditorRouteWithChildren
   '/dashboard/reviewer': typeof DashboardReviewerRouteWithChildren
   '/dashboard/editor/submission/$id': typeof DashboardEditorSubmissionIdRoute
@@ -99,6 +109,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/dashboard/$role'
     | '/dashboard/author'
+    | '/dashboard/decision_reviewer'
     | '/dashboard/editor'
     | '/dashboard/reviewer'
     | '/dashboard/editor/submission/$id'
@@ -109,6 +120,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/dashboard/$role'
     | '/dashboard/author'
+    | '/dashboard/decision_reviewer'
     | '/dashboard/editor'
     | '/dashboard/reviewer'
     | '/dashboard/editor/submission/$id'
@@ -119,6 +131,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/dashboard/$role'
     | '/dashboard/author'
+    | '/dashboard/decision_reviewer'
     | '/dashboard/editor'
     | '/dashboard/reviewer'
     | '/dashboard/editor/submission/$id'
@@ -130,6 +143,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   DashboardRoleRoute: typeof DashboardRoleRoute
   DashboardAuthorRoute: typeof DashboardAuthorRoute
+  DashboardDecision_reviewerRoute: typeof DashboardDecision_reviewerRoute
   DashboardEditorRoute: typeof DashboardEditorRouteWithChildren
   DashboardReviewerRoute: typeof DashboardReviewerRouteWithChildren
 }
@@ -162,6 +176,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard/editor'
       fullPath: '/dashboard/editor'
       preLoaderRoute: typeof DashboardEditorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/decision_reviewer': {
+      id: '/dashboard/decision_reviewer'
+      path: '/dashboard/decision_reviewer'
+      fullPath: '/dashboard/decision_reviewer'
+      preLoaderRoute: typeof DashboardDecision_reviewerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard/author': {
@@ -223,6 +244,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   DashboardRoleRoute: DashboardRoleRoute,
   DashboardAuthorRoute: DashboardAuthorRoute,
+  DashboardDecision_reviewerRoute: DashboardDecision_reviewerRoute,
   DashboardEditorRoute: DashboardEditorRouteWithChildren,
   DashboardReviewerRoute: DashboardReviewerRouteWithChildren,
 }
