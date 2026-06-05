@@ -21,6 +21,16 @@ import {
   displayNameFromEmail,
 } from "@/lib/proposals";
 
+const API_BASE = "https://api.cambridgescholars.com/api/proposals";
+
+type PeerReviewer = {
+  id: number;
+  name: string;
+  email: string;
+  assigned_proposals_count?: number;
+  created_at?: string;
+};
+
 export const Route = createFileRoute("/dashboard/decision_reviewer")({
   head: () => ({
     meta: [{ title: "Decision Reviewer Portal — Proposal Intake" }],
@@ -52,6 +62,116 @@ function DecisionReviewerDashboard() {
   const [sort, setSort] = useState<"newest" | "oldest">("newest");
   const [statusOverrides, setStatusOverrides] = useState<Record<string, StatusKey>>({});
   const [assignedProposalIds, setAssignedProposalIds] = useState<Set<string>>(new Set());
+  const [reviewersOpen, setReviewersOpen] = useState(false);
+  const [reviewers, setReviewers] = useState<PeerReviewer[]>([]);
+  const [reviewersLoading, setReviewersLoading] = useState(false);
+  const [reviewersError, setReviewersError] = useState<string | null>(null);
+  const [reviewersInfo, setReviewersInfo] = useState<string | null>(null);
+  const [newReviewer, setNewReviewer] = useState({ name: "", email: "" });
+  const [adding, setAdding] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  const authHeaders = (): HeadersInit => {
+    const token = (() => {
+      try {
+        return sessionStorage.getItem("csp.token") || "";
+      } catch {
+        return "";
+      }
+    })();
+    return {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+  };
+
+  const fetchReviewers = async () => {
+    setReviewersLoading(true);
+    setReviewersError(null);
+    try {
+      const res = await fetch(`${API_BASE}/users/peer-reviewers`, {
+        headers: authHeaders(),
+      });
+      const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!res.ok) {
+        setReviewersError((data.error as string) || "Failed to load peer reviewers.");
+        return;
+      }
+      setReviewers((data.peer_reviewers as PeerReviewer[]) || []);
+    } catch {
+      setReviewersError("Network error. Please try again.");
+    } finally {
+      setReviewersLoading(false);
+    }
+  };
+
+  const openReviewers = () => {
+    setReviewersOpen(true);
+    setReviewersInfo(null);
+    setReviewersError(null);
+    fetchReviewers();
+  };
+
+  const addReviewer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newReviewer.name.trim() || !newReviewer.email.trim()) return;
+    setAdding(true);
+    setReviewersError(null);
+    setReviewersInfo(null);
+    try {
+      const res = await fetch(`${API_BASE}/users/peer-reviewers`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({
+          name: newReviewer.name.trim(),
+          email: newReviewer.email.trim(),
+        }),
+      });
+      const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!res.ok) {
+        setReviewersError((data.error as string) || "Unable to create peer reviewer.");
+        return;
+      }
+      setReviewersInfo(
+        (data.message as string) ||
+          "Peer reviewer created. A verification code has been emailed.",
+      );
+      setNewReviewer({ name: "", email: "" });
+      fetchReviewers();
+    } catch {
+      setReviewersError("Network error. Please try again.");
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const removeReviewer = async (id: number) => {
+    if (!confirm("Delete this peer reviewer?")) return;
+    setDeletingId(id);
+    setReviewersError(null);
+    setReviewersInfo(null);
+    try {
+      const res = await fetch(`${API_BASE}/users/peer-reviewers/${id}`, {
+        method: "DELETE",
+        headers: authHeaders(),
+      });
+      const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!res.ok) {
+        const msg =
+          (data.message as string) ||
+          (data.error as string) ||
+          "Unable to delete peer reviewer.";
+        setReviewersError(msg);
+        return;
+      }
+      setReviewersInfo("Peer reviewer deleted.");
+      setReviewers((prev) => prev.filter((r) => r.id !== id));
+    } catch {
+      setReviewersError("Network error. Please try again.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const isSubmissionDetail = Boolean(
     matchRoute({ to: "/dashboard/editor/submission/$id", fuzzy: true }),
@@ -185,13 +305,28 @@ function DecisionReviewerDashboard() {
       </header>
 
       <main className="mx-auto max-w-7xl px-8 py-10">
-        <div className="mb-8">
-          <h1 className="font-serif text-4xl font-bold tracking-tight text-stone-900">
-            Proposal Intake
-          </h1>
-          <p className="mt-2 font-sans text-base text-stone-600">
-            Review and manage incoming book proposals
-          </p>
+        <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="font-serif text-4xl font-bold tracking-tight text-stone-900">
+              Proposal Intake
+            </h1>
+            <p className="mt-2 font-sans text-base text-stone-600">
+              Review and manage incoming book proposals
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={openReviewers}
+            className="inline-flex items-center gap-2 rounded-xl border border-[#0E3D2F] bg-[#0E3D2F] px-4 py-2.5 font-sans text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#0a2e23]"
+          >
+            <Users className="h-4 w-4" />
+            Peer Reviewers
+            {reviewers.length > 0 && (
+              <span className="ml-1 inline-flex min-w-5 items-center justify-center rounded-full bg-white/20 px-1.5 py-0.5 font-sans text-xs font-medium">
+                {reviewers.length}
+              </span>
+            )}
+          </button>
         </div>
 
         {/* Filter pills */}
@@ -344,6 +479,126 @@ function DecisionReviewerDashboard() {
           </div>
         </div>
       </main>
+
+      {reviewersOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/50 p-4"
+          onClick={() => setReviewersOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between border-b border-stone-200 px-6 py-4">
+              <div>
+                <h2 className="font-serif text-2xl font-bold text-stone-900">Peer Reviewers</h2>
+                <p className="mt-1 font-sans text-sm text-stone-600">
+                  Add and manage peer reviewers. New reviewers receive an email OTP to set
+                  their password on first login.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setReviewersOpen(false)}
+                className="rounded-lg p-1.5 text-stone-500 hover:bg-stone-100 hover:text-stone-800"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={addReviewer}
+              className="grid gap-3 border-b border-stone-200 bg-stone-50/60 px-6 py-5 sm:grid-cols-2"
+            >
+              <input
+                type="text"
+                required
+                value={newReviewer.name}
+                onChange={(e) => setNewReviewer((r) => ({ ...r, name: e.target.value }))}
+                placeholder="Full name *"
+                className="rounded-lg border border-stone-200 bg-white px-3 py-2 font-sans text-sm focus:outline-none focus:ring-2 focus:ring-stone-300"
+              />
+              <input
+                type="email"
+                required
+                value={newReviewer.email}
+                onChange={(e) => setNewReviewer((r) => ({ ...r, email: e.target.value }))}
+                placeholder="Email *"
+                className="rounded-lg border border-stone-200 bg-white px-3 py-2 font-sans text-sm focus:outline-none focus:ring-2 focus:ring-stone-300"
+              />
+              <div className="sm:col-span-2 flex items-center justify-between gap-3">
+                <div className="text-xs">
+                  {reviewersError && (
+                    <p role="alert" className="text-red-600">
+                      {reviewersError}
+                    </p>
+                  )}
+                  {reviewersInfo && !reviewersError && (
+                    <p className="text-emerald-700">{reviewersInfo}</p>
+                  )}
+                </div>
+                <button
+                  type="submit"
+                  disabled={adding}
+                  className="inline-flex items-center gap-2 rounded-lg bg-[#0E3D2F] px-4 py-2 font-sans text-sm font-medium text-white hover:bg-[#0a2e23] disabled:opacity-50"
+                >
+                  <Plus className="h-4 w-4" />
+                  {adding ? "Adding…" : "Add reviewer"}
+                </button>
+              </div>
+            </form>
+
+            <div className="max-h-[40vh] overflow-y-auto">
+              {reviewersLoading ? (
+                <p className="px-6 py-10 text-center font-sans text-sm text-stone-500">
+                  Loading peer reviewers…
+                </p>
+              ) : reviewers.length === 0 ? (
+                <p className="px-6 py-10 text-center font-sans text-sm text-stone-500">
+                  No peer reviewers yet.
+                </p>
+              ) : (
+                <ul>
+                  {reviewers.map((r) => (
+                    <li
+                      key={r.id}
+                      className="flex items-start justify-between gap-4 border-b border-stone-100 px-6 py-4 last:border-b-0"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#0E3D2F] font-sans text-xs font-semibold text-white">
+                          {initialsFromName(r.name)}
+                        </div>
+                        <div>
+                          <p className="font-sans text-sm font-semibold text-stone-900">
+                            {r.name}
+                          </p>
+                          <p className="font-sans text-xs text-stone-500">{r.email}</p>
+                          {typeof r.assigned_proposals_count === "number" && (
+                            <p className="mt-1 font-sans text-xs text-stone-600">
+                              {r.assigned_proposals_count} active assignment
+                              {r.assigned_proposals_count === 1 ? "" : "s"}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeReviewer(r.id)}
+                        disabled={deletingId === r.id}
+                        className="rounded-lg p-1.5 text-stone-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+                        aria-label="Remove reviewer"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
