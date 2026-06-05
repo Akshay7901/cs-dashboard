@@ -6,12 +6,13 @@ import cspLogo from "@/assets/csp-logo.png";
 
 const API_BASE = "https://api.cambridgescholars.com/api/proposals";
 
-type ApiRole = "admin" | "editor" | "reviewer" | "author" | string;
+type ApiRole = "admin" | "editor" | "reviewer" | "decision_reviewer" | "author" | string;
 
 function roleToPortal(apiRole: ApiRole): Role {
   const r = (apiRole || "").toLowerCase();
+  if (r === "decision_reviewer") return "decision_reviewer";
   if (r === "editor" || r === "admin") return "editor";
-  if (r === "reviewer" || r === "decision_reviewer" || r.includes("reviewer")) return "reviewer";
+  if (r === "reviewer" || r.includes("reviewer")) return "reviewer";
   return "author";
 }
 
@@ -43,7 +44,7 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
-type Role = "author" | "editor" | "reviewer";
+type Role = "author" | "editor" | "reviewer" | "decision_reviewer";
 
 interface PortalConfig {
   id: Role;
