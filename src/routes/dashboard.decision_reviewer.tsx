@@ -546,7 +546,11 @@ function DecisionReviewerDashboard() {
             })}
             {filtered.length === 0 && (
               <li className="px-6 py-10 text-center font-sans text-sm text-stone-500">
-                No proposals match your filters.
+                {proposalsLoading
+                  ? "Loading proposals…"
+                  : proposalsError
+                    ? proposalsError
+                    : "No proposals match your filters."}
               </li>
             )}
           </ul>
