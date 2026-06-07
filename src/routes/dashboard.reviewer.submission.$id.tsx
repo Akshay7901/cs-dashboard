@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronLeft, LogOut, ChevronRight, FileText, Download } from "lucide-react";
+import { ChevronLeft, LogOut, ChevronRight, FileText, Download, CheckCircle2 } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
 import { initialsFromName } from "@/lib/proposals";
 import { clearPortalSession, getPortalSession, getPortalToken } from "@/lib/auth";
@@ -102,6 +102,8 @@ function ReviewerSubmission() {
     { kind: "success" | "error"; text: string } | null
   >(null);
   const [submitOpen, setSubmitOpen] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [reviewIsSubmitted, setReviewIsSubmitted] = useState(false);
 
   type ReviewForm = {
     scope: string;
@@ -194,6 +196,9 @@ function ReviewerSubmission() {
             const mine =
               reviews.find((r) => r.reviewer_role === "peer_reviewer") || reviews[0];
             if (mine && !cancelled) {
+              if ((mine.is_submitted as boolean) === true) {
+                setReviewIsSubmitted(true);
+              }
               const rd = (mine.review_data as Record<string, unknown>) || {};
               setForm((f) => ({
                 ...f,
@@ -333,7 +338,7 @@ function ReviewerSubmission() {
         setSubmitting(false);
         return;
       }
-      navigate({ to: "/dashboard/reviewer" });
+      setSubmitSuccess(true);
     } catch {
       setActionMessage({ kind: "error", text: "Network error. Please try again." });
       setSubmitting(false);
@@ -395,118 +400,140 @@ function ReviewerSubmission() {
 
           <hr className="my-6 border-stone-200" />
 
-          {/* Review fields */}
-          <p className="mb-4 font-sans text-xs font-semibold uppercase tracking-wide text-[#7A6A5A]">
-            Review Assessment
-          </p>
-          <div className="space-y-5">
-            {(
-              [
-                { key: "scope", label: "Scope", placeholder: "Assess the scope of the proposal…" },
-                { key: "purpose_value", label: "Purpose & Value", placeholder: "Assess the purpose and value of the work…" },
-                { key: "title", label: "Title", placeholder: "Comment on the suitability of the title…" },
-                { key: "originality", label: "Originality", placeholder: "Evaluate the originality of the contribution…" },
-                { key: "credibility", label: "Credibility", placeholder: "Evaluate the credibility of the author and content…" },
-                { key: "structure", label: "Structure", placeholder: "Comment on the structure and organisation…" },
-                { key: "clarity_quality", label: "Clarity & Quality", placeholder: "Assess the clarity and quality of writing…" },
-                { key: "other_comments", label: "Other Comments", placeholder: "Any other comments…" },
-                { key: "red_flags", label: "Red Flags", placeholder: "Note any red flags or concerns…" },
-              ] as Array<{ key: keyof ReviewForm; label: string; placeholder: string }>
-            ).map((f) => (
-              <div key={f.key}>
-                <label className="block mb-1.5 font-sans text-xs font-semibold uppercase tracking-wide text-[#7A6A5A]">
-                  {f.label}
-                </label>
-                <textarea
-                  value={form[f.key]}
-                  onChange={(e) => updateField(f.key, e.target.value)}
-                  rows={3}
-                  placeholder={f.placeholder}
-                  className="w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 font-sans text-xs text-slate-700 placeholder:text-slate-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
-                />
+          {reviewIsSubmitted ? (
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-center">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100">
+                <CheckCircle2 className="h-7 w-7 text-emerald-600" />
               </div>
-            ))}
-          </div>
-
-          <hr className="my-6 border-stone-200" />
-
-          {/* Recommendation */}
-          <div>
-            <label className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-700">
-              Recommendation <span className="text-rose-500">*</span>
-            </label>
-            <div className="mt-3 space-y-3">
-              {RECOMMENDATIONS.map((r) => {
-                const checked = recommendation === r.key;
-                return (
-                  <label
-                    key={r.key}
-                    className={`flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 transition-colors ${
-                      checked
-                        ? "border-sky-400 bg-sky-50/60 ring-2 ring-sky-100"
-                        : "border-stone-200 bg-white hover:border-stone-300"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="recommendation"
-                      className="mt-1 h-4 w-4 cursor-pointer accent-sky-600"
-                      checked={checked}
-                      onChange={() => setRecommendation(r.key)}
+              <h2 className="mt-4 font-serif text-lg font-bold text-emerald-900">
+                Review Completed
+              </h2>
+              <p className="mt-1 font-sans text-sm text-emerald-700">
+                You have already submitted this review. It has been sent to the decision reviewer.
+              </p>
+              <Link
+                to="/dashboard/reviewer"
+                className="mt-5 inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-600 px-5 py-2.5 font-sans text-sm font-semibold text-white hover:bg-sky-700"
+              >
+                Back to Dashboard
+              </Link>
+            </div>
+          ) : (
+            <>
+              {/* Review fields */}
+              <p className="mb-4 font-sans text-xs font-semibold uppercase tracking-wide text-[#7A6A5A]">
+                Review Assessment
+              </p>
+              <div className="space-y-5">
+                {(
+                  [
+                    { key: "scope", label: "Scope", placeholder: "Assess the scope of the proposal…" },
+                    { key: "purpose_value", label: "Purpose & Value", placeholder: "Assess the purpose and value of the work…" },
+                    { key: "title", label: "Title", placeholder: "Comment on the suitability of the title…" },
+                    { key: "originality", label: "Originality", placeholder: "Evaluate the originality of the contribution…" },
+                    { key: "credibility", label: "Credibility", placeholder: "Evaluate the credibility of the author and content…" },
+                    { key: "structure", label: "Structure", placeholder: "Comment on the structure and organisation…" },
+                    { key: "clarity_quality", label: "Clarity & Quality", placeholder: "Assess the clarity and quality of writing…" },
+                    { key: "other_comments", label: "Other Comments", placeholder: "Any other comments…" },
+                    { key: "red_flags", label: "Red Flags", placeholder: "Note any red flags or concerns…" },
+                  ] as Array<{ key: keyof ReviewForm; label: string; placeholder: string }>
+                ).map((f) => (
+                  <div key={f.key}>
+                    <label className="block mb-1.5 font-sans text-xs font-semibold uppercase tracking-wide text-[#7A6A5A]">
+                      {f.label}
+                    </label>
+                    <textarea
+                      value={form[f.key]}
+                      onChange={(e) => updateField(f.key, e.target.value)}
+                      rows={3}
+                      placeholder={f.placeholder}
+                      className="w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 font-sans text-xs text-slate-700 placeholder:text-slate-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
                     />
-                    <div>
-                      <div className="font-sans text-sm font-semibold text-stone-900">
-                        {r.label}
-                      </div>
-                      <div className="mt-0.5 font-sans text-sm text-stone-600">
-                        {r.sub}
-                      </div>
-                    </div>
-                  </label>
-                );
-              })}
-            </div>
-          </div>
+                  </div>
+                ))}
+              </div>
 
-          {/* Footer actions */}
-          {actionMessage && (
-            <div
-              className={`mt-6 rounded-xl border px-4 py-3 text-sm ${
-                actionMessage.kind === "success"
-                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                  : "border-rose-200 bg-rose-50 text-rose-700"
-              }`}
-            >
-              {actionMessage.text}
-            </div>
+              <hr className="my-6 border-stone-200" />
+
+              {/* Recommendation */}
+              <div>
+                <label className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-700">
+                  Recommendation <span className="text-rose-500">*</span>
+                </label>
+                <div className="mt-3 space-y-3">
+                  {RECOMMENDATIONS.map((r) => {
+                    const checked = recommendation === r.key;
+                    return (
+                      <label
+                        key={r.key}
+                        className={`flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 transition-colors ${
+                          checked
+                            ? "border-sky-400 bg-sky-50/60 ring-2 ring-sky-100"
+                            : "border-stone-200 bg-white hover:border-stone-300"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="recommendation"
+                          className="mt-1 h-4 w-4 cursor-pointer accent-sky-600"
+                          checked={checked}
+                          onChange={() => setRecommendation(r.key)}
+                        />
+                        <div>
+                          <div className="font-sans text-sm font-semibold text-stone-900">
+                            {r.label}
+                          </div>
+                          <div className="mt-0.5 font-sans text-sm text-stone-600">
+                            {r.sub}
+                          </div>
+                        </div>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Footer actions */}
+              {actionMessage && (
+                <div
+                  className={`mt-6 rounded-xl border px-4 py-3 text-sm ${
+                    actionMessage.kind === "success"
+                      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                      : "border-rose-200 bg-rose-50 text-rose-700"
+                  }`}
+                >
+                  {actionMessage.text}
+                </div>
+              )}
+              <div className="mt-6 mb-4 flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={onSaveDraft}
+                  disabled={saving || submitting}
+                  className="flex-1 rounded-xl border border-stone-300 bg-white px-4 py-3 font-sans text-sm font-semibold text-stone-700 transition-colors hover:bg-stone-50 disabled:opacity-60"
+                >
+                  {saving ? "Saving…" : "Save Draft"}
+                </button>
+                <button
+                  type="button"
+                  disabled={!canSubmit || saving || submitting}
+                  onClick={() => {
+                    if (!canSubmit || saving || submitting) return;
+                    setActionMessage(null);
+                    setSubmitOpen(true);
+                  }}
+                  className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-sans text-sm font-semibold transition-colors ${
+                    canSubmit && !submitting && !saving
+                      ? "bg-sky-600 text-white hover:bg-sky-700"
+                      : "bg-sky-200 text-white"
+                  }`}
+                >
+                  {submitting ? "Submitting…" : "Submit Review"}
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            </>
           )}
-          <div className="mt-6 mb-4 flex items-center gap-3">
-            <button
-              type="button"
-              onClick={onSaveDraft}
-              disabled={saving || submitting}
-              className="flex-1 rounded-xl border border-stone-300 bg-white px-4 py-3 font-sans text-sm font-semibold text-stone-700 transition-colors hover:bg-stone-50 disabled:opacity-60"
-            >
-              {saving ? "Saving…" : "Save Draft"}
-            </button>
-            <button
-              type="button"
-              disabled={!canSubmit || saving || submitting}
-              onClick={() => {
-                if (!canSubmit || saving || submitting) return;
-                setActionMessage(null);
-                setSubmitOpen(true);
-              }}
-              className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-sans text-sm font-semibold transition-colors ${
-                canSubmit && !submitting && !saving
-                  ? "bg-sky-600 text-white hover:bg-sky-700"
-                  : "bg-sky-200 text-white"
-              }`}
-            >
-              {submitting ? "Submitting…" : "Submit Review"}
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
         </section>
 
         {/* RIGHT — Proposal context */}
@@ -515,45 +542,68 @@ function ReviewerSubmission() {
       {submitOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/50 px-4">
           <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
-            <h2 className="font-serif text-lg font-bold text-[#2C1A0E]">
-              Note to Decision Reviewer
-            </h2>
-            <p className="mt-1 font-sans text-sm text-stone-600">
-              Add a private note for the decision reviewer before submitting your review.
-            </p>
-            <textarea
-              value={form.note_to_dr}
-              onChange={(e) => updateField("note_to_dr", e.target.value)}
-              rows={6}
-              placeholder="Private note to the decision reviewer…"
-              className="mt-4 w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 font-sans text-sm text-slate-700 placeholder:text-slate-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
-              autoFocus
-            />
-            {actionMessage && actionMessage.kind === "error" && (
-              <div className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-                {actionMessage.text}
+            {submitSuccess ? (
+              <div className="text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100">
+                  <CheckCircle2 className="h-7 w-7 text-emerald-600" />
+                </div>
+                <h2 className="mt-4 font-serif text-lg font-bold text-[#2C1A0E]">
+                  Review Submitted
+                </h2>
+                <p className="mt-1 font-sans text-sm text-stone-600">
+                  Your review has been completed and sent to the decision reviewer.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => navigate({ to: "/dashboard/reviewer" })}
+                  className="mt-5 inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-600 px-5 py-2.5 font-sans text-sm font-semibold text-white hover:bg-sky-700"
+                >
+                  Back to Dashboard
+                </button>
               </div>
+            ) : (
+              <>
+                <h2 className="font-serif text-lg font-bold text-[#2C1A0E]">
+                  Note to Decision Reviewer
+                </h2>
+                <p className="mt-1 font-sans text-sm text-stone-600">
+                  Add a private note for the decision reviewer before submitting your review.
+                </p>
+                <textarea
+                  value={form.note_to_dr}
+                  onChange={(e) => updateField("note_to_dr", e.target.value)}
+                  rows={6}
+                  placeholder="Private note to the decision reviewer…"
+                  className="mt-4 w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 font-sans text-sm text-slate-700 placeholder:text-slate-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
+                  autoFocus
+                />
+                {actionMessage && actionMessage.kind === "error" && (
+                  <div className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+                    {actionMessage.text}
+                  </div>
+                )}
+                <div className="mt-5 flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSubmitOpen(false)}
+                    disabled={submitting}
+                    className="rounded-xl border border-stone-300 bg-white px-4 py-2.5 font-sans text-sm font-semibold text-stone-700 hover:bg-stone-50 disabled:opacity-60"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await onSubmitReview();
+                    }}
+                    disabled={submitting}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-600 px-4 py-2.5 font-sans text-sm font-semibold text-white hover:bg-sky-700 disabled:opacity-60"
+                  >
+                    {submitting ? "Submitting…" : "Submit to Decision Reviewer"}
+                  </button>
+                </div>
+              </>
             )}
-            <div className="mt-5 flex items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setSubmitOpen(false)}
-                disabled={submitting}
-                className="rounded-xl border border-stone-300 bg-white px-4 py-2.5 font-sans text-sm font-semibold text-stone-700 hover:bg-stone-50 disabled:opacity-60"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={async () => {
-                  await onSubmitReview();
-                }}
-                disabled={submitting}
-                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-600 px-4 py-2.5 font-sans text-sm font-semibold text-white hover:bg-sky-700 disabled:opacity-60"
-              >
-                {submitting ? "Submitting…" : "Submit to Decision Reviewer"}
-              </button>
-            </div>
           </div>
         </div>
       )}
