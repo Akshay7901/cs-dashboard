@@ -1,47 +1,13 @@
-import { createFileRoute, Link, useNavigate, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ChevronLeft, LogOut, Plus, ChevronRight, X } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
-import {
-  PROPOSALS,
-  initialsFromName,
-  type Proposal,
-} from "@/lib/proposals";
-import { clearPortalSession, getPortalSession } from "@/lib/auth";
-
-type AssignmentSnapshot = {
-  id: string;
-  proposalId: string;
-  reviewerEmail: string;
-  reviewerName: string;
-  assignedAt: string;
-  proposal: {
-    id: string;
-    title: string;
-    kind: string;
-    subject: string;
-    subtitle?: string;
-    authorName: string;
-    authorAffiliation: string;
-    wordCount: number;
-    overview: string;
-  };
-};
+import { initialsFromName } from "@/lib/proposals";
+import { clearPortalSession, getPortalSession, getPortalToken } from "@/lib/auth";
+import { proposalApiFetch } from "@/lib/proposalApi";
 
 export const Route = createFileRoute("/dashboard/reviewer/submission/$id")({
   head: () => ({ meta: [{ title: "Review Submission — Reviewer Portal" }] }),
-  loader: ({ params }) => {
-    const proposal = PROPOSALS.find((p) => p.id === params.id) ?? null;
-    return { proposal, id: params.id };
-  },
-  notFoundComponent: () => (
-    <div className="min-h-screen bg-[#FAF6EE] p-10 font-sans text-stone-700">
-      <p>Submission not found.</p>
-      <Link to="/dashboard/reviewer" className="mt-4 inline-block underline">
-        Back to dashboard
-      </Link>
-    </div>
-  ),
   component: ReviewerSubmission,
 });
 
@@ -71,10 +37,7 @@ const RECOMMENDATIONS: { key: RecKey; label: string; sub: string }[] = [
 ];
 
 function ReviewerSubmission() {
-  const { proposal: loaded, id } = Route.useLoaderData() as {
-    proposal: Proposal | null;
-    id: string;
-  };
+  const { id } = Route.useParams();
   const navigate = useNavigate();
 
   const [proposal, setProposal] = useState<{
@@ -87,57 +50,13 @@ function ReviewerSubmission() {
     authorEmail: string;
     country: string;
     biography: string;
-    wordCount: number;
+    wordCount: string;
     overview: string;
     discipline: string;
     estCompletion: string;
-  } | null>(
-    loaded
-      ? {
-          id: loaded.id,
-          title: loaded.title,
-          subtitle: loaded.subtitle,
-          kind: loaded.kind,
-          authorName: loaded.authorName,
-          authorAffiliation: loaded.authorAffiliation,
-          authorEmail: loaded.authorEmail,
-          country: loaded.country,
-          biography: loaded.biography,
-          wordCount: loaded.wordCount,
-          overview: loaded.overview,
-          discipline: loaded.discipline,
-          estCompletion: loaded.estCompletion,
-        }
-      : (() => {
-          if (typeof window === "undefined") return null;
-          try {
-            const aRaw = localStorage.getItem("csp.assignments");
-            if (!aRaw) return null;
-            const list = JSON.parse(aRaw) as AssignmentSnapshot[];
-            const found = list.find(
-              (a) => a.id === id || a.proposalId === id,
-            );
-            if (!found) return null;
-            return {
-              id: found.proposal.id,
-              title: found.proposal.title,
-              subtitle: found.proposal.subtitle,
-              kind: found.proposal.kind,
-              authorName: found.proposal.authorName,
-              authorAffiliation: found.proposal.authorAffiliation,
-              authorEmail: "—",
-              country: "—",
-              biography: "—",
-              wordCount: found.proposal.wordCount,
-              overview: found.proposal.overview,
-              discipline: found.proposal.subject,
-              estCompletion: "—",
-            };
-          } catch {
-            return null;
-          }
-        })(),
-  );
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   type CommentType = "General" | "Major Concern" | "Minor Concern" | "Suggestion" | "Question";
   type CommentEntry = { type: CommentType; section: string; page: string; text: string };
@@ -171,16 +90,79 @@ function ReviewerSubmission() {
       }
     } catch {
       navigate({ to: "/login" });
+      return;
     }
-  }, [navigate]);
+
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      setLoadError(null);
+      try {
+        const token = getPortalToken();
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        };
+        const res = await proposalApiFetch(`/${encodeURIComponent(id)}`, { headers });
+        const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+        if (!res.ok) {
+          if (!cancelled) {
+            setLoadError((body.error as string) || `Failed to load proposal (${res.status}).`);
+            setLoading(false);
+          }
+          return;
+        }
+        const cd = ((body.current_data as Record<string, string | undefined>) || {});
+        if (!cancelled) {
+          setProposal({
+            id: (body.ticket_number as string) || id,
+            title: cd.main_title || id,
+            subtitle: cd.sub_title || undefined,
+            kind: cd.book_type || "Proposal",
+            authorName: cd.corresponding_author_name || "—",
+            authorAffiliation: cd.institution || "—",
+            authorEmail: cd.email || "—",
+            country: cd.address || "—",
+            biography: cd.biography || "—",
+            wordCount: cd.word_count || "—",
+            overview: cd.detailed_description || cd.short_description || "—",
+            discipline: cd.keywords || "—",
+            estCompletion: cd.expected_completion_date || "—",
+          });
+          setLoading(false);
+        }
+      } catch {
+        if (!cancelled) {
+          setLoadError("Network error. Please try again.");
+          setLoading(false);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate, id]);
 
   const onLogout = () => {
     clearPortalSession();
     navigate({ to: "/login" });
   };
 
-  if (!proposal) {
-    throw notFound();
+  if (loading || !proposal) {
+    return (
+      <div className="min-h-screen bg-[#FAF6EE] p-10 font-sans text-stone-700">
+        {loadError ? (
+          <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {loadError}
+          </div>
+        ) : (
+          <p>Loading submission…</p>
+        )}
+        <Link to="/dashboard/reviewer" className="mt-4 inline-block underline">
+          Back to dashboard
+        </Link>
+      </div>
+    );
   }
 
   const reviewerName = "Dr. Anna Hoffmann";
@@ -431,7 +413,7 @@ function ReviewerSubmission() {
             )}
             <div className="mt-4 flex flex-wrap gap-2">
               <Pill>{proposal.kind}</Pill>
-              <Pill>{proposal.wordCount.toLocaleString()} words</Pill>
+              <Pill>{proposal.wordCount} words</Pill>
               {proposal.estCompletion && proposal.estCompletion !== "—" && (
                 <Pill>{proposal.estCompletion}</Pill>
               )}
