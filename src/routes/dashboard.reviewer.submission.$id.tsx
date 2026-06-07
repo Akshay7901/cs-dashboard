@@ -101,6 +101,7 @@ function ReviewerSubmission() {
   const [actionMessage, setActionMessage] = useState<
     { kind: "success" | "error"; text: string } | null
   >(null);
+  const [submitOpen, setSubmitOpen] = useState(false);
 
   type ReviewForm = {
     scope: string;
@@ -410,8 +411,6 @@ function ReviewerSubmission() {
                 { key: "clarity_quality", label: "Clarity & Quality", placeholder: "Assess the clarity and quality of writing…" },
                 { key: "other_comments", label: "Other Comments", placeholder: "Any other comments…" },
                 { key: "red_flags", label: "Red Flags", placeholder: "Note any red flags or concerns…" },
-                { key: "note_to_dr", label: "Note to Decision Reviewer", placeholder: "Private note to the decision reviewer…" },
-                { key: "dr_note", label: "Decision Reviewer Note", placeholder: "Note from the decision reviewer…" },
               ] as Array<{ key: keyof ReviewForm; label: string; placeholder: string }>
             ).map((f) => (
               <div key={f.key}>
@@ -493,7 +492,11 @@ function ReviewerSubmission() {
             <button
               type="button"
               disabled={!canSubmit || saving || submitting}
-              onClick={onSubmitReview}
+              onClick={() => {
+                if (!canSubmit || saving || submitting) return;
+                setActionMessage(null);
+                setSubmitOpen(true);
+              }}
               className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-sans text-sm font-semibold transition-colors ${
                 canSubmit && !submitting && !saving
                   ? "bg-sky-600 text-white hover:bg-sky-700"
@@ -509,6 +512,51 @@ function ReviewerSubmission() {
         {/* RIGHT — Proposal context */}
         <ProposalDetails proposal={proposal} />
       </div>
+      {submitOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/50 px-4">
+          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+            <h2 className="font-serif text-lg font-bold text-[#2C1A0E]">
+              Note to Decision Reviewer
+            </h2>
+            <p className="mt-1 font-sans text-sm text-stone-600">
+              Add a private note for the decision reviewer before submitting your review.
+            </p>
+            <textarea
+              value={form.note_to_dr}
+              onChange={(e) => updateField("note_to_dr", e.target.value)}
+              rows={6}
+              placeholder="Private note to the decision reviewer…"
+              className="mt-4 w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 font-sans text-sm text-slate-700 placeholder:text-slate-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
+              autoFocus
+            />
+            {actionMessage && actionMessage.kind === "error" && (
+              <div className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+                {actionMessage.text}
+              </div>
+            )}
+            <div className="mt-5 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setSubmitOpen(false)}
+                disabled={submitting}
+                className="rounded-xl border border-stone-300 bg-white px-4 py-2.5 font-sans text-sm font-semibold text-stone-700 hover:bg-stone-50 disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  await onSubmitReview();
+                }}
+                disabled={submitting}
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-600 px-4 py-2.5 font-sans text-sm font-semibold text-white hover:bg-sky-700 disabled:opacity-60"
+              >
+                {submitting ? "Submitting…" : "Submit to Decision Reviewer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
