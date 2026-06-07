@@ -96,6 +96,11 @@ function ReviewerSubmission() {
   const [proposal, setProposal] = useState<ProposalState | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [actionMessage, setActionMessage] = useState<
+    { kind: "success" | "error"; text: string } | null
+  >(null);
 
   type ReviewForm = {
     scope: string;
@@ -175,6 +180,41 @@ function ReviewerSubmission() {
           });
           setLoading(false);
         }
+        // Load existing draft / submitted review for this peer reviewer
+        try {
+          const rr = await proposalApiFetch(`/${encodeURIComponent(id)}/review`, { headers });
+          if (rr.ok) {
+            const rb = (await rr.json().catch(() => ({}))) as Record<string, unknown>;
+            const reviews = Array.isArray(rb.reviews)
+              ? (rb.reviews as Array<Record<string, unknown>>)
+              : rb.review
+                ? [rb.review as Record<string, unknown>]
+                : [];
+            const mine =
+              reviews.find((r) => r.reviewer_role === "peer_reviewer") || reviews[0];
+            if (mine && !cancelled) {
+              const rd = (mine.review_data as Record<string, unknown>) || {};
+              setForm((f) => ({
+                ...f,
+                scope: (rd.scope as string) ?? f.scope,
+                purpose_value: (rd.purpose_value as string) ?? f.purpose_value,
+                title: (rd.title as string) ?? f.title,
+                originality: (rd.originality as string) ?? f.originality,
+                credibility: (rd.credibility as string) ?? f.credibility,
+                structure: (rd.structure as string) ?? f.structure,
+                clarity_quality: (rd.clarity_quality as string) ?? f.clarity_quality,
+                other_comments: (rd.other_comments as string) ?? f.other_comments,
+                red_flags: (rd.red_flags as string) ?? f.red_flags,
+                note_to_dr: (rd.note_to_dr as string) ?? f.note_to_dr,
+                dr_note: (rd.dr_note as string) ?? f.dr_note,
+              }));
+              const rec = rd.recommendation as RecKey | undefined;
+              if (rec) setRecommendation(rec);
+            }
+          }
+        } catch {
+          // ignore — draft load is best-effort
+        }
       } catch {
         if (!cancelled) {
           setLoadError("Network error. Please try again.");
@@ -212,31 +252,91 @@ function ReviewerSubmission() {
   const reviewerName = "Dr. Anna Hoffmann";
   const canSubmit = recommendation !== null;
 
-  const onSubmitReview = () => {
-    if (!canSubmit || !proposal) return;
+  const buildHeaders = () => {
+    const token = getPortalToken();
+    return {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    } as Record<string, string>;
+  };
+
+  const draftPayload = () => ({
+    scope: form.scope,
+    purpose_value: form.purpose_value,
+    title: form.title,
+    originality: form.originality,
+    credibility: form.credibility,
+    structure: form.structure,
+    clarity_quality: form.clarity_quality,
+    other_comments: form.other_comments,
+    red_flags: form.red_flags,
+  });
+
+  const onSaveDraft = async () => {
+    if (!proposal || saving || submitting) return;
+    setSaving(true);
+    setActionMessage(null);
     try {
-      const raw = localStorage.getItem("csp.reviews");
-      const list: Array<Record<string, unknown>> = raw ? JSON.parse(raw) : [];
-      const filtered = list.filter(
-        (r) => !(r.proposalId === proposal.ticket && r.reviewerName === reviewerName),
+      const res = await proposalApiFetch(
+        `/${encodeURIComponent(proposal.ticket)}/review/save`,
+        {
+          method: "POST",
+          headers: buildHeaders(),
+          body: JSON.stringify(draftPayload()),
+        },
       );
-      filtered.push({
-        id: `rev-${proposal.ticket}-${Date.now()}`,
-        proposalId: proposal.ticket,
-        reviewerName,
-        recommendation,
-        ...form,
-        submittedAt: new Date().toISOString(),
-      });
-      localStorage.setItem("csp.reviews", JSON.stringify(filtered));
-      const sRaw = localStorage.getItem("csp.proposalStatusOverrides");
-      const overrides: Record<string, string> = sRaw ? JSON.parse(sRaw) : {};
-      overrides[proposal.ticket] = "review_returned";
-      localStorage.setItem("csp.proposalStatusOverrides", JSON.stringify(overrides));
+      const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!res.ok) {
+        setActionMessage({
+          kind: "error",
+          text: (body.error as string) || `Failed to save draft (${res.status}).`,
+        });
+      } else {
+        setActionMessage({
+          kind: "success",
+          text: (body.message as string) || "Draft saved successfully.",
+        });
+      }
     } catch {
-      // ignore
+      setActionMessage({ kind: "error", text: "Network error. Please try again." });
+    } finally {
+      setSaving(false);
     }
-    navigate({ to: "/dashboard/reviewer" });
+  };
+
+  const onSubmitReview = async () => {
+    if (!canSubmit || !proposal || saving || submitting) return;
+    setSubmitting(true);
+    setActionMessage(null);
+    try {
+      const payload = {
+        ...draftPayload(),
+        note_to_dr: form.note_to_dr,
+        dr_note: form.dr_note,
+        recommendation,
+      };
+      const res = await proposalApiFetch(
+        `/${encodeURIComponent(proposal.ticket)}/review/submit`,
+        {
+          method: "POST",
+          headers: buildHeaders(),
+          body: JSON.stringify(payload),
+        },
+      );
+      const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!res.ok) {
+        setActionMessage({
+          kind: "error",
+          text: (body.error as string) || `Failed to submit review (${res.status}).`,
+        });
+        setSubmitting(false);
+        return;
+      }
+      navigate({ to: "/dashboard/reviewer" });
+    } catch {
+      setActionMessage({ kind: "error", text: "Network error. Please try again." });
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -370,24 +470,37 @@ function ReviewerSubmission() {
           </div>
 
           {/* Footer actions */}
-          <div className="mt-8 mb-4 flex items-center gap-3">
+          {actionMessage && (
+            <div
+              className={`mt-6 rounded-xl border px-4 py-3 text-sm ${
+                actionMessage.kind === "success"
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                  : "border-rose-200 bg-rose-50 text-rose-700"
+              }`}
+            >
+              {actionMessage.text}
+            </div>
+          )}
+          <div className="mt-6 mb-4 flex items-center gap-3">
             <button
               type="button"
-              className="flex-1 rounded-xl border border-stone-300 bg-white px-4 py-3 font-sans text-sm font-semibold text-stone-700 transition-colors hover:bg-stone-50"
+              onClick={onSaveDraft}
+              disabled={saving || submitting}
+              className="flex-1 rounded-xl border border-stone-300 bg-white px-4 py-3 font-sans text-sm font-semibold text-stone-700 transition-colors hover:bg-stone-50 disabled:opacity-60"
             >
-              Save Draft
+              {saving ? "Saving…" : "Save Draft"}
             </button>
             <button
               type="button"
-              disabled={!canSubmit}
+              disabled={!canSubmit || saving || submitting}
               onClick={onSubmitReview}
               className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-sans text-sm font-semibold transition-colors ${
-                canSubmit
+                canSubmit && !submitting && !saving
                   ? "bg-sky-600 text-white hover:bg-sky-700"
                   : "bg-sky-200 text-white"
               }`}
             >
-              Submit Review
+              {submitting ? "Submitting…" : "Submit Review"}
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>
