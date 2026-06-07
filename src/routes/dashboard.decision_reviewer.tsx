@@ -40,6 +40,7 @@ type ApiProposal = {
   submitted_at: string;
   status: string;
   display_status?: string;
+  action_required?: boolean;
 };
 
 type ProposalRow = {
@@ -51,6 +52,9 @@ type ProposalRow = {
   country: string;
   submittedAt: string;
   status: StatusKey;
+  rawStatus: string;
+  displayStatus?: string;
+  actionRequired?: boolean;
 };
 
 const STATUS_MAP: Record<string, StatusKey> = {
@@ -75,6 +79,9 @@ const mapApiProposal = (p: ApiProposal): ProposalRow => ({
   country: p.country || "—",
   submittedAt: p.submitted_at,
   status: STATUS_MAP[p.status] ?? "submitted",
+  rawStatus: p.status,
+  displayStatus: p.display_status,
+  actionRequired: p.action_required,
 });
 
 export const Route = createFileRoute("/dashboard/decision_reviewer")({
