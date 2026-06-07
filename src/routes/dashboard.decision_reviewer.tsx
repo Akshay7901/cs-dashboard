@@ -570,6 +570,15 @@ function DecisionReviewerDashboard() {
                     Review
                     <ChevronRight className="h-4 w-4" />
                   </Link>
+                  <button
+                    type="button"
+                    onClick={() => openEvents(p.id)}
+                    className="inline-flex items-center gap-1 justify-self-end font-sans text-sm font-medium text-stone-600 hover:text-stone-900"
+                    title="View audit trail"
+                  >
+                    <History className="h-4 w-4" />
+                    Events
+                  </button>
                 </li>
               );
             })}
