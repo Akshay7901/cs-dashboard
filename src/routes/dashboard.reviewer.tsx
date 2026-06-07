@@ -143,11 +143,10 @@ function ReviewerDashboard() {
           (listBody.proposals as ApiProposalListItem[]) ||
           (Array.isArray(listBody) ? (listBody as unknown as ApiProposalListItem[]) : []);
 
-        const mine = proposals.filter((p) =>
-          (p.assignments || []).some(
-            (a) => a.reviewer_email?.toLowerCase() === email.toLowerCase(),
-          ),
-        );
+        // API already scopes the list to the logged-in peer reviewer.
+        // Assignments in the list payload may omit reviewer_email, so trust the server filter.
+        const mine = proposals.filter((p) => (p.assignments || []).length > 0);
+        void email;
 
         const details = await Promise.all(
           mine.map(async (p) => {
