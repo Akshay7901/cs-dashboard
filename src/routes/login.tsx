@@ -4,8 +4,7 @@ import { UserRound, FileText, ClipboardCheck, ArrowRight, ArrowLeft, type Lucide
 import libraryBg from "@/assets/library-reference.jpg";
 import cspLogo from "@/assets/csp-logo.png";
 import { getPortalSession, persistPortalSession } from "@/lib/auth";
-
-const API_BASE = "https://api.cambridgescholars.com/api/proposals";
+import { proposalApiFetch } from "@/lib/proposalApi";
 
 type ApiRole = "admin" | "editor" | "reviewer" | "decision_reviewer" | "author" | string;
 
@@ -190,7 +189,7 @@ function PortalLoginForm({ portal, onBack }: { portal: PortalConfig; onBack: () 
     try {
       const body: Record<string, string> = { email: email.trim() };
       if (password) body.password = password;
-      const res = await fetch(`${API_BASE}/login`, {
+      const res = await proposalApiFetch("/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -228,7 +227,7 @@ function PortalLoginForm({ portal, onBack }: { portal: PortalConfig; onBack: () 
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/auth/verify-otp`, {
+      const res = await proposalApiFetch("/auth/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim(), otp: otp.trim() }),
@@ -266,7 +265,7 @@ function PortalLoginForm({ portal, onBack }: { portal: PortalConfig; onBack: () 
     }
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/auth/set-password`, {
+      const res = await proposalApiFetch("/auth/set-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ temp_token: tempToken, password: newPassword }),
@@ -301,7 +300,7 @@ function PortalLoginForm({ portal, onBack }: { portal: PortalConfig; onBack: () 
     setError(null);
     setLoading(true);
     try {
-      await fetch(`${API_BASE}/auth/forgot-password`, {
+      await proposalApiFetch("/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim() }),
