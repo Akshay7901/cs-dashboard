@@ -59,6 +59,9 @@ function ProposalDetailPage() {
   const [reviewers, setReviewers] = useState<PeerReviewer[]>([]);
   const [reviewersLoading, setReviewersLoading] = useState(false);
   const [reviewersError, setReviewersError] = useState<string | null>(null);
+  const [selectedReviewerId, setSelectedReviewerId] = useState<number | null>(null);
+  const [reviewDueDate, setReviewDueDate] = useState("");
+  const [reviewerNotes, setReviewerNotes] = useState("");
 
   useEffect(() => {
     try {
@@ -152,6 +155,12 @@ function ProposalDetailPage() {
 
   const openReviewers = async () => {
     setReviewersOpen(true);
+    setSelectedReviewerId(null);
+    // default due date = today + 4 weeks (yyyy-mm-dd for <input type="date">)
+    const d = new Date();
+    d.setDate(d.getDate() + 28);
+    setReviewDueDate(d.toISOString().slice(0, 10));
+    setReviewerNotes("");
     setReviewersLoading(true);
     setReviewersError(null);
     try {
