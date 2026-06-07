@@ -330,7 +330,7 @@ function ProposalDetailPage() {
                         </div>
                       )}
                       {cd.detailed_description && (
-                        <div className="border-t border-stone-100 pt-5">
+                        <div className="-mx-7 border-t border-stone-300 px-7 pt-5">
                           <SectionLabel>Key Features & Unique Contribution</SectionLabel>
                           <p className="mt-2 whitespace-pre-line font-sans text-sm leading-relaxed text-stone-700">
                             {cd.detailed_description}
@@ -468,7 +468,7 @@ function ProposalDetailPage() {
                       </span>
                     </div>
                   )}
-                  <div className="border-t border-stone-100 px-5 py-4">
+                  <div className="border-t border-stone-300 px-5 py-4">
                     <button
                       type="button"
                       className="flex w-full items-start gap-3 rounded-xl border border-stone-200 px-4 py-3 text-left transition-colors hover:border-red-300 hover:bg-red-50/50"
