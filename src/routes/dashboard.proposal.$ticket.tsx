@@ -1,6 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { ArrowLeft, LogOut, UserRound, Mail, Building2, Calendar, FileText } from "lucide-react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import {
+  ArrowLeft,
+  LogOut,
+  Calendar,
+  FileText,
+  Download,
+  X as XIcon,
+} from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
 import { formatDate, initialsFromName, displayNameFromEmail } from "@/lib/proposals";
 
@@ -46,6 +53,8 @@ function ProposalDetailPage() {
   const [data, setData] = useState<ProposalDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notes, setNotes] = useState("");
+  const [savedAt, setSavedAt] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -109,6 +118,40 @@ function ProposalDetailPage() {
   const cd = data?.current_data ?? {};
   const title = cd.main_title || ticket;
 
+  const keywords = useMemo(
+    () =>
+      (cd.keywords || "")
+        .split(/[,;]/)
+        .map((k) => k.trim())
+        .filter(Boolean),
+    [cd.keywords],
+  );
+
+  const tocItems = useMemo(
+    () =>
+      (cd.table_of_contents || "")
+        .split(/\n+/)
+        .map((l) => l.replace(/^\s*\d+[.)]\s*/, "").trim())
+        .filter(Boolean),
+    [cd.table_of_contents],
+  );
+
+  const suggestedReviewers = useMemo(
+    () =>
+      (cd.referees_reviewers || "")
+        .split(/\n+/)
+        .map((l) => l.trim())
+        .filter(Boolean),
+    [cd.referees_reviewers],
+  );
+
+  const assignedReviewer = data?.assignments?.[0];
+
+  const onSaveNotes = (e: FormEvent) => {
+    e.preventDefault();
+    setSavedAt(new Date().toLocaleTimeString());
+  };
+
   return (
     <div className="min-h-screen bg-[#FAF6EE] font-sans text-stone-800">
       <header className="border-b border-stone-200 bg-white">
@@ -161,151 +204,344 @@ function ProposalDetailPage() {
 
         {data && !loading && (
           <>
+            {/* Title hero card */}
             <section className="mt-6 rounded-2xl border border-stone-200 bg-white px-8 py-7">
               <div className="flex items-start justify-between gap-6">
                 <div>
-                  <p className="font-sans text-xs uppercase tracking-wider text-stone-500">
-                    {data.ticket_number}
-                  </p>
-                  <h1 className="mt-1 font-serif text-3xl font-bold leading-tight text-stone-900">
+                  <h1 className="font-serif text-3xl font-bold leading-tight text-stone-900">
                     {title}
                   </h1>
                   {cd.sub_title && (
-                    <p className="mt-1 font-sans text-base text-stone-600">{cd.sub_title}</p>
+                    <p className="mt-2 font-sans text-base font-medium text-amber-700">
+                      {cd.sub_title}
+                    </p>
                   )}
                 </div>
-                <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-stone-100 px-3 py-1.5 font-sans text-xs font-medium text-stone-700">
+                <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1.5 font-sans text-xs font-medium text-indigo-700 ring-1 ring-indigo-200">
+                  <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
                   {data.status}
                 </span>
               </div>
               <div className="mt-5 flex flex-wrap items-center gap-x-7 gap-y-2 font-sans text-sm text-stone-600">
                 {cd.corresponding_author_name && (
-                  <Meta icon={UserRound} text={cd.corresponding_author_name} />
+                  <MetaItem icon="user" text={cd.corresponding_author_name} />
                 )}
-                {cd.email && <Meta icon={Mail} text={cd.email} />}
-                {cd.institution && <Meta icon={Building2} text={cd.institution} />}
-                <Meta icon={Calendar} text={formatDate(data.submitted_at)} />
+                {cd.email && <MetaItem icon="mail" text={cd.email} />}
+                {cd.institution && <MetaItem icon="building" text={cd.institution} />}
+                <MetaItem icon="calendar" text={formatDate(data.submitted_at)} />
               </div>
             </section>
 
             <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
+              {/* Main column */}
               <div className="space-y-6">
-                <Card title="Proposal Details">
-                  <Field label="Book Type" value={cd.book_type} />
-                  <Field label="Word Count" value={cd.word_count} />
-                  <Field label="Expected Completion" value={cd.expected_completion_date} />
-                  <Field label="Keywords" value={cd.keywords} />
-                  <Field label="Co-authors / Editors" value={cd.co_authors_editors} />
-                  <Field label="Figures / Tables" value={cd.figures_tables_count} />
+                {/* Primary Author */}
+                <Card>
+                  <CardHeader
+                    title="Primary Author / Editor"
+                    subtitle="Institutional affiliation and contact"
+                    right={
+                      <div className="flex items-start gap-7 font-sans text-sm">
+                        {cd.book_type && (
+                          <Stat label="Type" value={cd.book_type} />
+                        )}
+                        {cd.word_count && (
+                          <Stat label="Words" value={formatNumber(cd.word_count)} />
+                        )}
+                        {cd.expected_completion_date && (
+                          <Stat label="Completion" value={cd.expected_completion_date} />
+                        )}
+                      </div>
+                    }
+                  />
+                  <div className="space-y-5 px-7 py-6">
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+                      <DataField label="Name" value={cd.corresponding_author_name} />
+                      <DataField label="Email" value={cd.email} />
+                      <DataField label="Institution" value={cd.institution} />
+                      <DataField label="Job Title" value={cd.job_title} />
+                      <DataField label="Secondary Email" value={cd.secondary_email} />
+                    </div>
+                    {cd.address && (
+                      <DataField label="Mailing Address" value={cd.address} />
+                    )}
+                    {cd.biography && (
+                      <DataField label="Biography" value={cd.biography} multiline />
+                    )}
+                  </div>
                 </Card>
 
-                {cd.short_description && (
-                  <Card title="Short Description">
-                    <p className="whitespace-pre-line font-sans text-sm leading-relaxed text-stone-700">
-                      {cd.short_description}
-                    </p>
+                {/* Additional Authors */}
+                {cd.co_authors_editors && (
+                  <Card>
+                    <CardHeader
+                      title="Additional Authors / Editors"
+                      subtitle="Co-authors and contributors"
+                    />
+                    <div className="px-7 py-6">
+                      <p className="whitespace-pre-line font-sans text-sm leading-relaxed text-stone-700">
+                        {cd.co_authors_editors}
+                      </p>
+                    </div>
                   </Card>
                 )}
 
-                {cd.detailed_description && (
-                  <Card title="Detailed Description">
-                    <p className="whitespace-pre-line font-sans text-sm leading-relaxed text-stone-700">
-                      {cd.detailed_description}
-                    </p>
-                  </Card>
-                )}
+                {/* Manuscript Details */}
+                <Card>
+                  <CardHeader title="Manuscript Details" />
+                  <div className="grid grid-cols-2 gap-6 px-7 py-6 sm:grid-cols-4">
+                    <Stat label="Word Count" value={formatNumber(cd.word_count) || "—"} large />
+                    <Stat
+                      label="Illustrations / Tables"
+                      value={cd.figures_tables_count || "—"}
+                      large
+                    />
+                    <Stat
+                      label="Under Review Elsewhere"
+                      value={cd.under_review_elsewhere || "—"}
+                      large
+                    />
+                    <Stat
+                      label="Est. Completion"
+                      value={cd.expected_completion_date || "—"}
+                      large
+                    />
+                  </div>
+                </Card>
 
-                {cd.table_of_contents && (
-                  <Card title="Table of Contents">
-                    <p className="whitespace-pre-line font-sans text-sm leading-relaxed text-stone-700">
-                      {cd.table_of_contents}
-                    </p>
-                  </Card>
-                )}
-
-                {cd.biography && (
-                  <Card title="Author Biography">
-                    <p className="whitespace-pre-line font-sans text-sm leading-relaxed text-stone-700">
-                      {cd.biography}
-                    </p>
-                  </Card>
-                )}
-
-                {(cd.marketing_info || cd.permissions_required || cd.referees_reviewers ||
-                  cd.under_review_elsewhere || cd.additional_info) && (
-                  <Card title="Additional Information">
-                    <Field label="Marketing Info" value={cd.marketing_info} />
-                    <Field label="Permissions Required" value={cd.permissions_required} />
-                    <Field label="Suggested Referees" value={cd.referees_reviewers} />
-                    <Field label="Under Review Elsewhere" value={cd.under_review_elsewhere} />
-                    <Field label="Additional Info" value={cd.additional_info} />
-                  </Card>
-                )}
-              </div>
-
-              <div className="space-y-6">
-                {data.assignments && data.assignments.length > 0 && (
-                  <Card title="Assignments">
-                    <ul className="space-y-3">
-                      {data.assignments.map((a, i) => (
-                        <li
-                          key={`${a.reviewer_email}-${i}`}
-                          className="rounded-xl border border-stone-200 p-3"
-                        >
-                          <p className="font-sans text-sm font-semibold text-stone-900">
-                            {a.reviewer_email}
+                {/* Summary & Description */}
+                {(cd.short_description || cd.detailed_description || keywords.length > 0) && (
+                  <Card>
+                    <CardHeader
+                      title="Summary & Description"
+                      subtitle="Overview, key features and audience"
+                    />
+                    <div className="space-y-6 px-7 py-6">
+                      {cd.short_description && (
+                        <div>
+                          <SectionLabel>Overview</SectionLabel>
+                          <p className="mt-2 whitespace-pre-line font-sans text-sm leading-relaxed text-stone-700">
+                            {cd.short_description}
                           </p>
-                          <p className="mt-0.5 font-sans text-xs text-stone-500">
-                            Assigned {formatDate(a.assigned_at)}
+                          {keywords.length > 0 && (
+                            <div className="mt-4 flex flex-wrap gap-2">
+                              {keywords.map((k) => (
+                                <span
+                                  key={k}
+                                  className="inline-flex rounded-full bg-amber-50 px-3 py-1 font-sans text-xs font-medium text-amber-800 ring-1 ring-amber-200"
+                                >
+                                  {k}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {cd.detailed_description && (
+                        <div className="border-t border-stone-100 pt-5">
+                          <SectionLabel>Key Features & Unique Contribution</SectionLabel>
+                          <p className="mt-2 whitespace-pre-line font-sans text-sm leading-relaxed text-stone-700">
+                            {cd.detailed_description}
                           </p>
-                          <span className="mt-2 inline-flex rounded-full bg-stone-100 px-2.5 py-1 font-sans text-xs font-medium text-stone-700">
-                            {a.display_status || a.peer_reviewer_status}
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                )}
+
+                {/* Table of Contents */}
+                {tocItems.length > 0 && (
+                  <Card>
+                    <CardHeader
+                      title="Table of Contents"
+                      subtitle="Is this coherently planned?"
+                    />
+                    <div className="px-7 py-6">
+                      <ol className="space-y-3 rounded-xl bg-stone-50 px-6 py-5 font-sans text-sm text-stone-800">
+                        {tocItems.map((item, i) => (
+                          <li key={`${i}-${item}`} className="flex gap-3">
+                            <span className="text-stone-500">{i + 1}.</span>
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  </Card>
+                )}
+
+                {/* Market & Competition */}
+                {cd.marketing_info && (
+                  <Card>
+                    <CardHeader
+                      title="Market & Competition"
+                      subtitle="Commercial viability and competitive landscape"
+                    />
+                    <div className="space-y-6 px-7 py-6">
+                      <div>
+                        <SectionLabel>Why is this book needed?</SectionLabel>
+                        <p className="mt-2 whitespace-pre-line font-sans text-sm leading-relaxed text-stone-700">
+                          {cd.marketing_info}
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
+                )}
+
+                {/* Author-Suggested Reviewers */}
+                {suggestedReviewers.length > 0 && (
+                  <Card>
+                    <CardHeader
+                      title="Author-Suggested Reviewers"
+                      subtitle="Nominated by the author — for consideration only"
+                    />
+                    <ol className="divide-y divide-stone-100 px-2 py-2">
+                      {suggestedReviewers.map((r, i) => (
+                        <li key={`${i}-${r}`} className="flex gap-5 px-5 py-4">
+                          <span className="font-sans text-sm font-medium text-stone-500">
+                            {i + 1}.
                           </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </Card>
-                )}
-
-                {data.timeline && data.timeline.length > 0 && (
-                  <Card title="Timeline">
-                    <ol className="space-y-3">
-                      {data.timeline.map((s) => (
-                        <li key={s.stage_name} className="flex items-start gap-3">
-                          <span
-                            className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${
-                              s.is_completed
-                                ? "bg-emerald-500"
-                                : s.is_current
-                                  ? "bg-amber-500"
-                                  : "bg-stone-300"
-                            }`}
-                          />
-                          <div>
-                            <p className="font-sans text-sm font-medium text-stone-900">
-                              {s.display_name}
-                            </p>
-                            {(s.completed_at || s.started_at) && (
-                              <p className="font-sans text-xs text-stone-500">
-                                {formatDate(s.completed_at || s.started_at || "")}
-                              </p>
-                            )}
-                          </div>
+                          <p className="whitespace-pre-line font-sans text-sm text-stone-800">
+                            {r}
+                          </p>
                         </li>
                       ))}
                     </ol>
                   </Card>
                 )}
 
-                <Card title="Meta">
-                  <Field label="Status" value={data.status} />
-                  <Field label="Internal Status" value={data.internal_status} />
-                  <Field label="Submitted" value={formatDate(data.submitted_at)} />
-                  {data.updated_at && (
-                    <Field label="Updated" value={formatDate(data.updated_at)} />
-                  )}
+                {/* Additional Notes */}
+                {(cd.additional_info || cd.permissions_required) && (
+                  <Card>
+                    <CardHeader
+                      title="Additional Notes"
+                      subtitle="Copyright, permissions, special considerations"
+                    />
+                    <div className="space-y-4 px-7 py-6">
+                      {cd.additional_info && (
+                        <p className="whitespace-pre-line font-sans text-sm leading-relaxed text-stone-700">
+                          {cd.additional_info}
+                        </p>
+                      )}
+                      {cd.permissions_required && (
+                        <DataField
+                          label="Permissions Required"
+                          value={cd.permissions_required}
+                          multiline
+                        />
+                      )}
+                    </div>
+                  </Card>
+                )}
+
+                {/* Supporting Documents (placeholder — API does not return files) */}
+                <Card>
+                  <CardHeader
+                    title="Supporting Documents"
+                    subtitle="Files attached to this proposal"
+                  />
+                  <div className="px-7 py-8 text-center font-sans text-sm text-stone-500">
+                    No supporting documents available.
+                  </div>
                 </Card>
               </div>
+
+              {/* Sidebar */}
+              <aside className="space-y-6">
+                {/* Editorial Decision */}
+                <Card>
+                  <div className="px-6 py-5">
+                    <h2 className="font-serif text-xl font-bold text-stone-900">
+                      Editorial Decision
+                    </h2>
+                    <p className="mt-1 font-sans text-sm text-stone-500">
+                      {assignedReviewer ? "With peer reviewer" : "Awaiting assignment"}
+                    </p>
+                  </div>
+                  {assignedReviewer && (
+                    <div className="mx-5 mb-4 rounded-xl bg-indigo-50/60 px-4 py-4 ring-1 ring-indigo-100">
+                      <p className="font-sans text-[11px] font-semibold uppercase tracking-wider text-indigo-700">
+                        Assigned Reviewer
+                      </p>
+                      <p className="mt-2 font-sans text-sm font-semibold text-stone-900">
+                        {displayNameFromEmail(assignedReviewer.reviewer_email)}
+                      </p>
+                      <p className="font-sans text-xs text-stone-500">
+                        {assignedReviewer.reviewer_email}
+                      </p>
+                      <p className="mt-2 font-sans text-xs text-stone-500">
+                        Assigned {formatDate(assignedReviewer.assigned_at)}
+                      </p>
+                      <span className="mt-3 inline-flex rounded-full bg-white px-2.5 py-1 font-sans text-xs font-medium text-stone-700 ring-1 ring-stone-200">
+                        {assignedReviewer.display_status || assignedReviewer.peer_reviewer_status}
+                      </span>
+                    </div>
+                  )}
+                  <div className="border-t border-stone-100 px-5 py-4">
+                    <button
+                      type="button"
+                      className="flex w-full items-start gap-3 rounded-xl border border-stone-200 px-4 py-3 text-left transition-colors hover:border-red-300 hover:bg-red-50/50"
+                    >
+                      <XIcon className="mt-0.5 h-4 w-4 text-stone-500" />
+                      <div>
+                        <p className="font-sans text-sm font-semibold text-stone-900">Decline</p>
+                        <p className="font-sans text-xs text-stone-500">Not moving forward</p>
+                      </div>
+                    </button>
+                  </div>
+                </Card>
+
+                {/* Internal Notes */}
+                <Card>
+                  <div className="px-6 py-5">
+                    <h2 className="font-serif text-xl font-bold text-stone-900">
+                      Internal Notes
+                    </h2>
+                    <p className="mt-1 font-sans text-sm text-stone-500">
+                      Not visible to the author
+                    </p>
+                  </div>
+                  <form onSubmit={onSaveNotes} className="space-y-3 px-5 pb-5">
+                    <textarea
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder="Editorial notes, flags, or comments..."
+                      rows={5}
+                      className="w-full resize-none rounded-xl border border-stone-200 bg-white px-3.5 py-3 font-sans text-sm text-stone-800 placeholder:text-stone-400 focus:border-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-100"
+                    />
+                    <button
+                      type="submit"
+                      className="w-full rounded-xl bg-[#3D2A1E] px-4 py-3 font-sans text-sm font-semibold text-white hover:bg-[#2c1e15]"
+                    >
+                      Save Notes
+                    </button>
+                    {savedAt && (
+                      <p className="text-center font-sans text-xs text-stone-500">
+                        Saved at {savedAt}
+                      </p>
+                    )}
+                  </form>
+                </Card>
+
+                {/* Submission Info */}
+                <Card>
+                  <div className="px-6 py-5">
+                    <p className="font-sans text-[11px] font-semibold uppercase tracking-wider text-stone-500">
+                      Submission Info
+                    </p>
+                  </div>
+                  <dl className="divide-y divide-stone-100 px-6 pb-5 font-sans text-sm">
+                    <InfoRow label="Ref" value={data.ticket_number} />
+                    {cd.book_type && <InfoRow label="Type" value={cd.book_type} />}
+                    <InfoRow label="Submitted" value={formatDate(data.submitted_at)} />
+                    {data.updated_at && (
+                      <InfoRow label="Updated" value={formatDate(data.updated_at)} />
+                    )}
+                    {data.internal_status && (
+                      <InfoRow label="Stage" value={data.internal_status} />
+                    )}
+                  </dl>
+                </Card>
+              </aside>
             </div>
           </>
         )}
@@ -314,40 +550,133 @@ function ProposalDetailPage() {
   );
 }
 
-function Meta({
-  icon: Icon,
-  text,
-}: {
-  icon: typeof FileText;
-  text: string;
-}) {
+function MetaItem({ icon, text }: { icon: "user" | "mail" | "building" | "calendar"; text: string }) {
+  const paths: Record<typeof icon, string> = {
+    user:
+      "M12 12a4 4 0 100-8 4 4 0 000 8zm-7 8a7 7 0 0114 0",
+    mail: "M4 6h16v12H4z M4 6l8 7 8-7",
+    building: "M4 21V5a2 2 0 012-2h8a2 2 0 012 2v16M9 9h2M9 13h2M9 17h2",
+    calendar:
+      "M4 7h16M4 7v12a2 2 0 002 2h12a2 2 0 002-2V7M4 7l1-3h14l1 3M9 11h6M9 15h6",
+  };
   return (
-    <span className="inline-flex items-center gap-1.5">
-      <Icon className="h-4 w-4 text-stone-400" />
+    <span className="inline-flex items-center gap-2 text-stone-600">
+      <svg
+        className="h-4 w-4 text-stone-400"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d={paths[icon]} />
+      </svg>
       {text}
     </span>
   );
 }
 
-function Card({ title, children }: { title: string; children: React.ReactNode }) {
+function Card({ children }: { children: React.ReactNode }) {
   return (
     <section className="overflow-hidden rounded-2xl border border-stone-200 bg-white">
-      <div className="border-b border-stone-200 px-6 py-4">
-        <h2 className="font-serif text-lg font-bold text-stone-900">{title}</h2>
-      </div>
-      <div className="space-y-3 px-6 py-5">{children}</div>
+      {children}
     </section>
   );
 }
 
-function Field({ label, value }: { label: string; value?: string }) {
+function CardHeader({
+  title,
+  subtitle,
+  right,
+}: {
+  title: string;
+  subtitle?: string;
+  right?: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-start justify-between gap-6 border-b border-stone-100 px-7 py-5">
+      <div>
+        <h2 className="font-serif text-xl font-bold text-stone-900">{title}</h2>
+        {subtitle && (
+          <p className="mt-1 font-sans text-sm text-stone-500">{subtitle}</p>
+        )}
+      </div>
+      {right && <div>{right}</div>}
+    </div>
+  );
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="font-sans text-[11px] font-semibold uppercase tracking-wider text-stone-500">
+      {children}
+    </p>
+  );
+}
+
+function DataField({
+  label,
+  value,
+  multiline,
+}: {
+  label: string;
+  value?: string;
+  multiline?: boolean;
+}) {
   if (!value) return null;
   return (
     <div>
-      <p className="font-sans text-xs font-semibold uppercase tracking-wide text-stone-500">
-        {label}
+      <SectionLabel>{label}</SectionLabel>
+      <p
+        className={`mt-1.5 font-sans text-sm font-medium text-stone-900 ${
+          multiline ? "whitespace-pre-line font-normal text-stone-700 leading-relaxed" : ""
+        }`}
+      >
+        {value}
       </p>
-      <p className="mt-1 whitespace-pre-line font-sans text-sm text-stone-800">{value}</p>
     </div>
   );
+}
+
+function Stat({
+  label,
+  value,
+  large,
+}: {
+  label: string;
+  value: string;
+  large?: boolean;
+}) {
+  return (
+    <div>
+      <p className="font-sans text-[11px] font-semibold uppercase tracking-wider text-stone-500">
+        {label}
+      </p>
+      <p
+        className={`mt-1 font-sans font-semibold text-stone-900 ${
+          large ? "text-base" : "text-sm"
+        }`}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-4 py-2.5">
+      <dt className="font-sans text-sm text-stone-500">{label}</dt>
+      <dd className="font-sans text-sm font-semibold text-stone-900">{value}</dd>
+    </div>
+  );
+}
+
+function formatNumber(s?: string): string {
+  if (!s) return "";
+  const n = Number(s.replace(/[^0-9.]/g, ""));
+  if (!Number.isFinite(n) || n === 0) return s;
+  return n.toLocaleString();
 }
