@@ -143,11 +143,10 @@ function ReviewerDashboard() {
           (listBody.proposals as ApiProposalListItem[]) ||
           (Array.isArray(listBody) ? (listBody as unknown as ApiProposalListItem[]) : []);
 
-        const mine = proposals.filter((p) =>
-          (p.assignments || []).some(
-            (a) => a.reviewer_email?.toLowerCase() === email.toLowerCase(),
-          ),
-        );
+        // API already scopes the list to the logged-in peer reviewer.
+        // Assignments in the list payload may omit reviewer_email, so trust the server filter.
+        const mine = proposals.filter((p) => (p.assignments || []).length > 0);
+        void email;
 
         const details = await Promise.all(
           mine.map(async (p) => {
@@ -164,9 +163,11 @@ function ReviewerDashboard() {
 
         const items: ReviewItem[] = details.map((d) => {
           const cd = d.current_data || {};
-          const myAssign = (d.assignments || []).find(
-            (a) => a.reviewer_email?.toLowerCase() === email.toLowerCase(),
-          );
+          const assigns = d.assignments || [];
+          const myAssign =
+            assigns.find(
+              (a) => a.reviewer_email?.toLowerCase() === email.toLowerCase(),
+            ) || assigns[0];
           const status: ReviewStatus = isCompletedStatus(
             myAssign?.peer_reviewer_status || myAssign?.display_status,
           )
