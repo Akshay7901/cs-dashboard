@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronLeft, LogOut, Plus, ChevronRight, X, FileText, Download } from "lucide-react";
+import { ChevronLeft, LogOut, ChevronRight, FileText, Download } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
 import { initialsFromName } from "@/lib/proposals";
 import { clearPortalSession, getPortalSession, getPortalToken } from "@/lib/auth";
@@ -97,24 +97,35 @@ function ReviewerSubmission() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  type CommentType = "General" | "Major Concern" | "Minor Concern" | "Suggestion" | "Question";
-  type CommentEntry = { type: CommentType; section: string; page: string; text: string };
-
-  const [summary, setSummary] = useState("");
+  type ReviewForm = {
+    scope: string;
+    purpose_value: string;
+    title: string;
+    originality: string;
+    credibility: string;
+    structure: string;
+    clarity_quality: string;
+    other_comments: string;
+    red_flags: string;
+    note_to_dr: string;
+    dr_note: string;
+  };
   const [recommendation, setRecommendation] = useState<RecKey | null>(null);
-  const [comments, setComments] = useState<CommentEntry[]>([]);
-
-  const addComment = () => {
-    setComments((c) => [...c, { type: "General", section: "", page: "", text: "" }]);
-  };
-
-  const updateComment = (i: number, patch: Partial<CommentEntry>) => {
-    setComments((c) => c.map((item, idx) => (idx === i ? { ...item, ...patch } : item)));
-  };
-
-  const removeComment = (i: number) => {
-    setComments((c) => c.filter((_, idx) => idx !== i));
-  };
+  const [form, setForm] = useState<ReviewForm>({
+    scope: "",
+    purpose_value: "",
+    title: "",
+    originality: "",
+    credibility: "",
+    structure: "",
+    clarity_quality: "",
+    other_comments: "",
+    red_flags: "",
+    note_to_dr: "",
+    dr_note: "",
+  });
+  const updateField = (k: keyof ReviewForm, v: string) =>
+    setForm((f) => ({ ...f, [k]: v }));
 
   useEffect(() => {
     try {
@@ -214,8 +225,7 @@ function ReviewerSubmission() {
         proposalId: proposal.ticket,
         reviewerName,
         recommendation,
-        summary,
-        comments,
+        ...form,
         submittedAt: new Date().toISOString(),
       });
       localStorage.setItem("csp.reviews", JSON.stringify(filtered));
