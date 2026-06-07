@@ -8,8 +8,11 @@ import { proposalApiFetch } from "@/lib/proposalApi";
 
 type Assignment = {
   reviewer_email: string;
+  reviewer_name?: string;
+  reviewer_institution?: string;
+  reviewer_topics?: string[];
   assigned_at: string;
-  peer_reviewer_status: string;
+  peer_reviewer_status?: string;
   display_status?: string;
 };
 
