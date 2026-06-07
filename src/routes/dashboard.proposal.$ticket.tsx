@@ -62,6 +62,9 @@ function ProposalDetailPage() {
   const [selectedReviewerId, setSelectedReviewerId] = useState<number | null>(null);
   const [reviewDueDate, setReviewDueDate] = useState("");
   const [reviewerNotes, setReviewerNotes] = useState("");
+  const [assigning, setAssigning] = useState(false);
+  const [assignError, setAssignError] = useState<string | null>(null);
+  const [assignSuccess, setAssignSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -156,6 +159,8 @@ function ProposalDetailPage() {
   const openReviewers = async () => {
     setReviewersOpen(true);
     setSelectedReviewerId(null);
+    setAssignError(null);
+    setAssignSuccess(null);
     // default due date = today + 4 weeks (yyyy-mm-dd for <input type="date">)
     const d = new Date();
     d.setDate(d.getDate() + 28);
@@ -181,6 +186,58 @@ function ProposalDetailPage() {
       setReviewersError("Network error. Please try again.");
     } finally {
       setReviewersLoading(false);
+    }
+  };
+
+  const handleAssignReviewer = async () => {
+    const reviewer = reviewers.find((r) => r.id === selectedReviewerId);
+    if (!reviewer) return;
+    setAssigning(true);
+    setAssignError(null);
+    setAssignSuccess(null);
+    try {
+      const token = getPortalToken();
+      const res = await proposalApiFetch(`/${encodeURIComponent(ticket)}/assign`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          reviewer_email: reviewer.email,
+          ...(reviewerNotes.trim() ? { note: reviewerNotes.trim() } : {}),
+        }),
+      });
+      const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!res.ok) {
+        setAssignError(
+          (body.error as string) ||
+            (body.message as string) ||
+            `Failed to assign reviewer (${res.status}).`,
+        );
+        return;
+      }
+      setAssignSuccess(
+        (body.message as string) || `Assigned to ${reviewer.name || reviewer.email}.`,
+      );
+      // Refresh proposal so the assigned reviewer appears
+      try {
+        const refreshed = await proposalApiFetch(`/${encodeURIComponent(ticket)}`, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        const refreshedBody = (await refreshed.json().catch(() => ({}))) as Record<string, unknown>;
+        if (refreshed.ok) setData(refreshedBody as unknown as ProposalDetail);
+      } catch {
+        // ignore refresh errors
+      }
+      setTimeout(() => setReviewersOpen(false), 1200);
+    } catch {
+      setAssignError("Network error. Please try again.");
+    } finally {
+      setAssigning(false);
     }
   };
 
@@ -752,6 +809,15 @@ function ProposalDetailPage() {
 
             {/* Footer */}
             <div className="flex items-center justify-between gap-3 border-t border-stone-200 bg-stone-50 px-6 py-4">
+              {(assignError || assignSuccess) && (
+                <div
+                  className={`mr-auto text-xs font-medium ${
+                    assignError ? "text-red-600" : "text-emerald-700"
+                  }`}
+                >
+                  {assignError || assignSuccess}
+                </div>
+              )}
               <button
                 type="button"
                 onClick={() => setReviewersOpen(false)}
@@ -761,10 +827,11 @@ function ProposalDetailPage() {
               </button>
               <button
                 type="button"
-                disabled={!selectedReviewerId}
+                disabled={!selectedReviewerId || assigning}
+                onClick={handleAssignReviewer}
                 className="rounded-xl bg-[#0E3D2F] px-4 py-2.5 font-sans text-sm font-semibold text-white hover:bg-[#0a2f24] disabled:cursor-not-allowed disabled:bg-stone-300 disabled:text-stone-500"
               >
-                Confirm & Assign Reviewer
+                {assigning ? "Assigning…" : "Confirm & Assign Reviewer"}
               </button>
             </div>
           </div>
