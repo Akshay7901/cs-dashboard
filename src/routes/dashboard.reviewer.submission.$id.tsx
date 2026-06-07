@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronLeft, LogOut, Plus, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, LogOut, Plus, ChevronRight, X, FileText, Download } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
 import { initialsFromName } from "@/lib/proposals";
 import { clearPortalSession, getPortalSession, getPortalToken } from "@/lib/auth";
@@ -40,21 +40,60 @@ function ReviewerSubmission() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
 
-  const [proposal, setProposal] = useState<{
-    id: string;
-    title: string;
-    subtitle?: string;
-    kind: string;
-    authorName: string;
-    authorAffiliation: string;
-    authorEmail: string;
-    country: string;
-    biography: string;
-    wordCount: string;
-    overview: string;
-    discipline: string;
-    estCompletion: string;
-  } | null>(null);
+  type ManuscriptFile = { url: string; filename: string; size_bytes?: number };
+  type ManuscriptFiles = {
+    sampleChapter?: ManuscriptFile;
+    additionalFiles?: ManuscriptFile[];
+  };
+  type CurrentData = Record<string, unknown> & {
+    main_title?: string;
+    sub_title?: string;
+    book_type?: string;
+    subject?: string;
+    language?: string;
+    secondary_subjects?: string[];
+    corresponding_author_name?: string;
+    author_first_name?: string;
+    author_last_name?: string;
+    author_title?: string;
+    email?: string;
+    phone?: string;
+    institution?: string;
+    address?: string;
+    country?: string;
+    biography?: string;
+    co_authors?: unknown[];
+    estimated_word_count?: number;
+    estimated_pages?: number | null;
+    estimated_completion_date?: string;
+    has_tables?: boolean;
+    has_illustrations?: boolean;
+    illustration_count?: number;
+    is_previously_published?: boolean;
+    detailed_description?: string;
+    table_of_contents?: string;
+    key_features?: string;
+    unique_selling_points?: string;
+    target_audience?: string;
+    primary_market?: string;
+    competing_titles?: string;
+    conferences?: string;
+    promotional_channels?: string;
+    recommended_reviewers?: string;
+    website_reference_number?: string;
+    source?: string;
+    manuscript_files?: ManuscriptFiles;
+  };
+  type ProposalState = {
+    ticket: string;
+    status?: string;
+    internalStatus?: string;
+    submittedAt?: string;
+    updatedAt?: string;
+    assignments?: Array<{ assigned_at?: string; note?: string; reviewer_email?: string }>;
+    cd: CurrentData;
+  };
+  const [proposal, setProposal] = useState<ProposalState | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -112,22 +151,16 @@ function ReviewerSubmission() {
           }
           return;
         }
-        const cd = ((body.current_data as Record<string, string | undefined>) || {});
+        const cd = (body.current_data as CurrentData) || {};
         if (!cancelled) {
           setProposal({
-            id: (body.ticket_number as string) || id,
-            title: cd.main_title || id,
-            subtitle: cd.sub_title || undefined,
-            kind: cd.book_type || "Proposal",
-            authorName: cd.corresponding_author_name || "—",
-            authorAffiliation: cd.institution || "—",
-            authorEmail: cd.email || "—",
-            country: cd.address || "—",
-            biography: cd.biography || "—",
-            wordCount: cd.word_count || "—",
-            overview: cd.detailed_description || cd.short_description || "—",
-            discipline: cd.keywords || "—",
-            estCompletion: cd.expected_completion_date || "—",
+            ticket: (body.ticket_number as string) || id,
+            status: body.status as string | undefined,
+            internalStatus: body.internal_status as string | undefined,
+            submittedAt: body.submitted_at as string | undefined,
+            updatedAt: body.updated_at as string | undefined,
+            assignments: (body.assignments as ProposalState["assignments"]) || [],
+            cd,
           });
           setLoading(false);
         }
@@ -174,11 +207,11 @@ function ReviewerSubmission() {
       const raw = localStorage.getItem("csp.reviews");
       const list: Array<Record<string, unknown>> = raw ? JSON.parse(raw) : [];
       const filtered = list.filter(
-        (r) => !(r.proposalId === proposal.id && r.reviewerName === reviewerName),
+        (r) => !(r.proposalId === proposal.ticket && r.reviewerName === reviewerName),
       );
       filtered.push({
-        id: `rev-${proposal.id}-${Date.now()}`,
-        proposalId: proposal.id,
+        id: `rev-${proposal.ticket}-${Date.now()}`,
+        proposalId: proposal.ticket,
         reviewerName,
         recommendation,
         summary,
@@ -188,7 +221,7 @@ function ReviewerSubmission() {
       localStorage.setItem("csp.reviews", JSON.stringify(filtered));
       const sRaw = localStorage.getItem("csp.proposalStatusOverrides");
       const overrides: Record<string, string> = sRaw ? JSON.parse(sRaw) : {};
-      overrides[proposal.id] = "review_returned";
+      overrides[proposal.ticket] = "review_returned";
       localStorage.setItem("csp.proposalStatusOverrides", JSON.stringify(overrides));
     } catch {
       // ignore
@@ -243,10 +276,10 @@ function ReviewerSubmission() {
             Dashboard
           </Link>
           <h1 className="mt-3 font-serif text-base font-bold leading-snug text-[#2C1A0E] line-clamp-2">
-            {proposal.title}
+            {proposal.cd.main_title || proposal.ticket}
           </h1>
           <p className="mt-1 font-sans text-xs text-[#7A6A5A]">
-            {proposal.authorName} · {proposal.authorAffiliation}
+            {proposal.cd.corresponding_author_name || "—"} · {proposal.cd.institution || "—"}
           </p>
 
           <hr className="my-6 border-stone-200" />
@@ -402,60 +435,7 @@ function ReviewerSubmission() {
         </section>
 
         {/* RIGHT — Proposal context */}
-        <section className="min-h-0 space-y-4 overflow-y-auto px-6 py-4">
-          {/* Title card */}
-          <div className="rounded-2xl border border-stone-200 bg-white p-6">
-            <h2 className="font-serif text-xl font-bold leading-tight text-[#2C1A0E]">
-              {proposal.title}
-            </h2>
-            {proposal.subtitle && (
-              <p className="mt-1 font-sans text-sm font-medium text-[#A6814A]">{proposal.subtitle}</p>
-            )}
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Pill>{proposal.kind}</Pill>
-              <Pill>{proposal.wordCount} words</Pill>
-              {proposal.estCompletion && proposal.estCompletion !== "—" && (
-                <Pill>{proposal.estCompletion}</Pill>
-              )}
-            </div>
-          </div>
-
-          {/* Primary Author */}
-          <div className="rounded-2xl border border-stone-200 bg-white p-6">
-            <h3 className="font-serif text-sm font-bold text-[#2C1A0E]">Primary Author</h3>
-            <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
-              <Field label="Name" value={proposal.authorName} />
-              <Field label="Email" value={proposal.authorEmail} />
-              <Field label="Institution" value={proposal.authorAffiliation} />
-              <Field label="Country" value={proposal.country} />
-            </div>
-            <div className="mt-5">
-              <div className="font-sans text-xs font-medium text-stone-500">Biography</div>
-              <p className="mt-1 font-sans text-sm leading-relaxed text-stone-700">
-                {proposal.biography}
-              </p>
-            </div>
-          </div>
-
-          {/* Summary & Description */}
-          <div className="rounded-2xl border border-stone-200 bg-white p-6">
-            <div className="flex items-baseline gap-2">
-              <h3 className="font-serif text-sm font-bold text-[#2C1A0E]">
-                Summary &amp; Description
-              </h3>
-              <span className="font-sans text-sm text-emerald-700">{proposal.discipline}</span>
-            </div>
-
-            <div className="mt-5">
-              <div className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-500">
-                Overview
-              </div>
-              <p className="mt-2 font-sans text-sm leading-relaxed text-stone-700">
-                {proposal.overview}
-              </p>
-            </div>
-          </div>
-        </section>
+        <ProposalDetails proposal={proposal} />
       </div>
     </div>
   );
@@ -475,5 +455,297 @@ function Field({ label, value }: { label: string; value: string }) {
       <div className="font-sans text-xs font-medium text-stone-500">{label}</div>
       <div className="mt-1 font-sans text-sm text-stone-800">{value}</div>
     </div>
+  );
+}
+
+function formatDate(iso?: string) {
+  if (!iso) return "—";
+  try {
+    return new Date(iso).toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  } catch {
+    return iso;
+  }
+}
+
+function formatBytes(n?: number) {
+  if (!n && n !== 0) return "";
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+  return `${(n / 1024 / 1024).toFixed(1)} MB`;
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl border border-stone-200 bg-white p-6">
+      <h3 className="font-serif text-sm font-bold text-[#2C1A0E]">{title}</h3>
+      <div className="mt-4">{children}</div>
+    </div>
+  );
+}
+
+function Para({ label, value }: { label: string; value?: string }) {
+  if (!value) return null;
+  return (
+    <div className="mt-4 first:mt-0">
+      <div className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-500">
+        {label}
+      </div>
+      <p className="mt-1.5 whitespace-pre-wrap font-sans text-sm leading-relaxed text-stone-700">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function ProposalDetails({
+  proposal,
+}: {
+  proposal: {
+    ticket: string;
+    status?: string;
+    internalStatus?: string;
+    submittedAt?: string;
+    updatedAt?: string;
+    assignments?: Array<{ assigned_at?: string; note?: string; reviewer_email?: string }>;
+    cd: Record<string, unknown> & {
+      main_title?: string;
+      sub_title?: string;
+      book_type?: string;
+      subject?: string;
+      language?: string;
+      secondary_subjects?: string[];
+      corresponding_author_name?: string;
+      author_first_name?: string;
+      author_last_name?: string;
+      author_title?: string;
+      email?: string;
+      phone?: string;
+      institution?: string;
+      address?: string;
+      country?: string;
+      biography?: string;
+      co_authors?: unknown[];
+      estimated_word_count?: number;
+      estimated_pages?: number | null;
+      estimated_completion_date?: string;
+      has_tables?: boolean;
+      has_illustrations?: boolean;
+      illustration_count?: number;
+      is_previously_published?: boolean;
+      detailed_description?: string;
+      table_of_contents?: string;
+      key_features?: string;
+      unique_selling_points?: string;
+      target_audience?: string;
+      primary_market?: string;
+      competing_titles?: string;
+      conferences?: string;
+      promotional_channels?: string;
+      recommended_reviewers?: string;
+      website_reference_number?: string;
+      source?: string;
+      manuscript_files?: {
+        sampleChapter?: { url: string; filename: string; size_bytes?: number };
+        additionalFiles?: Array<{ url: string; filename: string; size_bytes?: number }>;
+      };
+    };
+  };
+}) {
+  const cd = proposal.cd;
+  const sample = cd.manuscript_files?.sampleChapter;
+  const additional = cd.manuscript_files?.additionalFiles ?? [];
+  const allFiles = [
+    ...(sample ? [{ ...sample, label: "Sample Chapter" }] : []),
+    ...additional.map((f) => ({ ...f, label: "Additional" })),
+  ];
+
+  return (
+    <section className="min-h-0 space-y-4 overflow-y-auto px-6 py-4">
+      {/* Title card */}
+      <div className="rounded-2xl border border-stone-200 bg-white p-6">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-mono text-xs text-stone-500">{proposal.ticket}</span>
+          {proposal.status && (
+            <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
+              {proposal.status}
+            </span>
+          )}
+          {proposal.internalStatus && (
+            <span className="inline-flex items-center rounded-full bg-sky-100 px-2.5 py-0.5 text-xs font-medium text-sky-800">
+              {proposal.internalStatus}
+            </span>
+          )}
+        </div>
+        <h2 className="mt-2 font-serif text-xl font-bold leading-tight text-[#2C1A0E]">
+          {cd.main_title || proposal.ticket}
+        </h2>
+        {cd.sub_title && (
+          <p className="mt-1 font-sans text-sm font-medium text-[#A6814A]">{cd.sub_title}</p>
+        )}
+        <div className="mt-4 flex flex-wrap gap-2">
+          {cd.book_type && <Pill>{cd.book_type}</Pill>}
+          {cd.subject && <Pill>{cd.subject}</Pill>}
+          {cd.language && <Pill>{cd.language}</Pill>}
+          {typeof cd.estimated_word_count === "number" && (
+            <Pill>{cd.estimated_word_count.toLocaleString()} words</Pill>
+          )}
+          {cd.estimated_pages != null && <Pill>{cd.estimated_pages} pages</Pill>}
+          {cd.estimated_completion_date && (
+            <Pill>Due {formatDate(cd.estimated_completion_date)}</Pill>
+          )}
+        </div>
+        {cd.secondary_subjects && cd.secondary_subjects.length > 0 && (
+          <p className="mt-3 font-sans text-xs text-stone-500">
+            Also in: {cd.secondary_subjects.join(", ")}
+          </p>
+        )}
+      </div>
+
+      {/* Primary Author */}
+      <Section title="Primary Author">
+        <div className="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
+          <Field
+            label="Name"
+            value={
+              cd.corresponding_author_name ||
+              [cd.author_title, cd.author_first_name, cd.author_last_name]
+                .filter(Boolean)
+                .join(" ") ||
+              "—"
+            }
+          />
+          <Field label="Email" value={cd.email || "—"} />
+          <Field label="Phone" value={cd.phone || "—"} />
+          <Field label="Institution" value={cd.institution || "—"} />
+          <Field label="Country" value={cd.country || "—"} />
+          <Field label="Address" value={cd.address || "—"} />
+        </div>
+        <Para label="Biography" value={cd.biography} />
+        {cd.co_authors && cd.co_authors.length > 0 && (
+          <Para label="Co-authors / Editors" value={JSON.stringify(cd.co_authors, null, 2)} />
+        )}
+      </Section>
+
+      {/* Description */}
+      <Section title="Description">
+        <Para label="Detailed description" value={cd.detailed_description} />
+        <Para label="Key features" value={cd.key_features} />
+        <Para label="Unique selling points" value={cd.unique_selling_points} />
+        <Para label="Table of contents" value={cd.table_of_contents} />
+      </Section>
+
+      {/* Market */}
+      <Section title="Market & Audience">
+        <Para label="Target audience" value={cd.target_audience} />
+        <Para label="Primary market" value={cd.primary_market} />
+        <Para label="Competing titles" value={cd.competing_titles} />
+        <Para label="Conferences" value={cd.conferences} />
+        <Para label="Promotional channels" value={cd.promotional_channels} />
+        <Para label="Recommended reviewers" value={cd.recommended_reviewers} />
+      </Section>
+
+      {/* Production details */}
+      <Section title="Production Details">
+        <div className="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
+          <Field
+            label="Estimated word count"
+            value={
+              typeof cd.estimated_word_count === "number"
+                ? cd.estimated_word_count.toLocaleString()
+                : "—"
+            }
+          />
+          <Field
+            label="Estimated pages"
+            value={cd.estimated_pages != null ? String(cd.estimated_pages) : "—"}
+          />
+          <Field
+            label="Expected completion"
+            value={formatDate(cd.estimated_completion_date)}
+          />
+          <Field
+            label="Has tables"
+            value={cd.has_tables ? "Yes" : "No"}
+          />
+          <Field
+            label="Has illustrations"
+            value={
+              cd.has_illustrations
+                ? `Yes${cd.illustration_count ? ` (${cd.illustration_count})` : ""}`
+                : "No"
+            }
+          />
+          <Field
+            label="Previously published"
+            value={cd.is_previously_published ? "Yes" : "No"}
+          />
+        </div>
+      </Section>
+
+      {/* Files */}
+      {allFiles.length > 0 && (
+        <Section title="Manuscript Files">
+          <ul className="divide-y divide-stone-100">
+            {allFiles.map((f, i) => (
+              <li key={i} className="flex items-center justify-between gap-3 py-3">
+                <div className="flex min-w-0 items-start gap-3">
+                  <FileText className="mt-0.5 h-5 w-5 flex-shrink-0 text-sky-600" />
+                  <div className="min-w-0">
+                    <p className="truncate font-sans text-sm font-medium text-stone-800">
+                      {f.filename}
+                    </p>
+                    <p className="font-sans text-xs text-stone-500">
+                      {f.label}
+                      {f.size_bytes ? ` · ${formatBytes(f.size_bytes)}` : ""}
+                    </p>
+                  </div>
+                </div>
+                <a
+                  href={f.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-stone-300 bg-white px-3 py-1.5 font-sans text-xs font-semibold text-stone-700 hover:bg-stone-50"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  Download
+                </a>
+              </li>
+            ))}
+          </ul>
+        </Section>
+      )}
+
+      {/* Assignment & Submission Meta */}
+      <Section title="Submission Info">
+        <div className="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
+          <Field label="Submitted" value={formatDate(proposal.submittedAt)} />
+          <Field label="Last updated" value={formatDate(proposal.updatedAt)} />
+          <Field label="Website ref." value={cd.website_reference_number || "—"} />
+          <Field label="Source" value={cd.source || "—"} />
+        </div>
+        {proposal.assignments && proposal.assignments.length > 0 && (
+          <div className="mt-5 space-y-3">
+            <div className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-500">
+              Assignment
+            </div>
+            {proposal.assignments.map((a, i) => (
+              <div key={i} className="rounded-xl border border-stone-200 bg-stone-50 p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2 font-sans text-xs text-stone-600">
+                  <span>{a.reviewer_email || "Reviewer"}</span>
+                  <span>{formatDate(a.assigned_at)}</span>
+                </div>
+                {a.note && (
+                  <p className="mt-1.5 font-sans text-sm text-stone-700">{a.note}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </Section>
+    </section>
   );
 }
