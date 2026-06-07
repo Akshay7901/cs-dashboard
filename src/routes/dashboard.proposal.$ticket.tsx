@@ -242,8 +242,8 @@ function ProposalDetailPage() {
                       </div>
                     }
                   />
-                  <div className="divide-y divide-stone-300 px-7">
-                    <div className="grid grid-cols-1 gap-5 py-6 sm:grid-cols-3">
+                  <div className="divide-y divide-stone-300">
+                    <div className="grid grid-cols-1 gap-5 px-7 py-6 sm:grid-cols-3">
                       <DataField label="Name" value={cd.corresponding_author_name} />
                       <DataField label="Email" value={cd.email} />
                       <DataField label="Institution" value={cd.institution} />
@@ -251,12 +251,12 @@ function ProposalDetailPage() {
                       <DataField label="Secondary Email" value={cd.secondary_email} />
                     </div>
                     {cd.address && (
-                      <div className="py-6">
+                      <div className="px-7 py-6">
                         <DataField label="Mailing Address" value={cd.address} />
                       </div>
                     )}
                     {cd.biography && (
-                      <div className="py-6">
+                      <div className="px-7 py-6">
                         <DataField label="Biography" value={cd.biography} multiline />
                       </div>
                     )}
@@ -330,7 +330,7 @@ function ProposalDetailPage() {
                         </div>
                       )}
                       {cd.detailed_description && (
-                        <div className="border-t border-stone-100 pt-5">
+                        <div className="-mx-7 border-t border-stone-300 px-7 pt-5">
                           <SectionLabel>Key Features & Unique Contribution</SectionLabel>
                           <p className="mt-2 whitespace-pre-line font-sans text-sm leading-relaxed text-stone-700">
                             {cd.detailed_description}
@@ -468,7 +468,7 @@ function ProposalDetailPage() {
                       </span>
                     </div>
                   )}
-                  <div className="border-t border-stone-100 px-5 py-4">
+                  <div className="border-t border-stone-300 px-5 py-4">
                     <button
                       type="button"
                       className="flex w-full items-start gap-3 rounded-xl border border-stone-200 px-4 py-3 text-left transition-colors hover:border-red-300 hover:bg-red-50/50"
@@ -588,7 +588,7 @@ function CardHeader({
   right?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-start justify-between gap-6 border-b border-stone-100 px-7 py-5">
+    <div className="flex items-start justify-between gap-6 border-b border-stone-300 px-7 py-5">
       <div>
         <h2 className="font-serif text-xl font-bold text-stone-900">{title}</h2>
         {subtitle && (
