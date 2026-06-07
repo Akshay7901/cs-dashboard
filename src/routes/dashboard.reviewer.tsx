@@ -163,9 +163,11 @@ function ReviewerDashboard() {
 
         const items: ReviewItem[] = details.map((d) => {
           const cd = d.current_data || {};
-          const myAssign = (d.assignments || []).find(
-            (a) => a.reviewer_email?.toLowerCase() === email.toLowerCase(),
-          );
+          const assigns = d.assignments || [];
+          const myAssign =
+            assigns.find(
+              (a) => a.reviewer_email?.toLowerCase() === email.toLowerCase(),
+            ) || assigns[0];
           const status: ReviewStatus = isCompletedStatus(
             myAssign?.peer_reviewer_status || myAssign?.display_status,
           )
