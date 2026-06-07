@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronLeft, LogOut, Plus, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, LogOut, Plus, ChevronRight, X, FileText, Download } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
 import { initialsFromName } from "@/lib/proposals";
 import { clearPortalSession, getPortalSession, getPortalToken } from "@/lib/auth";
@@ -40,21 +40,60 @@ function ReviewerSubmission() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
 
-  const [proposal, setProposal] = useState<{
-    id: string;
-    title: string;
-    subtitle?: string;
-    kind: string;
-    authorName: string;
-    authorAffiliation: string;
-    authorEmail: string;
-    country: string;
-    biography: string;
-    wordCount: string;
-    overview: string;
-    discipline: string;
-    estCompletion: string;
-  } | null>(null);
+  type ManuscriptFile = { url: string; filename: string; size_bytes?: number };
+  type ManuscriptFiles = {
+    sampleChapter?: ManuscriptFile;
+    additionalFiles?: ManuscriptFile[];
+  };
+  type CurrentData = Record<string, unknown> & {
+    main_title?: string;
+    sub_title?: string;
+    book_type?: string;
+    subject?: string;
+    language?: string;
+    secondary_subjects?: string[];
+    corresponding_author_name?: string;
+    author_first_name?: string;
+    author_last_name?: string;
+    author_title?: string;
+    email?: string;
+    phone?: string;
+    institution?: string;
+    address?: string;
+    country?: string;
+    biography?: string;
+    co_authors?: unknown[];
+    estimated_word_count?: number;
+    estimated_pages?: number | null;
+    estimated_completion_date?: string;
+    has_tables?: boolean;
+    has_illustrations?: boolean;
+    illustration_count?: number;
+    is_previously_published?: boolean;
+    detailed_description?: string;
+    table_of_contents?: string;
+    key_features?: string;
+    unique_selling_points?: string;
+    target_audience?: string;
+    primary_market?: string;
+    competing_titles?: string;
+    conferences?: string;
+    promotional_channels?: string;
+    recommended_reviewers?: string;
+    website_reference_number?: string;
+    source?: string;
+    manuscript_files?: ManuscriptFiles;
+  };
+  type ProposalState = {
+    ticket: string;
+    status?: string;
+    internalStatus?: string;
+    submittedAt?: string;
+    updatedAt?: string;
+    assignments?: Array<{ assigned_at?: string; note?: string; reviewer_email?: string }>;
+    cd: CurrentData;
+  };
+  const [proposal, setProposal] = useState<ProposalState | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -112,22 +151,16 @@ function ReviewerSubmission() {
           }
           return;
         }
-        const cd = ((body.current_data as Record<string, string | undefined>) || {});
+        const cd = (body.current_data as CurrentData) || {};
         if (!cancelled) {
           setProposal({
-            id: (body.ticket_number as string) || id,
-            title: cd.main_title || id,
-            subtitle: cd.sub_title || undefined,
-            kind: cd.book_type || "Proposal",
-            authorName: cd.corresponding_author_name || "—",
-            authorAffiliation: cd.institution || "—",
-            authorEmail: cd.email || "—",
-            country: cd.address || "—",
-            biography: cd.biography || "—",
-            wordCount: cd.word_count || "—",
-            overview: cd.detailed_description || cd.short_description || "—",
-            discipline: cd.keywords || "—",
-            estCompletion: cd.expected_completion_date || "—",
+            ticket: (body.ticket_number as string) || id,
+            status: body.status as string | undefined,
+            internalStatus: body.internal_status as string | undefined,
+            submittedAt: body.submitted_at as string | undefined,
+            updatedAt: body.updated_at as string | undefined,
+            assignments: (body.assignments as ProposalState["assignments"]) || [],
+            cd,
           });
           setLoading(false);
         }
@@ -174,11 +207,11 @@ function ReviewerSubmission() {
       const raw = localStorage.getItem("csp.reviews");
       const list: Array<Record<string, unknown>> = raw ? JSON.parse(raw) : [];
       const filtered = list.filter(
-        (r) => !(r.proposalId === proposal.id && r.reviewerName === reviewerName),
+        (r) => !(r.proposalId === proposal.ticket && r.reviewerName === reviewerName),
       );
       filtered.push({
-        id: `rev-${proposal.id}-${Date.now()}`,
-        proposalId: proposal.id,
+        id: `rev-${proposal.ticket}-${Date.now()}`,
+        proposalId: proposal.ticket,
         reviewerName,
         recommendation,
         summary,
@@ -188,7 +221,7 @@ function ReviewerSubmission() {
       localStorage.setItem("csp.reviews", JSON.stringify(filtered));
       const sRaw = localStorage.getItem("csp.proposalStatusOverrides");
       const overrides: Record<string, string> = sRaw ? JSON.parse(sRaw) : {};
-      overrides[proposal.id] = "review_returned";
+      overrides[proposal.ticket] = "review_returned";
       localStorage.setItem("csp.proposalStatusOverrides", JSON.stringify(overrides));
     } catch {
       // ignore
