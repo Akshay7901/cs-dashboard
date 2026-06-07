@@ -520,45 +520,68 @@ function ReviewerSubmission() {
       {submitOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/50 px-4">
           <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
-            <h2 className="font-serif text-lg font-bold text-[#2C1A0E]">
-              Note to Decision Reviewer
-            </h2>
-            <p className="mt-1 font-sans text-sm text-stone-600">
-              Add a private note for the decision reviewer before submitting your review.
-            </p>
-            <textarea
-              value={form.note_to_dr}
-              onChange={(e) => updateField("note_to_dr", e.target.value)}
-              rows={6}
-              placeholder="Private note to the decision reviewer…"
-              className="mt-4 w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 font-sans text-sm text-slate-700 placeholder:text-slate-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
-              autoFocus
-            />
-            {actionMessage && actionMessage.kind === "error" && (
-              <div className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-                {actionMessage.text}
+            {submitSuccess ? (
+              <div className="text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100">
+                  <CheckCircle2 className="h-7 w-7 text-emerald-600" />
+                </div>
+                <h2 className="mt-4 font-serif text-lg font-bold text-[#2C1A0E]">
+                  Review Submitted
+                </h2>
+                <p className="mt-1 font-sans text-sm text-stone-600">
+                  Your review has been completed and sent to the decision reviewer.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => navigate({ to: "/dashboard/reviewer" })}
+                  className="mt-5 inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-600 px-5 py-2.5 font-sans text-sm font-semibold text-white hover:bg-sky-700"
+                >
+                  Back to Dashboard
+                </button>
               </div>
+            ) : (
+              <>
+                <h2 className="font-serif text-lg font-bold text-[#2C1A0E]">
+                  Note to Decision Reviewer
+                </h2>
+                <p className="mt-1 font-sans text-sm text-stone-600">
+                  Add a private note for the decision reviewer before submitting your review.
+                </p>
+                <textarea
+                  value={form.note_to_dr}
+                  onChange={(e) => updateField("note_to_dr", e.target.value)}
+                  rows={6}
+                  placeholder="Private note to the decision reviewer…"
+                  className="mt-4 w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 font-sans text-sm text-slate-700 placeholder:text-slate-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
+                  autoFocus
+                />
+                {actionMessage && actionMessage.kind === "error" && (
+                  <div className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+                    {actionMessage.text}
+                  </div>
+                )}
+                <div className="mt-5 flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSubmitOpen(false)}
+                    disabled={submitting}
+                    className="rounded-xl border border-stone-300 bg-white px-4 py-2.5 font-sans text-sm font-semibold text-stone-700 hover:bg-stone-50 disabled:opacity-60"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await onSubmitReview();
+                    }}
+                    disabled={submitting}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-600 px-4 py-2.5 font-sans text-sm font-semibold text-white hover:bg-sky-700 disabled:opacity-60"
+                  >
+                    {submitting ? "Submitting…" : "Submit to Decision Reviewer"}
+                  </button>
+                </div>
+              </>
             )}
-            <div className="mt-5 flex items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setSubmitOpen(false)}
-                disabled={submitting}
-                className="rounded-xl border border-stone-300 bg-white px-4 py-2.5 font-sans text-sm font-semibold text-stone-700 hover:bg-stone-50 disabled:opacity-60"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={async () => {
-                  await onSubmitReview();
-                }}
-                disabled={submitting}
-                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-600 px-4 py-2.5 font-sans text-sm font-semibold text-white hover:bg-sky-700 disabled:opacity-60"
-              >
-                {submitting ? "Submitting…" : "Submit to Decision Reviewer"}
-              </button>
-            </div>
           </div>
         </div>
       )}
