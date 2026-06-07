@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronLeft, LogOut, Plus, ChevronRight, X, FileText, Download } from "lucide-react";
+import { ChevronLeft, LogOut, ChevronRight, FileText, Download } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
 import { initialsFromName } from "@/lib/proposals";
 import { clearPortalSession, getPortalSession, getPortalToken } from "@/lib/auth";
@@ -97,24 +97,35 @@ function ReviewerSubmission() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  type CommentType = "General" | "Major Concern" | "Minor Concern" | "Suggestion" | "Question";
-  type CommentEntry = { type: CommentType; section: string; page: string; text: string };
-
-  const [summary, setSummary] = useState("");
+  type ReviewForm = {
+    scope: string;
+    purpose_value: string;
+    title: string;
+    originality: string;
+    credibility: string;
+    structure: string;
+    clarity_quality: string;
+    other_comments: string;
+    red_flags: string;
+    note_to_dr: string;
+    dr_note: string;
+  };
   const [recommendation, setRecommendation] = useState<RecKey | null>(null);
-  const [comments, setComments] = useState<CommentEntry[]>([]);
-
-  const addComment = () => {
-    setComments((c) => [...c, { type: "General", section: "", page: "", text: "" }]);
-  };
-
-  const updateComment = (i: number, patch: Partial<CommentEntry>) => {
-    setComments((c) => c.map((item, idx) => (idx === i ? { ...item, ...patch } : item)));
-  };
-
-  const removeComment = (i: number) => {
-    setComments((c) => c.filter((_, idx) => idx !== i));
-  };
+  const [form, setForm] = useState<ReviewForm>({
+    scope: "",
+    purpose_value: "",
+    title: "",
+    originality: "",
+    credibility: "",
+    structure: "",
+    clarity_quality: "",
+    other_comments: "",
+    red_flags: "",
+    note_to_dr: "",
+    dr_note: "",
+  });
+  const updateField = (k: keyof ReviewForm, v: string) =>
+    setForm((f) => ({ ...f, [k]: v }));
 
   useEffect(() => {
     try {
@@ -214,8 +225,7 @@ function ReviewerSubmission() {
         proposalId: proposal.ticket,
         reviewerName,
         recommendation,
-        summary,
-        comments,
+        ...form,
         submittedAt: new Date().toISOString(),
       });
       localStorage.setItem("csp.reviews", JSON.stringify(filtered));
@@ -284,90 +294,39 @@ function ReviewerSubmission() {
 
           <hr className="my-6 border-stone-200" />
 
-          {/* Comments */}
-          <p className="mb-2 font-sans text-xs font-semibold uppercase tracking-wide text-[#7A6A5A]">
-            Comments{comments.length > 0 ? ` (${comments.length})` : ""}
+          {/* Review fields */}
+          <p className="mb-4 font-sans text-xs font-semibold uppercase tracking-wide text-[#7A6A5A]">
+            Review Assessment
           </p>
-          {comments.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-stone-300 bg-white/60 px-6 py-10 text-center">
-              <p className="font-sans text-sm font-medium text-stone-700">No comments yet</p>
-              <p className="mt-1 font-sans text-xs text-stone-500">
-                Add your first comment below
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {comments.map((c, i) => (
-                <div key={i} className="rounded-2xl border border-stone-200 bg-white p-4">
-                  <div className="flex items-start gap-2">
-                    <select
-                      value={c.type}
-                      onChange={(e) => updateComment(i, { type: e.target.value as CommentType })}
-                      className="cursor-pointer rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 font-sans text-xs font-medium text-slate-600 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
-                    >
-                      <option>General</option>
-                      <option>Major Concern</option>
-                      <option>Minor Concern</option>
-                      <option>Suggestion</option>
-                      <option>Question</option>
-                    </select>
-                    <input
-                      type="text"
-                      value={c.section}
-                      onChange={(e) => updateComment(i, { section: e.target.value })}
-                      placeholder="Section / Chapter"
-                      className="flex-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 font-sans text-xs font-medium text-slate-700 placeholder:text-slate-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
-                    />
-                    <input
-                      type="text"
-                      value={c.page}
-                      onChange={(e) => updateComment(i, { page: e.target.value })}
-                      placeholder="Page"
-                      className="w-20 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 font-sans text-xs font-medium text-slate-700 placeholder:text-slate-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeComment(i)}
-                      className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 hover:bg-stone-100 hover:text-stone-700"
-                      aria-label="Remove comment"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                  <textarea
-                    value={c.text}
-                    onChange={(e) => updateComment(i, { text: e.target.value })}
-                    rows={4}
-                    placeholder="Enter your comment…"
-                    className="mt-2 w-full resize-y rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 font-sans text-xs text-slate-700 placeholder:text-slate-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-
-          <button
-            type="button"
-            onClick={addComment}
-            className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-sky-300 bg-white px-4 py-4 font-sans text-sm font-semibold text-sky-600 hover:border-sky-400 hover:bg-sky-50"
-          >
-            <Plus className="h-4 w-4" />
-            Add comment
-          </button>
-
-          {/* Overall summary */}
-          <div className="mt-8">
-            <label className="block mb-2 font-sans text-xs font-semibold uppercase tracking-wide text-[#7A6A5A]">
-              Overall Summary{" "}
-              <span className="font-normal normal-case text-[#7A6A5A]/70">(optional)</span>
-            </label>
-            <textarea
-              value={summary}
-              onChange={(e) => setSummary(e.target.value)}
-              rows={5}
-              placeholder="Summarise your overall assessment of the manuscript — strengths, weaknesses, and your key recommendation…"
-              className="w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 font-sans text-xs text-slate-700 placeholder:text-slate-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
-            />
+          <div className="space-y-5">
+            {(
+              [
+                { key: "scope", label: "Scope", placeholder: "Assess the scope of the proposal…" },
+                { key: "purpose_value", label: "Purpose & Value", placeholder: "Assess the purpose and value of the work…" },
+                { key: "title", label: "Title", placeholder: "Comment on the suitability of the title…" },
+                { key: "originality", label: "Originality", placeholder: "Evaluate the originality of the contribution…" },
+                { key: "credibility", label: "Credibility", placeholder: "Evaluate the credibility of the author and content…" },
+                { key: "structure", label: "Structure", placeholder: "Comment on the structure and organisation…" },
+                { key: "clarity_quality", label: "Clarity & Quality", placeholder: "Assess the clarity and quality of writing…" },
+                { key: "other_comments", label: "Other Comments", placeholder: "Any other comments…" },
+                { key: "red_flags", label: "Red Flags", placeholder: "Note any red flags or concerns…" },
+                { key: "note_to_dr", label: "Note to Decision Reviewer", placeholder: "Private note to the decision reviewer…" },
+                { key: "dr_note", label: "Decision Reviewer Note", placeholder: "Note from the decision reviewer…" },
+              ] as Array<{ key: keyof ReviewForm; label: string; placeholder: string }>
+            ).map((f) => (
+              <div key={f.key}>
+                <label className="block mb-1.5 font-sans text-xs font-semibold uppercase tracking-wide text-[#7A6A5A]">
+                  {f.label}
+                </label>
+                <textarea
+                  value={form[f.key]}
+                  onChange={(e) => updateField(f.key, e.target.value)}
+                  rows={3}
+                  placeholder={f.placeholder}
+                  className="w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 font-sans text-xs text-slate-700 placeholder:text-slate-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
+                />
+              </div>
+            ))}
           </div>
 
           <hr className="my-6 border-stone-200" />
