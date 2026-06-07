@@ -1,13 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import {
-  ArrowLeft,
-  LogOut,
-  Calendar,
-  FileText,
-  Download,
-  X as XIcon,
-} from "lucide-react";
+import { ArrowLeft, LogOut, X as XIcon } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
 import { formatDate, initialsFromName, displayNameFromEmail } from "@/lib/proposals";
 
