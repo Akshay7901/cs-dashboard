@@ -196,6 +196,9 @@ function ReviewerSubmission() {
             const mine =
               reviews.find((r) => r.reviewer_role === "peer_reviewer") || reviews[0];
             if (mine && !cancelled) {
+              if ((mine.is_submitted as boolean) === true) {
+                setReviewIsSubmitted(true);
+              }
               const rd = (mine.review_data as Record<string, unknown>) || {};
               setForm((f) => ({
                 ...f,
