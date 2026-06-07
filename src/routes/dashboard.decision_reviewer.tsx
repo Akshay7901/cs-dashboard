@@ -40,6 +40,7 @@ type ApiProposal = {
   submitted_at: string;
   status: string;
   display_status?: string;
+  action_required?: boolean;
 };
 
 type ProposalRow = {
@@ -51,6 +52,9 @@ type ProposalRow = {
   country: string;
   submittedAt: string;
   status: StatusKey;
+  rawStatus: string;
+  displayStatus?: string;
+  actionRequired?: boolean;
 };
 
 const STATUS_MAP: Record<string, StatusKey> = {
@@ -75,6 +79,9 @@ const mapApiProposal = (p: ApiProposal): ProposalRow => ({
   country: p.country || "—",
   submittedAt: p.submitted_at,
   status: STATUS_MAP[p.status] ?? "submitted",
+  rawStatus: p.status,
+  displayStatus: p.display_status,
+  actionRequired: p.action_required,
 });
 
 export const Route = createFileRoute("/dashboard/decision_reviewer")({
@@ -559,8 +566,16 @@ function DecisionReviewerDashboard() {
                           p.status === "signed" ? "bg-white" : meta.dot
                         }`}
                       />
-                      {meta.label}
+                      {p.displayStatus || meta.label}
                     </span>
+                    {p.actionRequired && (
+                      <span
+                        className="ml-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 font-sans text-[10px] font-semibold uppercase tracking-wide text-amber-800"
+                        title="Action required from you"
+                      >
+                        Action
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-4 justify-self-end">
                     <button
