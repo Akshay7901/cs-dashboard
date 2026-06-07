@@ -78,7 +78,7 @@ const mapApiProposal = (p: ApiProposal): ProposalRow => ({
 
 export const Route = createFileRoute("/dashboard/decision_reviewer")({
   head: () => ({
-    meta: [{ title: "Decision Reviewer Portal — Proposal Intake" }],
+    meta: [{ title: "Editor Portal — Proposal Intake" }],
   }),
   component: DecisionReviewerDashboard,
 });
@@ -361,7 +361,7 @@ function DecisionReviewerDashboard() {
               </span>
             </Link>
             <span className="mx-2 h-5 w-px bg-stone-300" />
-            <span className="font-sans text-base text-stone-700">Decision Reviewer Portal</span>
+            <span className="font-sans text-base text-stone-700">Editor Portal</span>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0E3D2F] font-sans text-xs font-semibold text-white">
