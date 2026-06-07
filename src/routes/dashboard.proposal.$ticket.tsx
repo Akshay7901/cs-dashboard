@@ -554,46 +554,74 @@ function ProposalDetailPage() {
                     </p>
                   </div>
                   {assignedReviewer && (
-                    <div className="mx-5 mb-4 rounded-xl bg-indigo-50/60 px-4 py-4 ring-1 ring-indigo-100">
-                      <p className="font-sans text-[11px] font-semibold uppercase tracking-wider text-indigo-700">
+                    <div className="mx-5 mb-4 rounded-xl bg-indigo-50/70 px-5 py-4 ring-1 ring-indigo-100">
+                      <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.12em] text-indigo-700">
                         Assigned Reviewer
                       </p>
-                      <p className="mt-2 font-sans text-sm font-semibold text-stone-900">
-                        {displayNameFromEmail(assignedReviewer.reviewer_email)}
+                      <p className="mt-2 font-serif text-lg font-bold text-stone-900">
+                        {assignedReviewer.reviewer_name ||
+                          displayNameFromEmail(assignedReviewer.reviewer_email)}
                       </p>
-                      <p className="font-sans text-xs text-stone-500">
+                      {assignedReviewer.reviewer_institution && (
+                        <p className="font-sans text-sm italic text-stone-600">
+                          {assignedReviewer.reviewer_institution}
+                        </p>
+                      )}
+                      <p className="mt-1 font-sans text-xs text-stone-500">
                         {assignedReviewer.reviewer_email}
                       </p>
-                      <p className="mt-2 font-sans text-xs text-stone-500">
+                      <p className="mt-1 font-sans text-xs text-stone-500">
                         Assigned {formatDate(assignedReviewer.assigned_at)}
+                        {(assignedReviewer.display_status ||
+                          assignedReviewer.peer_reviewer_status) && (
+                          <>
+                            {" · "}
+                            {assignedReviewer.display_status ||
+                              assignedReviewer.peer_reviewer_status}
+                          </>
+                        )}
                       </p>
-                      <span className="mt-3 inline-flex rounded-full bg-white px-2.5 py-1 font-sans text-xs font-medium text-stone-700 ring-1 ring-stone-200">
-                        {assignedReviewer.display_status || assignedReviewer.peer_reviewer_status}
-                      </span>
+                      {assignedReviewer.reviewer_topics &&
+                        assignedReviewer.reviewer_topics.length > 0 && (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {assignedReviewer.reviewer_topics.map((t) => (
+                              <span
+                                key={t}
+                                className="inline-flex items-center rounded-md bg-white/80 px-2.5 py-1 font-sans text-xs font-medium text-indigo-700 ring-1 ring-indigo-100"
+                              >
+                                {t}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                     </div>
                   )}
                   <div className="space-y-3 border-t border-stone-300 px-5 py-4">
-                    <button
-                      type="button"
-                      onClick={openReviewers}
-                      className="flex w-full items-start gap-3 rounded-xl bg-[#0E3D2F] px-4 py-3 text-left text-white transition-colors hover:bg-[#0a2f24]"
-                    >
-                      <Check className="mt-0.5 h-4 w-4 text-white" />
-                      <div>
-                        <p className="font-sans text-sm font-semibold">Move to Review</p>
-                        <p className="font-sans text-xs text-white/80">Assign a peer reviewer</p>
-                      </div>
-                    </button>
-                    <button
-                      type="button"
-                      className="flex w-full items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/60 px-4 py-3 text-left transition-colors hover:bg-amber-50"
-                    >
-                      <SquarePen className="mt-0.5 h-4 w-4 text-amber-700" />
-                      <div>
-                        <p className="font-sans text-sm font-semibold text-amber-900">Request Revisions</p>
-                        <p className="font-sans text-xs text-amber-700/80">Needs more info before review</p>
-                      </div>
-                    </button>
+                    {!assignedReviewer && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={openReviewers}
+                          className="flex w-full items-start gap-3 rounded-xl bg-[#0E3D2F] px-4 py-3 text-left text-white transition-colors hover:bg-[#0a2f24]"
+                        >
+                          <Check className="mt-0.5 h-4 w-4 text-white" />
+                          <div>
+                            <p className="font-sans text-sm font-semibold">Move to Review</p>
+                            <p className="font-sans text-xs text-white/80">Assign a peer reviewer</p>
+                          </div>
+                        </button>
+                        <button
+                          type="button"
+                          className="flex w-full items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/60 px-4 py-3 text-left transition-colors hover:bg-amber-50"
+                        >
+                          <SquarePen className="mt-0.5 h-4 w-4 text-amber-700" />
+                          <div>
+                            <p className="font-sans text-sm font-semibold text-amber-900">Request Revisions</p>
+                            <p className="font-sans text-xs text-amber-700/80">Needs more info before review</p>
+                          </div>
+                        </button>
+                      </>
+                    )}
                     <button
                       type="button"
                       className="flex w-full items-start gap-3 rounded-xl border border-stone-200 px-4 py-3 text-left transition-colors hover:border-red-300 hover:bg-red-50/50"
