@@ -566,8 +566,16 @@ function DecisionReviewerDashboard() {
                           p.status === "signed" ? "bg-white" : meta.dot
                         }`}
                       />
-                      {meta.label}
+                      {p.displayStatus || meta.label}
                     </span>
+                    {p.actionRequired && (
+                      <span
+                        className="ml-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 font-sans text-[10px] font-semibold uppercase tracking-wide text-amber-800"
+                        title="Action required from you"
+                      >
+                        Action
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-4 justify-self-end">
                     <button
