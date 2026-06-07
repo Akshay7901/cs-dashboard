@@ -9,8 +9,9 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
-import { clearPortalSession, getPortalSession } from "@/lib/auth";
+import { clearPortalSession, getPortalSession, getPortalToken } from "@/lib/auth";
 import { initialsFromName, displayNameFromEmail } from "@/lib/proposals";
+import { proposalApiFetch } from "@/lib/proposalApi";
 
 export const Route = createFileRoute("/dashboard/reviewer")({
   head: () => ({ meta: [{ title: "Reviewer Portal — Your Reviews" }] }),
@@ -36,23 +37,51 @@ interface ReviewItem {
   status: ReviewStatus;
 }
 
-const REVIEWS: ReviewItem[] = [
-  {
-    id: "rev-001",
-    proposalId: "sub-004",
-    subject: "Life Sciences",
-    kind: "Monograph",
-    title: "Climate Change and Agricultural Adaptation in Southeast Asia",
-    subtitle: "Smallholder Strategies and Policy Frameworks",
-    authorName: "Dr. Sarah Chen",
-    authorAffiliation: "University of Oxford",
-    wordCount: "90,000 words",
-    assignedAt: "5 Feb 2025",
-    abstract:
-      "This monograph examines the impact of climate change on agricultural practices across Southeast Asia, with a particular focus on adaptation strategies employed by smallholder farmers. Drawing on five years of fieldwork across Thailand, Vietnam, and Indonesia, the study presents empirical evidence of...",
-    status: "pending",
-  },
-];
+const REVIEWS: ReviewItem[] = [];
+
+type ApiAssignment = {
+  reviewer_email: string;
+  assigned_at?: string;
+  peer_reviewer_status?: string;
+  display_status?: string;
+};
+
+type ApiProposalListItem = {
+  ticket_number: string;
+  status?: string;
+  internal_status?: string;
+  submitted_at?: string;
+  current_data?: Record<string, string | undefined>;
+  assignments?: ApiAssignment[];
+};
+
+type ApiProposalDetail = ApiProposalListItem & {
+  current_data: Record<string, string | undefined>;
+};
+
+function formatDateShort(iso?: string) {
+  if (!iso) return "—";
+  try {
+    return new Date(iso).toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  } catch {
+    return iso;
+  }
+}
+
+function isCompletedStatus(s?: string) {
+  if (!s) return false;
+  const v = s.toLowerCase();
+  return (
+    v.includes("complete") ||
+    v.includes("returned") ||
+    v.includes("submitted") ||
+    v.includes("done")
+  );
+}
 
 const REVIEWER_PROFILE = {
   name: "Dr. Anna Hoffmann",
@@ -71,6 +100,8 @@ function ReviewerDashboard() {
   const matchRoute = useMatchRoute();
   const [userEmail, setUserEmail] = useState<string>("");
   const [assigned, setAssigned] = useState<ReviewItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const isSubmissionDetail = Boolean(
     matchRoute({ to: "/dashboard/reviewer/submission/$id", fuzzy: true }),
@@ -88,56 +119,83 @@ function ReviewerDashboard() {
         return;
       }
       setUserEmail(session.email);
-      try {
-        const aRaw = localStorage.getItem("csp.assignments");
-        if (aRaw) {
-          const list = JSON.parse(aRaw) as Array<{
-            id: string;
-            reviewerEmail: string;
-            dueDate: string | null;
-            assignedAt: string;
-            proposal: {
-              id: string;
-              title: string;
-              kind: string;
-              subject: string;
-              subtitle?: string;
-              authorName: string;
-              authorAffiliation: string;
-              wordCount: number;
-              overview: string;
-            };
-          }>;
-          const mine = list
-            .filter(
-              (a) =>
-                a.reviewerEmail.toLowerCase() === session.email.toLowerCase(),
-            )
-            .map<ReviewItem>((a) => ({
-              id: a.id,
-              proposalId: a.proposal.id,
-              subject: a.proposal.subject,
-              kind: a.proposal.kind,
-              title: a.proposal.title,
-              subtitle: a.proposal.subtitle,
-              authorName: a.proposal.authorName,
-              authorAffiliation: a.proposal.authorAffiliation,
-              wordCount: `${a.proposal.wordCount.toLocaleString()} words`,
-              assignedAt: new Date(a.assignedAt).toLocaleDateString("en-GB", {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-              }),
-              abstract: a.proposal.overview,
-              status: "pending",
-            }));
-          setAssigned(mine);
-        }
-      } catch {
-        // ignore
-      }
+      void loadReviewerProposals(session.email);
     } catch {
       navigate({ to: "/login" });
+    }
+    async function loadReviewerProposals(email: string) {
+      setLoading(true);
+      setLoadError(null);
+      try {
+        const token = getPortalToken();
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        };
+        const listRes = await proposalApiFetch("", { headers });
+        const listBody = (await listRes.json().catch(() => ({}))) as Record<string, unknown>;
+        if (!listRes.ok) {
+          setLoadError((listBody.error as string) || `Failed to load proposals (${listRes.status}).`);
+          setLoading(false);
+          return;
+        }
+        const proposals =
+          (listBody.proposals as ApiProposalListItem[]) ||
+          (Array.isArray(listBody) ? (listBody as unknown as ApiProposalListItem[]) : []);
+
+        const mine = proposals.filter((p) =>
+          (p.assignments || []).some(
+            (a) => a.reviewer_email?.toLowerCase() === email.toLowerCase(),
+          ),
+        );
+
+        const details = await Promise.all(
+          mine.map(async (p) => {
+            try {
+              const r = await proposalApiFetch(`/${encodeURIComponent(p.ticket_number)}`, { headers });
+              if (!r.ok) return p as ApiProposalDetail;
+              const b = (await r.json()) as ApiProposalDetail;
+              return b;
+            } catch {
+              return p as ApiProposalDetail;
+            }
+          }),
+        );
+
+        const items: ReviewItem[] = details.map((d) => {
+          const cd = d.current_data || {};
+          const myAssign = (d.assignments || []).find(
+            (a) => a.reviewer_email?.toLowerCase() === email.toLowerCase(),
+          );
+          const status: ReviewStatus = isCompletedStatus(
+            myAssign?.peer_reviewer_status || myAssign?.display_status,
+          )
+            ? "completed"
+            : "pending";
+          const wc = cd.word_count || cd.estimated_word_count || "";
+          return {
+            id: d.ticket_number,
+            proposalId: d.ticket_number,
+            subject: cd.discipline || cd.subject_area || "General",
+            kind: cd.book_type || cd.proposal_type || "Proposal",
+            title: cd.main_title || d.ticket_number,
+            subtitle: cd.subtitle,
+            authorName: cd.author_name || cd.primary_author_name || "—",
+            authorAffiliation: cd.affiliation || cd.institution || "—",
+            wordCount: wc ? `${wc} words` : "—",
+            assignedAt: formatDateShort(myAssign?.assigned_at || d.submitted_at),
+            completedAt: status === "completed" ? formatDateShort(myAssign?.assigned_at) : undefined,
+            abstract: cd.overview || cd.abstract || cd.description || "",
+            status,
+          };
+        });
+
+        setAssigned(items);
+      } catch {
+        setLoadError("Network error. Please try again.");
+      } finally {
+        setLoading(false);
+      }
     }
   }, [navigate]);
 
@@ -209,6 +267,12 @@ function ReviewerDashboard() {
           </p>
         </div>
 
+        {loadError && (
+          <div className="mb-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 font-sans text-sm text-rose-700">
+            {loadError}
+          </div>
+        )}
+
         {/* Stat cards */}
         <div className="mb-10 grid grid-cols-1 gap-5 sm:grid-cols-3">
           <StatCard label="Assigned" value={assignedCount} tone="sky" />
@@ -223,7 +287,9 @@ function ReviewerDashboard() {
             Awaiting Your Review
           </h2>
 
-          {pendingItems.length === 0 ? (
+          {loading ? (
+            <EmptyState text="Loading your assignments…" />
+          ) : pendingItems.length === 0 ? (
             <EmptyState text="No reviews awaiting your attention." />
           ) : (
             <ul className="space-y-4">
