@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { clearPortalSession, getPortalSession } from "@/lib/auth";
 
 type Role = "author" | "editor" | "reviewer";
 
@@ -21,12 +22,11 @@ function DashboardPage() {
 
   useEffect(() => {
     try {
-      const raw = sessionStorage.getItem("csp.session");
-      if (!raw) {
+      const session = getPortalSession() as { role: Role; email: string } | null;
+      if (!session) {
         navigate({ to: "/login" });
         return;
       }
-      const session = JSON.parse(raw) as { role: Role; email: string };
       if (session.role !== role) {
         navigate({ to: "/login" });
         return;
@@ -40,11 +40,7 @@ function DashboardPage() {
   const label = ROLE_LABEL[role as Role] ?? "Dashboard";
 
   const onLogout = () => {
-    try {
-      sessionStorage.removeItem("csp.session");
-    } catch {
-      // ignore
-    }
+    clearPortalSession();
     navigate({ to: "/login" });
   };
 

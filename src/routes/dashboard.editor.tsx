@@ -12,6 +12,7 @@ import {
   Trash2,
 } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
+import { clearPortalSession, getPortalSession } from "@/lib/auth";
 import {
   PROPOSALS,
   STATUS_META,
@@ -112,12 +113,11 @@ function EditorDashboard() {
 
   useEffect(() => {
     try {
-      const raw = sessionStorage.getItem("csp.session");
-      if (!raw) {
+      const session = getPortalSession();
+      if (!session) {
         navigate({ to: "/login" });
         return;
       }
-      const session = JSON.parse(raw) as { role: string; email: string };
       if (session.role !== "editor") {
         navigate({ to: "/login" });
         return;
@@ -188,11 +188,7 @@ function EditorDashboard() {
   }, [mergedProposals, activeFilter, search, field, sort]);
 
   const onLogout = () => {
-    try {
-      sessionStorage.removeItem("csp.session");
-    } catch {
-      // ignore
-    }
+    clearPortalSession();
     navigate({ to: "/login" });
   };
 

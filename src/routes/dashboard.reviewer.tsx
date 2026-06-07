@@ -9,6 +9,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
+import { clearPortalSession, getPortalSession } from "@/lib/auth";
 import { initialsFromName, displayNameFromEmail } from "@/lib/proposals";
 
 export const Route = createFileRoute("/dashboard/reviewer")({
@@ -77,12 +78,11 @@ function ReviewerDashboard() {
 
   useEffect(() => {
     try {
-      const raw = sessionStorage.getItem("csp.session");
-      if (!raw) {
+      const session = getPortalSession();
+      if (!session) {
         navigate({ to: "/login" });
         return;
       }
-      const session = JSON.parse(raw) as { role: string; email: string };
       if (session.role !== "reviewer") {
         navigate({ to: "/login" });
         return;
@@ -142,11 +142,7 @@ function ReviewerDashboard() {
   }, [navigate]);
 
   const onLogout = () => {
-    try {
-      sessionStorage.removeItem("csp.session");
-    } catch {
-      // ignore
-    }
+    clearPortalSession();
     navigate({ to: "/login" });
   };
 

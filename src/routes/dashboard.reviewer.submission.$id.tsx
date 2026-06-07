@@ -7,6 +7,7 @@ import {
   initialsFromName,
   type Proposal,
 } from "@/lib/proposals";
+import { clearPortalSession, getPortalSession } from "@/lib/auth";
 
 type AssignmentSnapshot = {
   id: string;
@@ -159,12 +160,11 @@ function ReviewerSubmission() {
 
   useEffect(() => {
     try {
-      const raw = sessionStorage.getItem("csp.session");
-      if (!raw) {
+      const session = getPortalSession();
+      if (!session) {
         navigate({ to: "/login" });
         return;
       }
-      const session = JSON.parse(raw) as { role: string; email: string };
       if (session.role !== "reviewer") {
         navigate({ to: "/login" });
         return;
@@ -175,11 +175,7 @@ function ReviewerSubmission() {
   }, [navigate]);
 
   const onLogout = () => {
-    try {
-      sessionStorage.removeItem("csp.session");
-    } catch {
-      /* ignore */
-    }
+    clearPortalSession();
     navigate({ to: "/login" });
   };
 
