@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { UserRound, FileText, ClipboardCheck, ArrowRight, ArrowLeft, type LucideIcon } from "lucide-react";
 import libraryBg from "@/assets/library-reference.jpg";
 import cspLogo from "@/assets/csp-logo.png";
-import { persistPortalSession } from "@/lib/auth";
+import { getPortalSession, persistPortalSession } from "@/lib/auth";
 
 const API_BASE = "https://api.cambridgescholars.com/api/proposals";
 
@@ -84,6 +84,17 @@ const portals: PortalConfig[] = [
 function LoginPage() {
   const [selected, setSelected] = useState<Role | null>(null);
   const portal = portals.find((p) => p.id === selected) ?? null;
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const session = getPortalSession();
+    if (!session?.role) return;
+    if (session.role === "decision_reviewer") {
+      navigate({ to: "/dashboard/decision_reviewer" });
+      return;
+    }
+    navigate({ to: "/dashboard/$role", params: { role: session.role } });
+  }, [navigate]);
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden font-sans text-foreground">
@@ -164,6 +175,10 @@ function PortalLoginForm({ portal, onBack }: { portal: PortalConfig; onBack: () 
   const goToDashboard = (apiRole: ApiRole, token: string, userEmail: string, name?: string) => {
     const role = roleToPortal(apiRole);
     persistPortalSession({ token, email: userEmail, name, role });
+    if (role === "decision_reviewer") {
+      navigate({ to: "/dashboard/decision_reviewer" });
+      return;
+    }
     navigate({ to: "/dashboard/$role", params: { role } });
   };
 

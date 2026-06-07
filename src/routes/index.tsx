@@ -12,6 +12,10 @@ function IndexRedirect() {
   useEffect(() => {
     const session = getPortalSession();
     if (session?.role) {
+      if (session.role === "decision_reviewer") {
+        navigate({ to: "/dashboard/decision_reviewer" });
+        return;
+      }
       navigate({ to: "/dashboard/$role", params: { role: session.role } });
       return;
     }

@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { ArrowLeft, LogOut, X as XIcon } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
+import { clearPortalSession, getPortalSession, getPortalToken } from "@/lib/auth";
 import { formatDate, initialsFromName, displayNameFromEmail } from "@/lib/proposals";
 
 const API_BASE = "https://api.cambridgescholars.com/api/proposals";
@@ -51,12 +52,11 @@ function ProposalDetailPage() {
 
   useEffect(() => {
     try {
-      const raw = sessionStorage.getItem("csp.session");
-      if (!raw) {
+      const session = getPortalSession();
+      if (!session) {
         navigate({ to: "/login" });
         return;
       }
-      const session = JSON.parse(raw) as { role: string; email: string; name?: string };
       setUserEmail(session.email);
       setUserName(session.name || "");
     } catch {
@@ -70,7 +70,7 @@ function ProposalDetailPage() {
       setLoading(true);
       setError(null);
       try {
-        const token = sessionStorage.getItem("csp.token") || "";
+        const token = getPortalToken();
         const res = await fetch(`${API_BASE}/${encodeURIComponent(ticket)}`, {
           headers: {
             "Content-Type": "application/json",
@@ -99,12 +99,7 @@ function ProposalDetailPage() {
   const displayName = userName || displayNameFromEmail(userEmail);
 
   const onLogout = () => {
-    try {
-      sessionStorage.removeItem("csp.session");
-      sessionStorage.removeItem("csp.token");
-    } catch {
-      // ignore
-    }
+    clearPortalSession();
     navigate({ to: "/login" });
   };
 
