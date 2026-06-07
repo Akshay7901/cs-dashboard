@@ -13,6 +13,7 @@ import {
   XCircle,
 } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
+import { clearPortalSession, getPortalSession } from "@/lib/auth";
 import { PROPOSALS, formatDate, type Proposal, type StatusKey } from "@/lib/proposals";
 
 export const Route = createFileRoute("/dashboard/author")({
@@ -237,12 +238,11 @@ function AuthorDashboard() {
 
   useEffect(() => {
     try {
-      const raw = sessionStorage.getItem("csp.session");
-      if (!raw) {
+      const session = getPortalSession();
+      if (!session) {
         navigate({ to: "/login" });
         return;
       }
-      const session = JSON.parse(raw) as { role: string };
       if (session.role !== "author") navigate({ to: "/login" });
     } catch {
       navigate({ to: "/login" });
@@ -278,7 +278,7 @@ function AuthorDashboard() {
   const doneList = visible.filter((p) => ["signed", "declined"].includes(p.status));
 
   const onLogout = () => {
-    sessionStorage.removeItem("csp.session");
+    clearPortalSession();
     navigate({ to: "/login" });
   };
 
