@@ -588,7 +588,7 @@ function CardHeader({
   right?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-start justify-between gap-6 border-b border-stone-100 px-7 py-5">
+    <div className="flex items-start justify-between gap-6 border-b border-stone-300 px-7 py-5">
       <div>
         <h2 className="font-serif text-xl font-bold text-stone-900">{title}</h2>
         {subtitle && (
