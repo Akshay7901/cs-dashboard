@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { ArrowLeft, LogOut, X as XIcon } from "lucide-react";
+import { ArrowLeft, Check, LogOut, SquarePen, X as XIcon } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
 import { clearPortalSession, getPortalSession, getPortalToken } from "@/lib/auth";
 import { formatDate, initialsFromName, displayNameFromEmail } from "@/lib/proposals";
@@ -445,7 +445,7 @@ function ProposalDetailPage() {
                       Editorial Decision
                     </h2>
                     <p className="mt-1 font-sans text-sm text-stone-500">
-                      {assignedReviewer ? "With peer reviewer" : "Awaiting assignment"}
+                      {assignedReviewer ? "With peer reviewer" : "Awaiting initial assessment"}
                     </p>
                   </div>
                   {assignedReviewer && (
@@ -467,7 +467,27 @@ function ProposalDetailPage() {
                       </span>
                     </div>
                   )}
-                  <div className="border-t border-stone-300 px-5 py-4">
+                  <div className="space-y-3 border-t border-stone-300 px-5 py-4">
+                    <button
+                      type="button"
+                      className="flex w-full items-start gap-3 rounded-xl bg-[#0E3D2F] px-4 py-3 text-left text-white transition-colors hover:bg-[#0a2f24]"
+                    >
+                      <Check className="mt-0.5 h-4 w-4 text-white" />
+                      <div>
+                        <p className="font-sans text-sm font-semibold">Move to Review</p>
+                        <p className="font-sans text-xs text-white/80">Assign a peer reviewer</p>
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      className="flex w-full items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/60 px-4 py-3 text-left transition-colors hover:bg-amber-50"
+                    >
+                      <SquarePen className="mt-0.5 h-4 w-4 text-amber-700" />
+                      <div>
+                        <p className="font-sans text-sm font-semibold text-amber-900">Request Revisions</p>
+                        <p className="font-sans text-xs text-amber-700/80">Needs more info before review</p>
+                      </div>
+                    </button>
                     <button
                       type="button"
                       className="flex w-full items-start gap-3 rounded-xl border border-stone-200 px-4 py-3 text-left transition-colors hover:border-red-300 hover:bg-red-50/50"
