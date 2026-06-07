@@ -102,6 +102,8 @@ function ReviewerSubmission() {
     { kind: "success" | "error"; text: string } | null
   >(null);
   const [submitOpen, setSubmitOpen] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [reviewIsSubmitted, setReviewIsSubmitted] = useState(false);
 
   type ReviewForm = {
     scope: string;
