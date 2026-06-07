@@ -170,7 +170,7 @@ function ReviewerDashboard() {
             ) || assigns[0];
           const status: ReviewStatus = isCompletedStatus(
             myAssign?.peer_reviewer_status || myAssign?.display_status,
-          )
+          ) || isCompletedStatus(d.status || d.internal_status)
             ? "completed"
             : "pending";
           const wc = cd.word_count || cd.estimated_word_count || "";
