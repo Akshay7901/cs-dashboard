@@ -247,7 +247,7 @@ function ProposalDetailPage() {
                       </div>
                     }
                   />
-                  <div className="divide-y divide-stone-100 px-7">
+                  <div className="divide-y divide-stone-300 px-7">
                     <div className="grid grid-cols-1 gap-5 py-6 sm:grid-cols-3">
                       <DataField label="Name" value={cd.corresponding_author_name} />
                       <DataField label="Email" value={cd.email} />
