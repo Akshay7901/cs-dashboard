@@ -506,6 +506,7 @@ function ProposalDetailPage() {
                   <div className="space-y-3 border-t border-stone-300 px-5 py-4">
                     <button
                       type="button"
+                      onClick={openReviewers}
                       className="flex w-full items-start gap-3 rounded-xl bg-[#0E3D2F] px-4 py-3 text-left text-white transition-colors hover:bg-[#0a2f24]"
                     >
                       <Check className="mt-0.5 h-4 w-4 text-white" />
@@ -593,6 +594,91 @@ function ProposalDetailPage() {
           </>
         )}
       </main>
+
+      {reviewersOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/50 px-4"
+          onClick={() => setReviewersOpen(false)}
+        >
+          <div
+            className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4 border-b border-stone-200 px-6 py-5">
+              <div>
+                <h3 className="font-serif text-lg font-bold text-stone-900">
+                  Assign Peer Reviewer
+                </h3>
+                <p className="mt-1 font-sans text-sm text-stone-500">
+                  Select a reviewer to move this proposal to review.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setReviewersOpen(false)}
+                className="rounded-lg p-1 text-stone-500 hover:bg-stone-100 hover:text-stone-900"
+                aria-label="Close"
+              >
+                <XIcon className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="max-h-[60vh] overflow-y-auto px-3 py-3">
+              {reviewersLoading && (
+                <p className="px-3 py-6 text-center font-sans text-sm text-stone-500">
+                  Loading reviewers…
+                </p>
+              )}
+              {reviewersError && !reviewersLoading && (
+                <p className="px-3 py-6 text-center font-sans text-sm text-red-600">
+                  {reviewersError}
+                </p>
+              )}
+              {!reviewersLoading && !reviewersError && reviewers.length === 0 && (
+                <p className="px-3 py-6 text-center font-sans text-sm text-stone-500">
+                  No peer reviewers found.
+                </p>
+              )}
+              {!reviewersLoading && !reviewersError && reviewers.length > 0 && (
+                <ul className="divide-y divide-stone-100">
+                  {reviewers.map((r) => (
+                    <li
+                      key={r.id}
+                      className="flex items-center justify-between gap-4 px-3 py-3"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#0E3D2F] font-sans text-xs font-semibold text-white">
+                          {initialsFromName(r.name || r.email)}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate font-sans text-sm font-semibold text-stone-900">
+                            {r.name || displayNameFromEmail(r.email)}
+                          </p>
+                          <p className="truncate font-sans text-xs text-stone-500">
+                            {r.email}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        {typeof r.assigned_proposals_count === "number" && (
+                          <span className="hidden font-sans text-xs text-stone-500 sm:inline">
+                            {r.assigned_proposals_count} active
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          className="rounded-lg bg-[#0E3D2F] px-3 py-1.5 font-sans text-xs font-semibold text-white hover:bg-[#0a2f24]"
+                        >
+                          Assign
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
