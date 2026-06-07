@@ -41,6 +41,12 @@ type ApiProposal = {
   status: string;
   display_status?: string;
   action_required?: boolean;
+  assignments?: Array<{
+    reviewer_email?: string;
+    assigned_at?: string;
+    peer_reviewer_status?: string;
+    display_status?: string;
+  }>;
 };
 
 type ProposalRow = {
@@ -109,11 +115,34 @@ const mapApiProposal = (p: ApiProposal): ProposalRow => ({
   authorAffiliation: p.email || "",
   country: p.country || "—",
   submittedAt: p.submitted_at,
-  status: normalizeStatus(p.status, p.display_status),
+  status: deriveProposalStatus(p),
   rawStatus: p.status,
-  displayStatus: p.display_status,
+  displayStatus: deriveDisplayStatus(p),
   actionRequired: p.action_required,
 });
+
+// When the API still reports raw status="new" but a peer review has been
+// returned, the proposal effectively belongs in In Review / Review Returned.
+// Promote it based on assignment state so the row matches status_summary.
+function deriveProposalStatus(p: ApiProposal): StatusKey {
+  const fromDisplay = normalizeStatus(p.status, p.display_status);
+  if (fromDisplay !== "submitted") return fromDisplay;
+  const assigns = p.assignments || [];
+  if (assigns.length === 0) return fromDisplay;
+  const anyCompleted = assigns.some((a) =>
+    /complete|returned|submitted|done/i.test(
+      a.peer_reviewer_status || a.display_status || "",
+    ),
+  );
+  if (anyCompleted) return "review_returned";
+  return "in_review";
+}
+
+function deriveDisplayStatus(p: ApiProposal): string | undefined {
+  if (p.display_status) return p.display_status;
+  const k = deriveProposalStatus(p);
+  return k === "submitted" ? undefined : undefined; // fallback to STATUS_META label
+}
 
 export const Route = createFileRoute("/dashboard/decision_reviewer")({
   head: () => ({
