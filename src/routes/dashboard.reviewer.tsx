@@ -161,6 +161,27 @@ function ReviewerDashboard() {
           }),
         );
 
+        // Check per-reviewer review submission status
+        const submittedMap = new Map<string, boolean>();
+        await Promise.all(
+          details.map(async (d) => {
+            try {
+              const r = await proposalApiFetch(
+                `/${encodeURIComponent(d.ticket_number)}/review`,
+                { headers },
+              );
+              if (!r.ok) return;
+              const body = (await r.json()) as { reviews?: Array<{ reviewer_email?: string; is_submitted?: boolean }> };
+              const mineReview = (body.reviews || []).find(
+                (rv) => rv.reviewer_email?.toLowerCase() === email.toLowerCase(),
+              );
+              if (mineReview?.is_submitted) submittedMap.set(d.ticket_number, true);
+            } catch {
+              // ignore
+            }
+          }),
+        );
+
         const items: ReviewItem[] = details.map((d) => {
           const cd = d.current_data || {};
           const assigns = d.assignments || [];
@@ -168,9 +189,9 @@ function ReviewerDashboard() {
             assigns.find(
               (a) => a.reviewer_email?.toLowerCase() === email.toLowerCase(),
             ) || assigns[0];
-          const status: ReviewStatus = isCompletedStatus(
+          const status: ReviewStatus = submittedMap.get(d.ticket_number) || isCompletedStatus(
             myAssign?.peer_reviewer_status || myAssign?.display_status,
-          )
+          ) || isCompletedStatus(d.status || d.internal_status)
             ? "completed"
             : "pending";
           const wc = cd.word_count || cd.estimated_word_count || "";
