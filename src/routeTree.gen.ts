@@ -16,6 +16,7 @@ import { Route as DashboardEditorRouteImport } from './routes/dashboard.editor'
 import { Route as DashboardDecision_reviewerRouteImport } from './routes/dashboard.decision_reviewer'
 import { Route as DashboardAuthorRouteImport } from './routes/dashboard.author'
 import { Route as DashboardRoleRouteImport } from './routes/dashboard.$role'
+import { Route as ApiProxyProposalsRouteImport } from './routes/api/proxy.proposals'
 import { Route as DashboardReviewerSubmissionIdRouteImport } from './routes/dashboard.reviewer.submission.$id'
 import { Route as DashboardEditorSubmissionIdRouteImport } from './routes/dashboard.editor.submission.$id'
 
@@ -55,6 +56,11 @@ const DashboardRoleRoute = DashboardRoleRouteImport.update({
   path: '/dashboard/$role',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiProxyProposalsRoute = ApiProxyProposalsRouteImport.update({
+  id: '/api/proxy/proposals',
+  path: '/api/proxy/proposals',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardReviewerSubmissionIdRoute =
   DashboardReviewerSubmissionIdRouteImport.update({
     id: '/submission/$id',
@@ -76,6 +82,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/decision_reviewer': typeof DashboardDecision_reviewerRoute
   '/dashboard/editor': typeof DashboardEditorRouteWithChildren
   '/dashboard/reviewer': typeof DashboardReviewerRouteWithChildren
+  '/api/proxy/proposals': typeof ApiProxyProposalsRoute
   '/dashboard/editor/submission/$id': typeof DashboardEditorSubmissionIdRoute
   '/dashboard/reviewer/submission/$id': typeof DashboardReviewerSubmissionIdRoute
 }
@@ -87,6 +94,7 @@ export interface FileRoutesByTo {
   '/dashboard/decision_reviewer': typeof DashboardDecision_reviewerRoute
   '/dashboard/editor': typeof DashboardEditorRouteWithChildren
   '/dashboard/reviewer': typeof DashboardReviewerRouteWithChildren
+  '/api/proxy/proposals': typeof ApiProxyProposalsRoute
   '/dashboard/editor/submission/$id': typeof DashboardEditorSubmissionIdRoute
   '/dashboard/reviewer/submission/$id': typeof DashboardReviewerSubmissionIdRoute
 }
@@ -99,6 +107,7 @@ export interface FileRoutesById {
   '/dashboard/decision_reviewer': typeof DashboardDecision_reviewerRoute
   '/dashboard/editor': typeof DashboardEditorRouteWithChildren
   '/dashboard/reviewer': typeof DashboardReviewerRouteWithChildren
+  '/api/proxy/proposals': typeof ApiProxyProposalsRoute
   '/dashboard/editor/submission/$id': typeof DashboardEditorSubmissionIdRoute
   '/dashboard/reviewer/submission/$id': typeof DashboardReviewerSubmissionIdRoute
 }
@@ -112,6 +121,7 @@ export interface FileRouteTypes {
     | '/dashboard/decision_reviewer'
     | '/dashboard/editor'
     | '/dashboard/reviewer'
+    | '/api/proxy/proposals'
     | '/dashboard/editor/submission/$id'
     | '/dashboard/reviewer/submission/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -123,6 +133,7 @@ export interface FileRouteTypes {
     | '/dashboard/decision_reviewer'
     | '/dashboard/editor'
     | '/dashboard/reviewer'
+    | '/api/proxy/proposals'
     | '/dashboard/editor/submission/$id'
     | '/dashboard/reviewer/submission/$id'
   id:
@@ -134,6 +145,7 @@ export interface FileRouteTypes {
     | '/dashboard/decision_reviewer'
     | '/dashboard/editor'
     | '/dashboard/reviewer'
+    | '/api/proxy/proposals'
     | '/dashboard/editor/submission/$id'
     | '/dashboard/reviewer/submission/$id'
   fileRoutesById: FileRoutesById
@@ -146,6 +158,7 @@ export interface RootRouteChildren {
   DashboardDecision_reviewerRoute: typeof DashboardDecision_reviewerRoute
   DashboardEditorRoute: typeof DashboardEditorRouteWithChildren
   DashboardReviewerRoute: typeof DashboardReviewerRouteWithChildren
+  ApiProxyProposalsRoute: typeof ApiProxyProposalsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -199,6 +212,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRoleRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/proxy/proposals': {
+      id: '/api/proxy/proposals'
+      path: '/api/proxy/proposals'
+      fullPath: '/api/proxy/proposals'
+      preLoaderRoute: typeof ApiProxyProposalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/reviewer/submission/$id': {
       id: '/dashboard/reviewer/submission/$id'
       path: '/submission/$id'
@@ -247,6 +267,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardDecision_reviewerRoute: DashboardDecision_reviewerRoute,
   DashboardEditorRoute: DashboardEditorRouteWithChildren,
   DashboardReviewerRoute: DashboardReviewerRouteWithChildren,
+  ApiProxyProposalsRoute: ApiProxyProposalsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
