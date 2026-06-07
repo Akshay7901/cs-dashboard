@@ -13,6 +13,13 @@ type Assignment = {
   display_status?: string;
 };
 
+type PeerReviewer = {
+  id: number;
+  name: string;
+  email: string;
+  assigned_proposals_count?: number;
+};
+
 type TimelineStage = {
   stage_name: string;
   display_name: string;
@@ -48,6 +55,10 @@ function ProposalDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
   const [savedAt, setSavedAt] = useState<string | null>(null);
+  const [reviewersOpen, setReviewersOpen] = useState(false);
+  const [reviewers, setReviewers] = useState<PeerReviewer[]>([]);
+  const [reviewersLoading, setReviewersLoading] = useState(false);
+  const [reviewersError, setReviewersError] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -137,6 +148,31 @@ function ProposalDetailPage() {
   const onSaveNotes = (e: FormEvent) => {
     e.preventDefault();
     setSavedAt(new Date().toLocaleTimeString());
+  };
+
+  const openReviewers = async () => {
+    setReviewersOpen(true);
+    setReviewersLoading(true);
+    setReviewersError(null);
+    try {
+      const token = getPortalToken();
+      const res = await proposalApiFetch("/users/peer-reviewers", {
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!res.ok) {
+        setReviewersError((body.error as string) || `Failed to load reviewers (${res.status}).`);
+        return;
+      }
+      setReviewers((body.peer_reviewers as PeerReviewer[]) || []);
+    } catch {
+      setReviewersError("Network error. Please try again.");
+    } finally {
+      setReviewersLoading(false);
+    }
   };
 
   return (
