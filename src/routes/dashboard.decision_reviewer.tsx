@@ -20,8 +20,7 @@ import {
   initialsFromName,
   displayNameFromEmail,
 } from "@/lib/proposals";
-
-const API_BASE = "https://api.cambridgescholars.com/api/proposals";
+import { proposalApiFetch } from "@/lib/proposalApi";
 
 type PeerReviewer = {
   id: number;
@@ -132,7 +131,7 @@ function DecisionReviewerDashboard() {
     setReviewersLoading(true);
     setReviewersError(null);
     try {
-      const res = await fetch(`${API_BASE}/users/peer-reviewers`, {
+      const res = await proposalApiFetch("/users/peer-reviewers", {
         headers: authHeaders(),
       });
       const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
@@ -163,7 +162,7 @@ function DecisionReviewerDashboard() {
     setProposalsLoading(true);
     setProposalsError(null);
     try {
-      const res = await fetch(`${API_BASE}?limit=100&sort_order=desc`, {
+      const res = await proposalApiFetch("?limit=100&sort_order=desc", {
         headers: authHeaders(),
       });
       const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
@@ -192,7 +191,7 @@ function DecisionReviewerDashboard() {
     setReviewersError(null);
     setReviewersInfo(null);
     try {
-      const res = await fetch(`${API_BASE}/users/peer-reviewers`, {
+      const res = await proposalApiFetch("/users/peer-reviewers", {
         method: "POST",
         headers: authHeaders(),
         body: JSON.stringify({
@@ -224,7 +223,7 @@ function DecisionReviewerDashboard() {
     setReviewersError(null);
     setReviewersInfo(null);
     try {
-      const res = await fetch(`${API_BASE}/users/peer-reviewers/${id}`, {
+      const res = await proposalApiFetch(`/users/peer-reviewers/${id}`, {
         method: "DELETE",
         headers: authHeaders(),
       });

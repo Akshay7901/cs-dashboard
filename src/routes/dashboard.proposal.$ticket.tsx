@@ -4,8 +4,7 @@ import { ArrowLeft, LogOut, X as XIcon } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
 import { clearPortalSession, getPortalSession, getPortalToken } from "@/lib/auth";
 import { formatDate, initialsFromName, displayNameFromEmail } from "@/lib/proposals";
-
-const API_BASE = "https://api.cambridgescholars.com/api/proposals";
+import { proposalApiFetch } from "@/lib/proposalApi";
 
 type Assignment = {
   reviewer_email: string;
@@ -71,7 +70,7 @@ function ProposalDetailPage() {
       setError(null);
       try {
         const token = getPortalToken();
-        const res = await fetch(`${API_BASE}/${encodeURIComponent(ticket)}`, {
+        const res = await proposalApiFetch(`/${encodeURIComponent(ticket)}`, {
           headers: {
             "Content-Type": "application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
