@@ -247,8 +247,8 @@ function ProposalDetailPage() {
                       </div>
                     }
                   />
-                  <div className="space-y-5 px-7 py-6">
-                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+                  <div className="divide-y divide-stone-100 px-7">
+                    <div className="grid grid-cols-1 gap-5 py-6 sm:grid-cols-3">
                       <DataField label="Name" value={cd.corresponding_author_name} />
                       <DataField label="Email" value={cd.email} />
                       <DataField label="Institution" value={cd.institution} />
@@ -256,10 +256,14 @@ function ProposalDetailPage() {
                       <DataField label="Secondary Email" value={cd.secondary_email} />
                     </div>
                     {cd.address && (
-                      <DataField label="Mailing Address" value={cd.address} />
+                      <div className="py-6">
+                        <DataField label="Mailing Address" value={cd.address} />
+                      </div>
                     )}
                     {cd.biography && (
-                      <DataField label="Biography" value={cd.biography} multiline />
+                      <div className="py-6">
+                        <DataField label="Biography" value={cd.biography} multiline />
+                      </div>
                     )}
                   </div>
                 </Card>
