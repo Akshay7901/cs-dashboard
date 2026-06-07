@@ -12,6 +12,7 @@ import {
   Trash2,
 } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
+import { clearPortalSession, getPortalSession, getPortalToken } from "@/lib/auth";
 import {
   STATUS_META,
   type StatusKey,
@@ -120,13 +121,7 @@ function DecisionReviewerDashboard() {
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const authHeaders = (): HeadersInit => {
-    const token = (() => {
-      try {
-        return sessionStorage.getItem("csp.token") || "";
-      } catch {
-        return "";
-      }
-    })();
+    const token = getPortalToken();
     return {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -257,12 +252,11 @@ function DecisionReviewerDashboard() {
 
   useEffect(() => {
     try {
-      const raw = sessionStorage.getItem("csp.session");
-      if (!raw) {
+      const session = getPortalSession();
+      if (!session) {
         navigate({ to: "/login" });
         return;
       }
-      const session = JSON.parse(raw) as { role: string; email: string; name?: string };
       if (session.role !== "decision_reviewer") {
         navigate({ to: "/login" });
         return;
@@ -333,12 +327,7 @@ function DecisionReviewerDashboard() {
   }, [mergedProposals, activeFilter, search, field, sort]);
 
   const onLogout = () => {
-    try {
-      sessionStorage.removeItem("csp.session");
-      sessionStorage.removeItem("csp.token");
-    } catch {
-      // ignore
-    }
+    clearPortalSession();
     navigate({ to: "/login" });
   };
 

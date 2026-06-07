@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react";
 import { UserRound, FileText, ClipboardCheck, ArrowRight, ArrowLeft, type LucideIcon } from "lucide-react";
 import libraryBg from "@/assets/library-reference.jpg";
 import cspLogo from "@/assets/csp-logo.png";
+import { persistPortalSession } from "@/lib/auth";
 
 const API_BASE = "https://api.cambridgescholars.com/api/proposals";
 
@@ -14,20 +15,6 @@ function roleToPortal(apiRole: ApiRole): Role {
   if (r === "editor" || r === "admin") return "editor";
   if (r === "reviewer" || r.includes("reviewer")) return "reviewer";
   return "author";
-}
-
-function persistSession(payload: {
-  token: string;
-  email: string;
-  name?: string;
-  role: Role;
-}) {
-  try {
-    sessionStorage.setItem("csp.session", JSON.stringify(payload));
-    sessionStorage.setItem("csp.token", payload.token);
-  } catch {
-    // ignore
-  }
 }
 
 export const Route = createFileRoute("/login")({
@@ -176,7 +163,7 @@ function PortalLoginForm({ portal, onBack }: { portal: PortalConfig; onBack: () 
 
   const goToDashboard = (apiRole: ApiRole, token: string, userEmail: string, name?: string) => {
     const role = roleToPortal(apiRole);
-    persistSession({ token, email: userEmail, name, role });
+    persistPortalSession({ token, email: userEmail, name, role });
     navigate({ to: "/dashboard/$role", params: { role } });
   };
 
