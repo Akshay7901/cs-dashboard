@@ -168,7 +168,7 @@ function DecisionReviewerDashboard() {
     setProposalsLoading(true);
     setProposalsError(null);
     try {
-      const res = await fetch(`${API_BASE}?limit=100&sort_order=desc`, {
+      const res = await fetch(`/api/proxy/proposals?limit=100&sort_order=desc`, {
         headers: authHeaders(),
       });
       const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
