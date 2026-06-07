@@ -59,6 +59,9 @@ function ProposalDetailPage() {
   const [reviewers, setReviewers] = useState<PeerReviewer[]>([]);
   const [reviewersLoading, setReviewersLoading] = useState(false);
   const [reviewersError, setReviewersError] = useState<string | null>(null);
+  const [selectedReviewerId, setSelectedReviewerId] = useState<number | null>(null);
+  const [reviewDueDate, setReviewDueDate] = useState("");
+  const [reviewerNotes, setReviewerNotes] = useState("");
 
   useEffect(() => {
     try {
@@ -152,6 +155,12 @@ function ProposalDetailPage() {
 
   const openReviewers = async () => {
     setReviewersOpen(true);
+    setSelectedReviewerId(null);
+    // default due date = today + 4 weeks (yyyy-mm-dd for <input type="date">)
+    const d = new Date();
+    d.setDate(d.getDate() + 28);
+    setReviewDueDate(d.toISOString().slice(0, 10));
+    setReviewerNotes("");
     setReviewersLoading(true);
     setReviewersError(null);
     try {
@@ -601,17 +610,26 @@ function ProposalDetailPage() {
           onClick={() => setReviewersOpen(false)}
         >
           <div
-            className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl"
+            className="flex max-h-[90vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Header */}
             <div className="flex items-start justify-between gap-4 border-b border-stone-200 px-6 py-5">
-              <div>
-                <h3 className="font-serif text-lg font-bold text-stone-900">
-                  Assign Peer Reviewer
-                </h3>
-                <p className="mt-1 font-sans text-sm text-stone-500">
-                  Select a reviewer to move this proposal to review.
-                </p>
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#0E3D2F]">
+                  <Check className="h-4 w-4 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-serif text-lg font-bold text-stone-900">
+                    Submit for Peer Review
+                  </h3>
+                  <p className="mt-0.5 font-sans text-sm text-stone-500">
+                    Assign a reviewer and set expectations before sending.
+                  </p>
+                  <p className="mt-1 font-sans text-xs italic text-stone-500">
+                    "{title}"
+                  </p>
+                </div>
               </div>
               <button
                 type="button"
@@ -622,59 +640,132 @@ function ProposalDetailPage() {
                 <XIcon className="h-5 w-5" />
               </button>
             </div>
-            <div className="max-h-[60vh] overflow-y-auto px-3 py-3">
+
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto px-6 py-5">
+              <p className="font-sans text-sm font-semibold text-stone-900">
+                Assign Reviewer <span className="text-red-500">*</span>
+              </p>
+
               {reviewersLoading && (
-                <p className="px-3 py-6 text-center font-sans text-sm text-stone-500">
+                <p className="mt-4 px-3 py-6 text-center font-sans text-sm text-stone-500">
                   Loading reviewers…
                 </p>
               )}
               {reviewersError && !reviewersLoading && (
-                <p className="px-3 py-6 text-center font-sans text-sm text-red-600">
+                <p className="mt-4 px-3 py-6 text-center font-sans text-sm text-red-600">
                   {reviewersError}
                 </p>
               )}
               {!reviewersLoading && !reviewersError && reviewers.length === 0 && (
-                <p className="px-3 py-6 text-center font-sans text-sm text-stone-500">
+                <p className="mt-4 px-3 py-6 text-center font-sans text-sm text-stone-500">
                   No peer reviewers found.
                 </p>
               )}
               {!reviewersLoading && !reviewersError && reviewers.length > 0 && (
-                <ul className="divide-y divide-stone-100">
-                  {reviewers.map((r) => (
-                    <li
-                      key={r.id}
-                      className="flex items-center justify-between gap-4 px-3 py-3"
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#0E3D2F] font-sans text-xs font-semibold text-white">
-                          {initialsFromName(r.name || r.email)}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="truncate font-sans text-sm font-semibold text-stone-900">
-                            {r.name || displayNameFromEmail(r.email)}
-                          </p>
-                          <p className="truncate font-sans text-xs text-stone-500">
-                            {r.email}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        {typeof r.assigned_proposals_count === "number" && (
-                          <span className="hidden font-sans text-xs text-stone-500 sm:inline">
-                            {r.assigned_proposals_count} active
-                          </span>
-                        )}
-                        <button
-                          type="button"
-                          className="rounded-lg bg-[#0E3D2F] px-3 py-1.5 font-sans text-xs font-semibold text-white hover:bg-[#0a2f24]"
+                <ul className="mt-3 space-y-2.5">
+                  {reviewers.map((r) => {
+                    const checked = selectedReviewerId === r.id;
+                    const count = r.assigned_proposals_count ?? 0;
+                    return (
+                      <li key={r.id}>
+                        <label
+                          className={`flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 transition-colors ${
+                            checked
+                              ? "border-[#0E3D2F] bg-[#0E3D2F]/5"
+                              : "border-stone-200 hover:border-stone-300"
+                          }`}
                         >
-                          Assign
-                        </button>
-                      </div>
-                    </li>
-                  ))}
+                          <input
+                            type="radio"
+                            name="reviewer"
+                            checked={checked}
+                            onChange={() => setSelectedReviewerId(r.id)}
+                            className="mt-1 h-4 w-4 accent-[#0E3D2F]"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className="truncate font-sans text-sm font-semibold text-stone-900">
+                                  {r.name || displayNameFromEmail(r.email)}
+                                </p>
+                                <p className="truncate font-sans text-xs text-stone-500">
+                                  {r.email}
+                                </p>
+                              </div>
+                              <span
+                                className={`shrink-0 rounded-full px-2.5 py-0.5 font-sans text-[11px] font-medium ring-1 ${
+                                  count > 0
+                                    ? "bg-amber-50 text-amber-800 ring-amber-200"
+                                    : "bg-emerald-50 text-emerald-800 ring-emerald-200"
+                                }`}
+                              >
+                                {count > 0 ? `${count} active` : "Available"}
+                              </span>
+                            </div>
+                          </div>
+                        </label>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
+
+              {/* Review Due Date */}
+              <div className="mt-6">
+                <div className="flex items-baseline justify-between">
+                  <label className="font-sans text-sm font-semibold text-stone-900">
+                    Review Due Date
+                  </label>
+                  <span className="font-sans text-xs text-stone-500">
+                    (approx. 4 weeks)
+                  </span>
+                </div>
+                <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <input
+                    type="date"
+                    value={reviewDueDate}
+                    onChange={(e) => setReviewDueDate(e.target.value)}
+                    className="w-full rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 font-sans text-sm text-stone-800 focus:border-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-100"
+                  />
+                  <p className="font-sans text-xs text-stone-500">
+                    Reviewer will be notified by email with the proposal details.
+                  </p>
+                </div>
+              </div>
+
+              {/* Notes */}
+              <div className="mt-6">
+                <label className="font-sans text-sm font-semibold text-stone-900">
+                  Notes for Reviewer{" "}
+                  <span className="font-normal text-stone-500">(optional)</span>
+                </label>
+                <textarea
+                  value={reviewerNotes}
+                  onChange={(e) => setReviewerNotes(e.target.value)}
+                  rows={3}
+                  placeholder="Any specific areas to focus on, context, or guidance…"
+                  className="mt-2 w-full resize-none rounded-xl border border-stone-200 bg-white px-3.5 py-3 font-sans text-sm text-stone-800 placeholder:text-stone-400 focus:border-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-100"
+                />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-between gap-3 border-t border-stone-200 bg-stone-50 px-6 py-4">
+              <button
+                type="button"
+                onClick={() => setReviewersOpen(false)}
+                className="rounded-xl border border-stone-200 bg-white px-4 py-2.5 font-sans text-sm font-semibold text-stone-800 hover:bg-stone-100"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={!selectedReviewerId}
+                className="rounded-xl bg-[#0E3D2F] px-4 py-2.5 font-sans text-sm font-semibold text-white hover:bg-[#0a2f24] disabled:cursor-not-allowed disabled:bg-stone-300 disabled:text-stone-500"
+              >
+                Confirm & Assign Reviewer
+              </button>
             </div>
           </div>
         </div>
