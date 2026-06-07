@@ -562,23 +562,25 @@ function DecisionReviewerDashboard() {
                       {meta.label}
                     </span>
                   </div>
-                  <Link
-                    to="/dashboard/proposal/$ticket"
-                    params={{ ticket: p.id }}
-                    className="inline-flex items-center gap-1 justify-self-end font-sans text-sm font-medium text-stone-700 hover:text-stone-900"
-                  >
-                    Review
-                    <ChevronRight className="h-4 w-4" />
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={() => openEvents(p.id)}
-                    className="inline-flex items-center gap-1 justify-self-end font-sans text-sm font-medium text-stone-600 hover:text-stone-900"
-                    title="View audit trail"
-                  >
-                    <History className="h-4 w-4" />
-                    Events
-                  </button>
+                  <div className="flex items-center gap-4 justify-self-end">
+                    <button
+                      type="button"
+                      onClick={() => openEvents(p.id)}
+                      className="inline-flex items-center gap-1 font-sans text-sm font-medium text-stone-600 hover:text-stone-900"
+                      title="View audit trail"
+                    >
+                      <History className="h-4 w-4" />
+                      Events
+                    </button>
+                    <Link
+                      to="/dashboard/proposal/$ticket"
+                      params={{ ticket: p.id }}
+                      className="inline-flex items-center gap-1 font-sans text-sm font-medium text-stone-700 hover:text-stone-900"
+                    >
+                      Review
+                      <ChevronRight className="h-4 w-4" />
+                    </Link>
+                  </div>
                 </li>
               );
             })}
