@@ -70,6 +70,37 @@ const STATUS_MAP: Record<string, StatusKey> = {
   awaiting_more_info: "revisions",
 };
 
+// Normalize a free-form display_status string (e.g. "Review Returned",
+// "Contract Issued") to our local StatusKey so the badge style + filter
+// bucket stay in sync with the API's status_summary.
+const DISPLAY_STATUS_MAP: Record<string, StatusKey> = {
+  submitted: "submitted",
+  new: "submitted",
+  "in review": "in_review",
+  "under review": "in_review",
+  "review returned": "review_returned",
+  "contract issued": "contract",
+  "contract received": "contract",
+  "awaiting author approval": "contract",
+  "queries raised": "question",
+  "question raised": "question",
+  "author approved": "signed",
+  locked: "signed",
+  "contract signed": "signed",
+  declined: "declined",
+  "awaiting more info": "revisions",
+  "additional info required": "revisions",
+  "revisions requested": "revisions",
+};
+
+const normalizeStatus = (raw: string, display?: string): StatusKey => {
+  if (display) {
+    const key = display.trim().toLowerCase();
+    if (DISPLAY_STATUS_MAP[key]) return DISPLAY_STATUS_MAP[key];
+  }
+  return STATUS_MAP[raw] ?? "submitted";
+};
+
 const mapApiProposal = (p: ApiProposal): ProposalRow => ({
   id: p.ticket_number,
   title: p.title,
@@ -78,7 +109,7 @@ const mapApiProposal = (p: ApiProposal): ProposalRow => ({
   authorAffiliation: p.email || "",
   country: p.country || "—",
   submittedAt: p.submitted_at,
-  status: STATUS_MAP[p.status] ?? "submitted",
+  status: normalizeStatus(p.status, p.display_status),
   rawStatus: p.status,
   displayStatus: p.display_status,
   actionRequired: p.action_required,
