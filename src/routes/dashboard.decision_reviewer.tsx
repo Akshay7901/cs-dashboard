@@ -534,8 +534,8 @@ function DecisionReviewerDashboard() {
                     </span>
                   </div>
                   <Link
-                    to="/dashboard/editor/submission/$id"
-                    params={{ id: p.id }}
+                    to="/dashboard/proposal/$ticket"
+                    params={{ ticket: p.id }}
                     className="inline-flex items-center gap-1 justify-self-end font-sans text-sm font-medium text-stone-700 hover:text-stone-900"
                   >
                     Review
