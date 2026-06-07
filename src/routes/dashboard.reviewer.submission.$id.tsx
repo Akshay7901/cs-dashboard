@@ -338,7 +338,7 @@ function ReviewerSubmission() {
         setSubmitting(false);
         return;
       }
-      navigate({ to: "/dashboard/reviewer" });
+      setSubmitSuccess(true);
     } catch {
       setActionMessage({ kind: "error", text: "Network error. Please try again." });
       setSubmitting(false);
