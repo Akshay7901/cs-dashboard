@@ -118,6 +118,7 @@ function DecisionReviewerDashboard() {
   const [apiProposals, setApiProposals] = useState<ProposalRow[]>([]);
   const [proposalsLoading, setProposalsLoading] = useState(false);
   const [proposalsError, setProposalsError] = useState<string | null>(null);
+  const [statusSummary, setStatusSummary] = useState<Record<string, number>>({});
   const [reviewersOpen, setReviewersOpen] = useState(false);
   const [reviewers, setReviewers] = useState<PeerReviewer[]>([]);
   const [reviewersLoading, setReviewersLoading] = useState(false);
@@ -220,6 +221,7 @@ function DecisionReviewerDashboard() {
       }
       const list = (data.proposals as ApiProposal[]) || [];
       setApiProposals(list.map(mapApiProposal));
+      setStatusSummary((data.status_summary as Record<string, number>) || {});
     } catch {
       setProposalsError("Network error. Please try again.");
     } finally {
