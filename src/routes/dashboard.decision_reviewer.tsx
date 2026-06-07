@@ -120,6 +120,46 @@ function DecisionReviewerDashboard() {
   const [adding, setAdding] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
+  // Events / audit trail modal
+  type ProposalEvent = {
+    id: number;
+    event_type: string;
+    old_status: string | null;
+    new_status: string | null;
+    description: string;
+    changed_by: string;
+    changed_by_role: string;
+    created_at: string;
+  };
+  const [eventsOpen, setEventsOpen] = useState(false);
+  const [eventsTicket, setEventsTicket] = useState<string>("");
+  const [events, setEvents] = useState<ProposalEvent[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(false);
+  const [eventsError, setEventsError] = useState<string | null>(null);
+
+  const openEvents = async (ticket: string) => {
+    setEventsOpen(true);
+    setEventsTicket(ticket);
+    setEvents([]);
+    setEventsError(null);
+    setEventsLoading(true);
+    try {
+      const res = await proposalApiFetch(`/${encodeURIComponent(ticket)}/events`, {
+        headers: authHeaders(),
+      });
+      const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!res.ok) {
+        setEventsError((data.error as string) || `Failed to load events (${res.status}).`);
+      } else {
+        setEvents((data.events as ProposalEvent[]) || []);
+      }
+    } catch {
+      setEventsError("Network error. Please try again.");
+    } finally {
+      setEventsLoading(false);
+    }
+  };
+
   const authHeaders = (): HeadersInit => {
     const token = getPortalToken();
     return {
