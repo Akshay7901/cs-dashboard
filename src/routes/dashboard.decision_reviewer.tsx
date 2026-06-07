@@ -720,6 +720,76 @@ function DecisionReviewerDashboard() {
           </div>
         </div>
       )}
+
+      {eventsOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/50 p-4"
+          onClick={() => setEventsOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between border-b border-stone-200 px-6 py-4">
+              <div>
+                <h2 className="font-serif text-2xl font-bold text-stone-900">Audit Trail</h2>
+                <p className="mt-1 font-sans text-sm text-stone-600">
+                  {eventsTicket} · {events.length} event{events.length === 1 ? "" : "s"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEventsOpen(false)}
+                className="rounded-lg p-1.5 text-stone-500 hover:bg-stone-100 hover:text-stone-800"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="max-h-[60vh] overflow-y-auto px-6 py-5">
+              {eventsLoading ? (
+                <p className="py-10 text-center font-sans text-sm text-stone-500">
+                  Loading events…
+                </p>
+              ) : eventsError ? (
+                <p role="alert" className="py-10 text-center font-sans text-sm text-red-600">
+                  {eventsError}
+                </p>
+              ) : events.length === 0 ? (
+                <p className="py-10 text-center font-sans text-sm text-stone-500">
+                  No events recorded yet.
+                </p>
+              ) : (
+                <ol className="relative space-y-5 border-l-2 border-stone-200 pl-5">
+                  {events.map((ev) => (
+                    <li key={ev.id} className="relative">
+                      <span className="absolute -left-[27px] top-1.5 h-3 w-3 rounded-full bg-[#0E3D2F] ring-4 ring-white" />
+                      <div className="flex flex-wrap items-baseline justify-between gap-2">
+                        <p className="font-sans text-sm font-semibold text-stone-900">
+                          {ev.event_type.replace(/_/g, " ")}
+                        </p>
+                        <p className="font-sans text-xs text-stone-500">
+                          {formatDate(ev.created_at)}
+                        </p>
+                      </div>
+                      <p className="mt-1 font-sans text-sm text-stone-700">{ev.description}</p>
+                      {(ev.old_status || ev.new_status) && (
+                        <p className="mt-1 font-sans text-xs text-stone-500">
+                          {ev.old_status || "—"} → {ev.new_status || "—"}
+                        </p>
+                      )}
+                      <p className="mt-1 font-sans text-xs text-stone-500">
+                        by {ev.changed_by}
+                        {ev.changed_by_role ? ` (${ev.changed_by_role.replace(/_/g, " ")})` : ""}
+                      </p>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
