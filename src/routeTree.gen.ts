@@ -16,7 +16,6 @@ import { Route as DashboardEditorRouteImport } from './routes/dashboard.editor'
 import { Route as DashboardDecision_reviewerRouteImport } from './routes/dashboard.decision_reviewer'
 import { Route as DashboardAuthorRouteImport } from './routes/dashboard.author'
 import { Route as DashboardRoleRouteImport } from './routes/dashboard.$role'
-import { Route as ApiProposalProxyRouteImport } from './routes/api/proposal-proxy'
 import { Route as DashboardProposalTicketRouteImport } from './routes/dashboard.proposal.$ticket'
 import { Route as DashboardReviewerSubmissionIdRouteImport } from './routes/dashboard.reviewer.submission.$id'
 import { Route as DashboardEditorSubmissionIdRouteImport } from './routes/dashboard.editor.submission.$id'
@@ -57,11 +56,6 @@ const DashboardRoleRoute = DashboardRoleRouteImport.update({
   path: '/dashboard/$role',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiProposalProxyRoute = ApiProposalProxyRouteImport.update({
-  id: '/api/proposal-proxy',
-  path: '/api/proposal-proxy',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DashboardProposalTicketRoute = DashboardProposalTicketRouteImport.update({
   id: '/dashboard/proposal/$ticket',
   path: '/dashboard/proposal/$ticket',
@@ -83,7 +77,6 @@ const DashboardEditorSubmissionIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/api/proposal-proxy': typeof ApiProposalProxyRoute
   '/dashboard/$role': typeof DashboardRoleRoute
   '/dashboard/author': typeof DashboardAuthorRoute
   '/dashboard/decision_reviewer': typeof DashboardDecision_reviewerRoute
@@ -96,7 +89,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/api/proposal-proxy': typeof ApiProposalProxyRoute
   '/dashboard/$role': typeof DashboardRoleRoute
   '/dashboard/author': typeof DashboardAuthorRoute
   '/dashboard/decision_reviewer': typeof DashboardDecision_reviewerRoute
@@ -110,7 +102,6 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/api/proposal-proxy': typeof ApiProposalProxyRoute
   '/dashboard/$role': typeof DashboardRoleRoute
   '/dashboard/author': typeof DashboardAuthorRoute
   '/dashboard/decision_reviewer': typeof DashboardDecision_reviewerRoute
@@ -125,7 +116,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
-    | '/api/proposal-proxy'
     | '/dashboard/$role'
     | '/dashboard/author'
     | '/dashboard/decision_reviewer'
@@ -138,7 +128,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
-    | '/api/proposal-proxy'
     | '/dashboard/$role'
     | '/dashboard/author'
     | '/dashboard/decision_reviewer'
@@ -151,7 +140,6 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/login'
-    | '/api/proposal-proxy'
     | '/dashboard/$role'
     | '/dashboard/author'
     | '/dashboard/decision_reviewer'
@@ -165,7 +153,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
-  ApiProposalProxyRoute: typeof ApiProposalProxyRoute
   DashboardRoleRoute: typeof DashboardRoleRoute
   DashboardAuthorRoute: typeof DashboardAuthorRoute
   DashboardDecision_reviewerRoute: typeof DashboardDecision_reviewerRoute
@@ -225,13 +212,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRoleRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/proposal-proxy': {
-      id: '/api/proposal-proxy'
-      path: '/api/proposal-proxy'
-      fullPath: '/api/proposal-proxy'
-      preLoaderRoute: typeof ApiProposalProxyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/dashboard/proposal/$ticket': {
       id: '/dashboard/proposal/$ticket'
       path: '/dashboard/proposal/$ticket'
@@ -282,7 +262,6 @@ const DashboardReviewerRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
-  ApiProposalProxyRoute: ApiProposalProxyRoute,
   DashboardRoleRoute: DashboardRoleRoute,
   DashboardAuthorRoute: DashboardAuthorRoute,
   DashboardDecision_reviewerRoute: DashboardDecision_reviewerRoute,
@@ -293,3 +272,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
