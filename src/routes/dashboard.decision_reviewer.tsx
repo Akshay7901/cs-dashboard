@@ -118,6 +118,7 @@ function DecisionReviewerDashboard() {
   const [apiProposals, setApiProposals] = useState<ProposalRow[]>([]);
   const [proposalsLoading, setProposalsLoading] = useState(false);
   const [proposalsError, setProposalsError] = useState<string | null>(null);
+  const [statusSummary, setStatusSummary] = useState<Record<string, number>>({});
   const [reviewersOpen, setReviewersOpen] = useState(false);
   const [reviewers, setReviewers] = useState<PeerReviewer[]>([]);
   const [reviewersLoading, setReviewersLoading] = useState(false);
@@ -220,6 +221,7 @@ function DecisionReviewerDashboard() {
       }
       const list = (data.proposals as ApiProposal[]) || [];
       setApiProposals(list.map(mapApiProposal));
+      setStatusSummary((data.status_summary as Record<string, number>) || {});
     } catch {
       setProposalsError("Network error. Please try again.");
     } finally {
@@ -344,11 +346,22 @@ function DecisionReviewerDashboard() {
   );
 
   const counts = useMemo(() => {
-    const map: Record<string, number> = { all: mergedProposals.length };
-    for (const k of Object.keys(STATUS_META)) map[k] = 0;
-    for (const p of mergedProposals) map[p.status] = (map[p.status] ?? 0) + 1;
-    return map;
-  }, [mergedProposals]);
+    const s = statusSummary;
+    const sum = (...keys: string[]) =>
+      keys.reduce((acc, k) => acc + (Number(s[k]) || 0), 0);
+    return {
+      all: Number(s.total) || mergedProposals.length,
+      submitted: sum("new"),
+      revisions: sum("awaiting_more_info"),
+      in_review: sum("in_review"),
+      review_returned: sum("review_returned"),
+      major_revisions: 0,
+      contract: sum("contract_issued", "awaiting_author_approval", "contract_received"),
+      question: sum("queries_raised"),
+      signed: sum("author_approved", "locked"),
+      declined: sum("declined"),
+    } as Record<string, number>;
+  }, [statusSummary, mergedProposals.length]);
 
   const filtered = useMemo(() => {
     let list = mergedProposals.slice();
