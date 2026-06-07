@@ -346,11 +346,22 @@ function DecisionReviewerDashboard() {
   );
 
   const counts = useMemo(() => {
-    const map: Record<string, number> = { all: mergedProposals.length };
-    for (const k of Object.keys(STATUS_META)) map[k] = 0;
-    for (const p of mergedProposals) map[p.status] = (map[p.status] ?? 0) + 1;
-    return map;
-  }, [mergedProposals]);
+    const s = statusSummary;
+    const sum = (...keys: string[]) =>
+      keys.reduce((acc, k) => acc + (Number(s[k]) || 0), 0);
+    return {
+      all: Number(s.total) || mergedProposals.length,
+      submitted: sum("new"),
+      revisions: sum("awaiting_more_info"),
+      in_review: sum("in_review"),
+      review_returned: sum("review_returned"),
+      major_revisions: 0,
+      contract: sum("contract_issued", "awaiting_author_approval", "contract_received"),
+      question: sum("queries_raised"),
+      signed: sum("author_approved", "locked"),
+      declined: sum("declined"),
+    } as Record<string, number>;
+  }, [statusSummary, mergedProposals.length]);
 
   const filtered = useMemo(() => {
     let list = mergedProposals.slice();
