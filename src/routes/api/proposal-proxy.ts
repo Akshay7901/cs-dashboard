@@ -27,7 +27,7 @@ async function proxyProposalRequest(request: Request) {
     return jsonResponse({ error: "Invalid API path." }, 400);
   }
 
-  const path = rawPath.startsWith("/") ? rawPath : `/${rawPath}`;
+  const path = rawPath.startsWith("/") || rawPath.startsWith("?") ? rawPath : `/${rawPath}`;
   const upstreamUrl = `${UPSTREAM_BASE}${path}`;
   const headers = new Headers();
   const contentType = request.headers.get("content-type");
