@@ -295,17 +295,43 @@ function DecisionReviewerDashboard() {
     setProposalsLoading(true);
     setProposalsError(null);
     try {
-      const res = await proposalApiFetch("?limit=100&sort_order=desc", {
-        headers: authHeaders(),
-      });
-      const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-      if (!res.ok) {
-        setProposalsError((data.error as string) || "Failed to load proposals.");
+      // Fetch the default list (which carries the authoritative status_summary)
+      // plus an explicit request per known status, then merge by ticket so
+      // terminal states (declined / signed) that the default endpoint omits
+      // are still shown under "All".
+      const headers = authHeaders();
+      const defaultRes = await proposalApiFetch("?limit=100&sort_order=desc", { headers });
+      const defaultBody = (await defaultRes.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!defaultRes.ok) {
+        setProposalsError((defaultBody.error as string) || "Failed to load proposals.");
         return;
       }
-      const list = (data.proposals as ApiProposal[]) || [];
-      setApiProposals(list.map(mapApiProposal));
-      setStatusSummary((data.status_summary as Record<string, number>) || {});
+      const merged = new Map<string, ApiProposal>();
+      for (const p of (defaultBody.proposals as ApiProposal[]) || []) {
+        merged.set(p.ticket_number, p);
+      }
+      const extraLists = await Promise.all(
+        ALL_API_STATUSES.map(async (status) => {
+          try {
+            const r = await proposalApiFetch(
+              `?limit=100&sort_order=desc&status=${encodeURIComponent(status)}`,
+              { headers },
+            );
+            if (!r.ok) return [] as ApiProposal[];
+            const b = (await r.json().catch(() => ({}))) as Record<string, unknown>;
+            return ((b.proposals as ApiProposal[]) || []);
+          } catch {
+            return [] as ApiProposal[];
+          }
+        }),
+      );
+      for (const list of extraLists) {
+        for (const p of list) {
+          if (!merged.has(p.ticket_number)) merged.set(p.ticket_number, p);
+        }
+      }
+      setApiProposals(Array.from(merged.values()).map(mapApiProposal));
+      setStatusSummary((defaultBody.status_summary as Record<string, number>) || {});
     } catch {
       setProposalsError("Network error. Please try again.");
     } finally {
