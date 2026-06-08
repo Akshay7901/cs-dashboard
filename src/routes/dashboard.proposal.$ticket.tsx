@@ -258,13 +258,12 @@ function ProposalDetailPage() {
     }
   };
 
-  const handleDecline = async () => {
-    if (
-      !confirm(
-        "Are you sure you want to decline this proposal? This action cannot be undone and the proposal will become read-only.",
-      )
-    )
-      return;
+  const handleDecline = () => {
+    setDeclineError(null);
+    setDeclineConfirmOpen(true);
+  };
+
+  const executeDecline = async () => {
     setDeclineLoading(true);
     setDeclineError(null);
     try {
@@ -285,6 +284,7 @@ function ProposalDetailPage() {
         );
         return;
       }
+      setDeclineConfirmOpen(false);
       // Refresh proposal data
       try {
         const refreshed = await proposalApiFetch(`/${encodeURIComponent(ticket)}`, {
