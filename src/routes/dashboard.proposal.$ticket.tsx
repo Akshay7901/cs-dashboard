@@ -621,6 +621,12 @@ function ProposalDetailPage() {
     return s === "review_returned" && reviews.length > 0;
   }, [data?.status, reviews.length]);
 
+  const isDeclined = useMemo(() => {
+    const s = (data?.status || "").toLowerCase().replace(/\s+/g, "_");
+    const ds = (data?.display_status || "").toLowerCase();
+    return s === "declined" || ds === "declined";
+  }, [data?.status, data?.display_status]);
+
   const primaryReview = reviews[0];
   const recommendationKey = (primaryReview?.review_data?.recommendation as string) || "";
   const recommendationLabel = RECOMMENDATION_LABELS[recommendationKey] || recommendationKey;
