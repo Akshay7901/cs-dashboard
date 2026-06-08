@@ -1,6 +1,15 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { ArrowLeft, Check, LogOut, SquarePen, X as XIcon } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  ChevronDown,
+  FileText,
+  LogOut,
+  Plus,
+  SquarePen,
+  X as XIcon,
+} from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
 import { clearPortalSession, getPortalSession, getPortalToken } from "@/lib/auth";
 import { formatDate, initialsFromName, displayNameFromEmail } from "@/lib/proposals";
@@ -71,6 +80,43 @@ const REVIEW_SECTIONS: { key: string; label: string }[] = [
   { key: "red_flags", label: "Red Flags" },
 ];
 
+const SEVERITY_OPTIONS = [
+  "General",
+  "Minor Concern",
+  "Major Concern",
+  "Suggestion",
+  "Question",
+] as const;
+type Severity = (typeof SEVERITY_OPTIONS)[number];
+
+const SEVERITY_TOKENS: Record<Severity, string> = {
+  General: "bg-stone-50 text-stone-700 ring-stone-200",
+  "Minor Concern": "bg-amber-50 text-amber-800 ring-amber-200",
+  "Major Concern": "bg-rose-50 text-rose-800 ring-rose-200",
+  Suggestion: "bg-sky-50 text-sky-800 ring-sky-200",
+  Question: "bg-violet-50 text-violet-800 ring-violet-200",
+};
+
+const SECTION_SEVERITY: Record<string, Severity> = {
+  scope: "General",
+  purpose_value: "General",
+  title: "Suggestion",
+  originality: "General",
+  credibility: "Minor Concern",
+  structure: "Suggestion",
+  clarity_quality: "Minor Concern",
+  other_comments: "General",
+  red_flags: "Major Concern",
+};
+
+type ReviewComment = {
+  id: string;
+  severity: Severity;
+  chapter: string;
+  page: string;
+  body: string;
+};
+
 export const Route = createFileRoute("/dashboard/proposal/$ticket")({
   head: () => ({ meta: [{ title: "Proposal Details — Editor Portal" }] }),
   component: ProposalDetailPage,
@@ -99,6 +145,10 @@ function ProposalDetailPage() {
   const [reviews, setReviews] = useState<SubmittedReview[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [reviewsError, setReviewsError] = useState<string | null>(null);
+  const [comments, setComments] = useState<ReviewComment[]>([]);
+  const [commentsSeeded, setCommentsSeeded] = useState(false);
+  const [editorialSummary, setEditorialSummary] = useState("");
+  const [originalOpen, setOriginalOpen] = useState(false);
 
   useEffect(() => {
     try {
@@ -220,6 +270,72 @@ function ProposalDetailPage() {
   );
 
   const assignedReviewer = data?.assignments?.[0];
+
+  const isReviewReturned = useMemo(() => {
+    const s = (data?.status || "").toLowerCase().replace(/\s+/g, "_");
+    return s === "review_returned" && reviews.length > 0;
+  }, [data?.status, reviews.length]);
+
+  const primaryReview = reviews[0];
+  const recommendationKey = (primaryReview?.review_data?.recommendation as string) || "";
+  const recommendationLabel = RECOMMENDATION_LABELS[recommendationKey] || recommendationKey;
+  const reviewerDisplayName = primaryReview
+    ? primaryReview.reviewer_name ||
+      displayNameFromEmail(primaryReview.reviewer_email || "")
+    : "";
+  const reviewerInstitution = (primaryReview as { reviewer_institution?: string } | undefined)
+    ?.reviewer_institution;
+  const reviewerSummary = useMemo(() => {
+    if (!primaryReview) return "";
+    const rd = (primaryReview.review_data || {}) as Record<string, unknown>;
+    const candidates = [
+      rd.note_to_dr,
+      rd.other_comments,
+      rd.scope,
+      rd.purpose_value,
+    ];
+    for (const c of candidates) {
+      const s = typeof c === "string" ? c.trim() : "";
+      if (s) return s;
+    }
+    return "";
+  }, [primaryReview]);
+
+  useEffect(() => {
+    if (commentsSeeded || !primaryReview) return;
+    const rd = (primaryReview.review_data || {}) as Record<string, unknown>;
+    const seeded: ReviewComment[] = [];
+    REVIEW_SECTIONS.forEach(({ key, label }) => {
+      const v = rd[key];
+      const text = typeof v === "string" ? v.trim() : "";
+      if (!text) return;
+      seeded.push({
+        id: `${key}-${seeded.length}`,
+        severity: SECTION_SEVERITY[key] || "General",
+        chapter: label,
+        page: "",
+        body: text,
+      });
+    });
+    setComments(seeded);
+    setCommentsSeeded(true);
+  }, [commentsSeeded, primaryReview]);
+
+  const updateComment = (id: string, patch: Partial<ReviewComment>) =>
+    setComments((cs) => cs.map((c) => (c.id === id ? { ...c, ...patch } : c)));
+  const removeComment = (id: string) =>
+    setComments((cs) => cs.filter((c) => c.id !== id));
+  const addComment = () =>
+    setComments((cs) => [
+      ...cs,
+      {
+        id: `new-${Date.now()}`,
+        severity: "General",
+        chapter: "",
+        page: "",
+        body: "",
+      },
+    ]);
 
   const onSaveNotes = (e: FormEvent) => {
     e.preventDefault();
@@ -394,6 +510,159 @@ function ProposalDetailPage() {
             <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
               {/* Main column */}
               <div className="space-y-6">
+                {isReviewReturned && (
+                  <>
+                    {/* Review Returned hero */}
+                    <Card>
+                      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-stone-200 bg-indigo-50/40 px-7 py-5">
+                        <div className="min-w-0">
+                          <h2 className="font-serif text-2xl font-bold text-stone-900">
+                            Review Returned
+                          </h2>
+                          <p className="mt-1 font-sans text-sm text-stone-600">
+                            <span className="font-semibold text-[#0E3D2F]">
+                              {reviewerDisplayName}
+                            </span>
+                            {reviewerInstitution && (
+                              <span className="text-stone-500"> · {reviewerInstitution}</span>
+                            )}
+                          </p>
+                        </div>
+                        {recommendationLabel && (
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3.5 py-1.5 font-sans text-xs font-semibold text-amber-800 ring-1 ring-amber-200">
+                            Recommended: {recommendationLabel}
+                          </span>
+                        )}
+                      </div>
+                      {reviewerSummary && (
+                        <div className="px-7 py-6">
+                          <SectionLabel>Reviewer Summary</SectionLabel>
+                          <p className="mt-3 whitespace-pre-line font-sans text-sm leading-relaxed text-stone-700">
+                            {reviewerSummary}
+                          </p>
+                        </div>
+                      )}
+                    </Card>
+
+                    {/* Peer Review Comments */}
+                    <Card>
+                      <CardHeader
+                        title="Peer Review Comments"
+                        subtitle={`Edit before sending — ${comments.length} ${comments.length === 1 ? "comment" : "comments"}`}
+                      />
+                      <div className="space-y-4 px-7 py-6">
+                        {comments.length === 0 && (
+                          <p className="rounded-xl border border-dashed border-stone-200 px-4 py-6 text-center font-sans text-sm text-stone-500">
+                            No comments yet. Add one below.
+                          </p>
+                        )}
+                        {comments.map((c) => (
+                          <div
+                            key={c.id}
+                            className="rounded-2xl border border-stone-200 bg-white p-4"
+                          >
+                            <div className="flex flex-wrap items-start gap-3">
+                              <select
+                                value={c.severity}
+                                onChange={(e) =>
+                                  updateComment(c.id, {
+                                    severity: e.target.value as Severity,
+                                  })
+                                }
+                                className={`shrink-0 rounded-lg px-3 py-2 font-sans text-xs font-medium ring-1 focus:outline-none ${SEVERITY_TOKENS[c.severity]}`}
+                              >
+                                {SEVERITY_OPTIONS.map((s) => (
+                                  <option key={s} value={s}>
+                                    {s}
+                                  </option>
+                                ))}
+                              </select>
+                              <input
+                                type="text"
+                                value={c.chapter}
+                                onChange={(e) =>
+                                  updateComment(c.id, { chapter: e.target.value })
+                                }
+                                placeholder="Chapter / Section"
+                                className="min-w-0 flex-1 rounded-lg border border-stone-200 bg-white px-3 py-2 font-sans text-sm text-stone-800 placeholder:text-stone-400 focus:border-stone-400 focus:outline-none"
+                              />
+                              <input
+                                type="text"
+                                value={c.page}
+                                onChange={(e) =>
+                                  updateComment(c.id, { page: e.target.value })
+                                }
+                                placeholder="Page"
+                                className="w-28 shrink-0 rounded-lg border border-stone-200 bg-white px-3 py-2 font-sans text-sm text-stone-800 placeholder:text-stone-400 focus:border-stone-400 focus:outline-none"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => removeComment(c.id)}
+                                className="shrink-0 rounded-lg p-2 text-stone-400 hover:bg-stone-100 hover:text-stone-700"
+                                aria-label="Remove comment"
+                              >
+                                <XIcon className="h-4 w-4" />
+                              </button>
+                            </div>
+                            <textarea
+                              value={c.body}
+                              onChange={(e) =>
+                                updateComment(c.id, { body: e.target.value })
+                              }
+                              rows={3}
+                              placeholder="Comment…"
+                              className="mt-3 w-full resize-y rounded-lg border border-stone-200 bg-white px-3 py-2.5 font-sans text-sm leading-relaxed text-stone-800 placeholder:text-stone-400 focus:border-stone-400 focus:outline-none"
+                            />
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={addComment}
+                          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-stone-300 bg-white px-4 py-3 font-sans text-sm font-medium text-stone-600 hover:border-[#0E3D2F] hover:text-[#0E3D2F]"
+                        >
+                          <Plus className="h-4 w-4" />
+                          Add comment
+                        </button>
+                      </div>
+                    </Card>
+
+                    {/* Your Editorial Notes */}
+                    <Card>
+                      <CardHeader
+                        title="Your Editorial Notes"
+                        subtitle="These will be sent to the author along with the review comments"
+                      />
+                      <div className="px-7 py-6">
+                        <textarea
+                          value={editorialSummary}
+                          onChange={(e) => setEditorialSummary(e.target.value)}
+                          rows={6}
+                          placeholder="Add your editorial summary, guidance, or context for the author before sending…"
+                          className="w-full resize-y rounded-xl border border-stone-200 bg-white px-4 py-3 font-sans text-sm leading-relaxed text-stone-800 placeholder:text-stone-400 focus:border-stone-400 focus:outline-none"
+                        />
+                      </div>
+                    </Card>
+
+                    {/* Collapsible toggle for original proposal */}
+                    <button
+                      type="button"
+                      onClick={() => setOriginalOpen((v) => !v)}
+                      className="flex w-full items-center justify-between rounded-2xl border border-stone-200 bg-white px-6 py-4 font-sans text-sm font-semibold text-stone-800 hover:border-stone-300"
+                      aria-expanded={originalOpen}
+                    >
+                      <span className="inline-flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-stone-500" />
+                        View original proposal details
+                      </span>
+                      <ChevronDown
+                        className={`h-4 w-4 text-stone-500 transition-transform ${originalOpen ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                  </>
+                )}
+
+                {(!isReviewReturned || originalOpen) && (
+                  <>
                 {/* Primary Author */}
                 <Card>
                   <CardHeader
@@ -595,90 +864,21 @@ function ProposalDetailPage() {
                     </div>
                   </Card>
                 )}
-
-                {/* Peer Review(s) returned */}
-                {(reviews.length > 0 || reviewsLoading) && (
-                  <Card>
-                    <CardHeader
-                      title="Peer Review"
-                      subtitle="Returned by the assigned reviewer"
-                    />
-                    {reviewsLoading && (
-                      <p className="px-7 py-6 font-sans text-sm text-stone-500">
-                        Loading review…
-                      </p>
-                    )}
-                    {!reviewsLoading && reviews.map((rv, idx) => {
-                      const rd = (rv.review_data || {}) as Record<string, unknown>;
-                      const rec = (rd.recommendation as string) || "";
-                      const recLabel = RECOMMENDATION_LABELS[rec] || rec;
-                      return (
-                        <div
-                          key={idx}
-                          className={idx > 0 ? "border-t border-stone-200" : ""}
-                        >
-                          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-stone-200 bg-stone-50/60 px-7 py-4">
-                            <div>
-                              <p className="font-sans text-sm font-semibold text-stone-900">
-                                {rv.reviewer_name ||
-                                  displayNameFromEmail(rv.reviewer_email || "")}
-                              </p>
-                              {rv.reviewer_email && (
-                                <p className="font-sans text-xs text-stone-500">
-                                  {rv.reviewer_email}
-                                </p>
-                              )}
-                              {rv.submitted_at && (
-                                <p className="mt-1 font-sans text-xs text-stone-500">
-                                  Submitted {formatDate(rv.submitted_at)}
-                                </p>
-                              )}
-                            </div>
-                            {recLabel && (
-                              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 font-sans text-xs font-medium text-emerald-800 ring-1 ring-emerald-200">
-                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                                {recLabel}
-                              </span>
-                            )}
-                          </div>
-                          <div className="space-y-5 px-7 py-6">
-                            {REVIEW_SECTIONS.map(({ key, label }) => {
-                              const v = rd[key] as string | undefined;
-                              if (!v || !v.trim()) return null;
-                              return (
-                                <div key={key}>
-                                  <SectionLabel>{label}</SectionLabel>
-                                  <p className="mt-2 whitespace-pre-line font-sans text-sm leading-relaxed text-stone-700">
-                                    {v}
-                                  </p>
-                                </div>
-                              );
-                            })}
-                            {(rd.note_to_dr as string)?.trim() && (
-                              <div className="rounded-xl bg-amber-50 px-5 py-4 ring-1 ring-amber-200">
-                                <SectionLabel>Private Note to Decision Reviewer</SectionLabel>
-                                <p className="mt-2 whitespace-pre-line font-sans text-sm leading-relaxed text-amber-900">
-                                  {rd.note_to_dr as string}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </Card>
+                  </>
                 )}
 
                 {/* Supporting Documents (placeholder — API does not return files) */}
-                <Card>
-                  <CardHeader
-                    title="Supporting Documents"
-                    subtitle="Files attached to this proposal"
-                  />
-                  <div className="px-7 py-8 text-center font-sans text-sm text-stone-500">
-                    No supporting documents available.
-                  </div>
-                </Card>
+                {!isReviewReturned && (
+                  <Card>
+                    <CardHeader
+                      title="Supporting Documents"
+                      subtitle="Files attached to this proposal"
+                    />
+                    <div className="px-7 py-8 text-center font-sans text-sm text-stone-500">
+                      No supporting documents available.
+                    </div>
+                  </Card>
+                )}
               </div>
 
               {/* Sidebar */}
@@ -690,10 +890,14 @@ function ProposalDetailPage() {
                       Editorial Decision
                     </h2>
                     <p className="mt-1 font-sans text-sm text-stone-500">
-                      {assignedReviewer ? "With peer reviewer" : "Awaiting initial assessment"}
+                      {isReviewReturned
+                        ? "Review returned — add notes and send to author"
+                        : assignedReviewer
+                          ? "With peer reviewer"
+                          : "Awaiting initial assessment"}
                     </p>
                   </div>
-                  {assignedReviewer && (
+                  {assignedReviewer && !isReviewReturned && (
                     <div className="mx-5 mb-4 rounded-xl bg-indigo-50/70 px-5 py-4 ring-1 ring-indigo-100">
                       <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.12em] text-indigo-700">
                         Assigned Reviewer
@@ -737,7 +941,37 @@ function ProposalDetailPage() {
                     </div>
                   )}
                   <div className="space-y-3 border-t border-stone-300 px-5 py-4">
-                    {!assignedReviewer && (
+                    {isReviewReturned && (
+                      <>
+                        <button
+                          type="button"
+                          className="flex w-full items-start gap-3 rounded-xl bg-[#5B2EBA] px-4 py-3 text-left text-white transition-colors hover:bg-[#4a2599]"
+                        >
+                          <FileText className="mt-0.5 h-4 w-4 text-white" />
+                          <div>
+                            <p className="font-sans text-sm font-semibold">Issue Contract</p>
+                            <p className="font-sans text-xs text-white/85">
+                              Send contract &amp; review comments to author
+                            </p>
+                          </div>
+                        </button>
+                        <button
+                          type="button"
+                          className="flex w-full items-start gap-3 rounded-xl border border-rose-200 bg-rose-50/60 px-4 py-3 text-left transition-colors hover:bg-rose-50"
+                        >
+                          <SquarePen className="mt-0.5 h-4 w-4 text-rose-700" />
+                          <div>
+                            <p className="font-sans text-sm font-semibold text-rose-900">
+                              Request Major Revisions
+                            </p>
+                            <p className="font-sans text-xs text-rose-700/80">
+                              Send review comments back to author
+                            </p>
+                          </div>
+                        </button>
+                      </>
+                    )}
+                    {!assignedReviewer && !isReviewReturned && (
                       <>
                         <button
                           type="button"
