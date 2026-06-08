@@ -942,48 +942,6 @@ function ProposalDetailPage() {
                     </Card>
 
                     {/* Send Review to Author */}
-                    <Card>
-                      <CardHeader
-                        title="Send Review to Author"
-                        subtitle="Submit the edited peer review and your recommendation"
-                      />
-                      <div className="space-y-4 px-7 py-6">
-                        <div>
-                          <label className="mb-2 block font-sans text-xs font-semibold uppercase tracking-wide text-stone-500">
-                            Recommendation
-                          </label>
-                          <select
-                            value={reviewRecommendation}
-                            onChange={(e) => setReviewRecommendation(e.target.value)}
-                            className="w-full rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 font-sans text-sm text-stone-800 focus:border-stone-400 focus:outline-none"
-                          >
-                            {Object.entries(RECOMMENDATION_LABELS).map(([k, v]) => (
-                              <option key={k} value={k}>
-                                {v}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        {submitReviewError && (
-                          <p className="rounded-lg bg-red-50 px-3 py-2 font-sans text-xs text-red-700 ring-1 ring-red-200">
-                            {submitReviewError}
-                          </p>
-                        )}
-                        {submitReviewSuccess && (
-                          <p className="rounded-lg bg-emerald-50 px-3 py-2 font-sans text-xs text-emerald-700 ring-1 ring-emerald-200">
-                            {submitReviewSuccess}
-                          </p>
-                        )}
-                        <button
-                          type="button"
-                          onClick={submitReviewToAuthor}
-                          disabled={submitReviewLoading || comments.length === 0}
-                          className="w-full rounded-xl bg-[#0E3D2F] px-4 py-3 font-sans text-sm font-semibold text-white hover:bg-[#0a2f24] disabled:opacity-50"
-                        >
-                          {submitReviewLoading ? "Sending…" : "Send Review to Author"}
-                        </button>
-                      </div>
-                    </Card>
 
                     {/* Collapsible toggle for original proposal */}
                     <button
