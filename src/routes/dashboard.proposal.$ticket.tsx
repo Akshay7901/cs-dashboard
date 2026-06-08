@@ -864,6 +864,8 @@ function ProposalDetailPage() {
                     </div>
                   </Card>
                 )}
+                  </>
+                )}
 
                 {/* Supporting Documents (placeholder — API does not return files) */}
                 {!isReviewReturned && (
@@ -876,20 +878,6 @@ function ProposalDetailPage() {
                       No supporting documents available.
                     </div>
                   </Card>
-                )}
-
-                {isReviewReturned && (
-                  <button
-                    type="button"
-                    onClick={() => setOriginalOpen((v) => !v)}
-                    className="mt-2 flex w-full items-center justify-between rounded-2xl border border-stone-200 bg-white px-6 py-4 font-sans text-sm font-semibold text-stone-800 hover:border-stone-300"
-                    aria-expanded={originalOpen}
-                  >
-                    <span>View original proposal details</span>
-                    <ChevronDown
-                      className={`h-4 w-4 text-stone-500 transition-transform ${originalOpen ? "rotate-180" : ""}`}
-                    />
-                  </button>
                 )}
               </div>
 
