@@ -173,6 +173,10 @@ function ProposalDetailPage() {
   const [declineLoading, setDeclineLoading] = useState(false);
   const [declineError, setDeclineError] = useState<string | null>(null);
   const [declineConfirmOpen, setDeclineConfirmOpen] = useState(false);
+  const [reviewRecommendation, setReviewRecommendation] = useState<string>("proceed");
+  const [submitReviewLoading, setSubmitReviewLoading] = useState(false);
+  const [submitReviewError, setSubmitReviewError] = useState<string | null>(null);
+  const [submitReviewSuccess, setSubmitReviewSuccess] = useState<string | null>(null);
 
   const openRequestRevisions = () => {
     setReqRevMode("revisions");
@@ -305,6 +309,85 @@ function ProposalDetailPage() {
       setDeclineError("Network error. Please try again.");
     } finally {
       setDeclineLoading(false);
+    }
+  };
+
+  const submitReviewToAuthor = async () => {
+    setSubmitReviewLoading(true);
+    setSubmitReviewError(null);
+    setSubmitReviewSuccess(null);
+    try {
+      const token = getPortalToken();
+      // Map comments back to section fields by chapter label
+      const sectionByLabel: Record<string, string> = {};
+      REVIEW_SECTIONS.forEach(({ label }) => (sectionByLabel[label] = ""));
+      const otherBuckets: string[] = [];
+      comments.forEach((c) => {
+        const body = (c.body || "").trim();
+        if (!body) return;
+        const label = (c.chapter || "").trim();
+        if (label && Object.prototype.hasOwnProperty.call(sectionByLabel, label)) {
+          sectionByLabel[label] = sectionByLabel[label]
+            ? `${sectionByLabel[label]}\n\n${body}`
+            : body;
+        } else {
+          otherBuckets.push(label ? `${label}: ${body}` : body);
+        }
+      });
+      const payload: Record<string, unknown> = { recommendation: reviewRecommendation };
+      REVIEW_SECTIONS.forEach(({ key, label }) => {
+        const v = sectionByLabel[label];
+        if (key === "other_comments") {
+          const merged = [v, ...otherBuckets].filter(Boolean).join("\n\n");
+          if (merged) payload[key] = merged;
+        } else if (v) {
+          payload[key] = v;
+        }
+      });
+      if (editorialSummary.trim()) payload.dr_note = editorialSummary.trim();
+      const res = await proposalApiFetch(
+        `/${encodeURIComponent(ticket)}/review/submit`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify(payload),
+        },
+      );
+      const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!res.ok) {
+        setSubmitReviewError(
+          (body.error as string) ||
+            (body.message as string) ||
+            `Failed to submit review (${res.status}).`,
+        );
+        return;
+      }
+      setSubmitReviewSuccess(
+        (body.message as string) || "Review submitted to author.",
+      );
+      // refresh proposal
+      try {
+        const refreshed = await proposalApiFetch(`/${encodeURIComponent(ticket)}`, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        const refreshedBody = (await refreshed.json().catch(() => ({}))) as Record<
+          string,
+          unknown
+        >;
+        if (refreshed.ok) setData(refreshedBody as unknown as ProposalDetail);
+      } catch {
+        // ignore
+      }
+    } catch {
+      setSubmitReviewError("Network error. Please try again.");
+    } finally {
+      setSubmitReviewLoading(false);
     }
   };
 
@@ -477,6 +560,7 @@ function ProposalDetailPage() {
     });
     setComments(seeded);
     setCommentsSeeded(true);
+    if (recommendationKey) setReviewRecommendation(recommendationKey);
   }, [commentsSeeded, primaryReview]);
 
   const updateComment = (id: string, patch: Partial<ReviewComment>) =>
@@ -774,6 +858,50 @@ function ProposalDetailPage() {
                           placeholder="Add your editorial summary, guidance, or context for the author before sending…"
                           className="w-full resize-y rounded-xl border border-stone-200 bg-white px-4 py-3 font-sans text-sm leading-relaxed text-stone-800 placeholder:text-stone-400 focus:border-stone-400 focus:outline-none"
                         />
+                      </div>
+                    </Card>
+
+                    {/* Send Review to Author */}
+                    <Card>
+                      <CardHeader
+                        title="Send Review to Author"
+                        subtitle="Submit the edited peer review and your recommendation"
+                      />
+                      <div className="space-y-4 px-7 py-6">
+                        <div>
+                          <label className="mb-2 block font-sans text-xs font-semibold uppercase tracking-wide text-stone-500">
+                            Recommendation
+                          </label>
+                          <select
+                            value={reviewRecommendation}
+                            onChange={(e) => setReviewRecommendation(e.target.value)}
+                            className="w-full rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 font-sans text-sm text-stone-800 focus:border-stone-400 focus:outline-none"
+                          >
+                            {Object.entries(RECOMMENDATION_LABELS).map(([k, v]) => (
+                              <option key={k} value={k}>
+                                {v}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        {submitReviewError && (
+                          <p className="rounded-lg bg-red-50 px-3 py-2 font-sans text-xs text-red-700 ring-1 ring-red-200">
+                            {submitReviewError}
+                          </p>
+                        )}
+                        {submitReviewSuccess && (
+                          <p className="rounded-lg bg-emerald-50 px-3 py-2 font-sans text-xs text-emerald-700 ring-1 ring-emerald-200">
+                            {submitReviewSuccess}
+                          </p>
+                        )}
+                        <button
+                          type="button"
+                          onClick={submitReviewToAuthor}
+                          disabled={submitReviewLoading || comments.length === 0}
+                          className="w-full rounded-xl bg-[#0E3D2F] px-4 py-3 font-sans text-sm font-semibold text-white hover:bg-[#0a2f24] disabled:opacity-50"
+                        >
+                          {submitReviewLoading ? "Sending…" : "Send Review to Author"}
+                        </button>
                       </div>
                     </Card>
 
