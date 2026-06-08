@@ -636,7 +636,7 @@ function DecisionReviewerDashboard() {
                   <div className="font-sans text-sm text-stone-700">
                     {formatDate(p.submittedAt)}
                   </div>
-                  <div>
+                  <div className="flex items-center">
                     <span
                       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-sans text-xs font-medium ${meta.badgeClass}`}
                     >
