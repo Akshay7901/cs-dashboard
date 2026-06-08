@@ -720,21 +720,6 @@ function ProposalDetailPage() {
                             className="rounded-2xl border border-stone-200 bg-white p-4"
                           >
                             <div className="flex flex-wrap items-start gap-3">
-                              <select
-                                value={c.severity}
-                                onChange={(e) =>
-                                  updateComment(c.id, {
-                                    severity: e.target.value as Severity,
-                                  })
-                                }
-                                className={`shrink-0 rounded-lg px-3 py-2 font-sans text-xs font-medium ring-1 focus:outline-none ${SEVERITY_TOKENS[c.severity]}`}
-                              >
-                                {SEVERITY_OPTIONS.map((s) => (
-                                  <option key={s} value={s}>
-                                    {s}
-                                  </option>
-                                ))}
-                              </select>
                               <input
                                 type="text"
                                 value={c.chapter}
@@ -743,15 +728,6 @@ function ProposalDetailPage() {
                                 }
                                 placeholder="Chapter / Section"
                                 className="min-w-0 flex-1 rounded-lg border border-stone-200 bg-white px-3 py-2 font-sans text-sm text-stone-800 placeholder:text-stone-400 focus:border-stone-400 focus:outline-none"
-                              />
-                              <input
-                                type="text"
-                                value={c.page}
-                                onChange={(e) =>
-                                  updateComment(c.id, { page: e.target.value })
-                                }
-                                placeholder="Page"
-                                className="w-28 shrink-0 rounded-lg border border-stone-200 bg-white px-3 py-2 font-sans text-sm text-stone-800 placeholder:text-stone-400 focus:border-stone-400 focus:outline-none"
                               />
                               <button
                                 type="button"
