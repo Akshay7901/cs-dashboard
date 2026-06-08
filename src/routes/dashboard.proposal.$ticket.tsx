@@ -256,6 +256,56 @@ function ProposalDetailPage() {
     }
   };
 
+  const handleDecline = async () => {
+    if (
+      !confirm(
+        "Are you sure you want to decline this proposal? This action cannot be undone and the proposal will become read-only.",
+      )
+    )
+      return;
+    setDeclineLoading(true);
+    setDeclineError(null);
+    try {
+      const token = getPortalToken();
+      const res = await proposalApiFetch(`/${encodeURIComponent(ticket)}/decline`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!res.ok) {
+        setDeclineError(
+          (body.error as string) ||
+            (body.message as string) ||
+            `Failed to decline proposal (${res.status}).`,
+        );
+        return;
+      }
+      // Refresh proposal data
+      try {
+        const refreshed = await proposalApiFetch(`/${encodeURIComponent(ticket)}`, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        const refreshedBody = (await refreshed.json().catch(() => ({}))) as Record<
+          string,
+          unknown
+        >;
+        if (refreshed.ok) setData(refreshedBody as unknown as ProposalDetail);
+      } catch {
+        // ignore refresh errors
+      }
+    } catch {
+      setDeclineError("Network error. Please try again.");
+    } finally {
+      setDeclineLoading(false);
+    }
+  };
+
   useEffect(() => {
     try {
       const session = getPortalSession();
