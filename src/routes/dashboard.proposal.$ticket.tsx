@@ -623,9 +623,8 @@ function ProposalDetailPage() {
 
   const isDeclined = useMemo(() => {
     const s = (data?.status || "").toLowerCase().replace(/\s+/g, "_");
-    const ds = (data?.display_status || "").toLowerCase();
-    return s === "declined" || ds === "declined";
-  }, [data?.status, data?.display_status]);
+    return s === "declined";
+  }, [data?.status]);
 
   const primaryReview = reviews[0];
   const recommendationKey = (primaryReview?.review_data?.recommendation as string) || "";
