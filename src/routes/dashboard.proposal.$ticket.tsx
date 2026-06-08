@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
+  AlertTriangle,
   ArrowLeft,
   Check,
   ChevronDown,
@@ -171,6 +172,7 @@ function ProposalDetailPage() {
   const [reqRevMode, setReqRevMode] = useState<"revisions" | "major">("revisions");
   const [declineLoading, setDeclineLoading] = useState(false);
   const [declineError, setDeclineError] = useState<string | null>(null);
+  const [declineConfirmOpen, setDeclineConfirmOpen] = useState(false);
 
   const openRequestRevisions = () => {
     setReqRevMode("revisions");
@@ -256,13 +258,12 @@ function ProposalDetailPage() {
     }
   };
 
-  const handleDecline = async () => {
-    if (
-      !confirm(
-        "Are you sure you want to decline this proposal? This action cannot be undone and the proposal will become read-only.",
-      )
-    )
-      return;
+  const handleDecline = () => {
+    setDeclineError(null);
+    setDeclineConfirmOpen(true);
+  };
+
+  const executeDecline = async () => {
     setDeclineLoading(true);
     setDeclineError(null);
     try {
@@ -283,6 +284,7 @@ function ProposalDetailPage() {
         );
         return;
       }
+      setDeclineConfirmOpen(false);
       // Refresh proposal data
       try {
         const refreshed = await proposalApiFetch(`/${encodeURIComponent(ticket)}`, {
@@ -1517,6 +1519,65 @@ function ProposalDetailPage() {
                 className="rounded-xl bg-[#C97A6A] px-5 py-2.5 font-sans text-sm font-semibold text-white hover:bg-[#b56656] disabled:cursor-not-allowed disabled:bg-[#E9C8C0] disabled:text-white/80"
               >
                 {reqRevSubmitting ? "Sending…" : "Send Revision Request"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {declineConfirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/50 px-4 py-8">
+          <div className="flex w-full max-w-md flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <div className="flex items-start justify-between gap-4 px-7 pt-7 pb-5">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-100 text-rose-700">
+                  <AlertTriangle className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="font-serif text-2xl font-bold text-[#2C1A0E]">
+                    Decline Proposal
+                  </h2>
+                  <p className="mt-1 font-sans text-sm text-[#7A6A5A]">
+                    This action cannot be undone and the proposal will become read-only.
+                  </p>
+                  <p className="mt-1 font-sans text-sm italic text-[#7A6A5A]">
+                    &ldquo;{title}&rdquo;
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDeclineConfirmOpen(false)}
+                className="rounded-md p-1 text-stone-500 hover:bg-stone-200 hover:text-stone-700"
+                aria-label="Close"
+              >
+                <XIcon className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="px-7 pb-5">
+              <p className="font-sans text-sm text-stone-700">
+                Are you sure you want to decline this proposal? The author will be notified and the proposal status will be set to <strong>Declined</strong>.
+              </p>
+              {declineError && (
+                <p className="mt-4 rounded-lg bg-rose-50 px-3 py-2 font-sans text-sm text-rose-700 ring-1 ring-rose-200">
+                  {declineError}
+                </p>
+              )}
+            </div>
+            <div className="flex items-center justify-between gap-3 border-t border-stone-200 bg-white px-7 py-4">
+              <button
+                type="button"
+                onClick={() => setDeclineConfirmOpen(false)}
+                className="rounded-xl px-5 py-2.5 font-sans text-sm font-semibold text-stone-700 hover:bg-stone-100"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={executeDecline}
+                disabled={declineLoading}
+                className="rounded-xl bg-rose-600 px-5 py-2.5 font-sans text-sm font-semibold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:bg-rose-300 disabled:text-white/80"
+              >
+                {declineLoading ? "Declining…" : "Decline Proposal"}
               </button>
             </div>
           </div>
