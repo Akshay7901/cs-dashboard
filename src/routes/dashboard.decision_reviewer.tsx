@@ -471,23 +471,23 @@ function DecisionReviewerDashboard() {
           <div className="flex items-center gap-3">
             <Link to="/login" className="flex items-center gap-3">
               <img src={cspLogo} alt="CSP" width={32} height={32} />
-              <span className="font-serif text-xl font-bold text-stone-900">
+              <span className="font-serif text-base font-bold text-[#2C1A0E]">
                 Cambridge Scholars Publishing
               </span>
             </Link>
             <span className="mx-2 h-5 w-px bg-stone-300" />
-            <span className="font-sans text-base text-stone-700">Editor Portal</span>
+            <span className="font-sans text-sm font-medium text-[#00422F]">Editor Portal</span>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0E3D2F] font-sans text-xs font-semibold text-white">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#00422F] font-sans text-xs font-bold text-white">
               {initialsFromName(displayName)}
             </div>
-            <span className="font-sans text-sm font-medium text-stone-800">{displayName}</span>
+            <span className="font-sans text-sm text-[#2C1A0E]">{displayName}</span>
             <span className="h-5 w-px bg-stone-300" />
             <button
               type="button"
               onClick={onLogout}
-              className="inline-flex items-center gap-1.5 font-sans text-sm text-stone-600 hover:text-stone-900"
+              className="inline-flex items-center gap-1.5 font-sans text-sm text-[#7A6A5A] hover:text-[#2C1A0E]"
             >
               <LogOut className="h-4 w-4" />
               Logout
@@ -499,10 +499,10 @@ function DecisionReviewerDashboard() {
       <main className="mx-auto max-w-7xl px-8 py-10">
         <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="font-serif text-4xl font-bold tracking-tight text-stone-900">
+            <h1 className="font-serif text-3xl font-bold tracking-tight text-[#2C1A0E]">
               Proposal Intake
             </h1>
-            <p className="mt-2 font-sans text-base text-stone-600">
+            <p className="mt-1.5 font-sans text-sm text-[#7A6A5A]">
               Review and manage incoming book proposals
             </p>
           </div>
@@ -601,7 +601,7 @@ function DecisionReviewerDashboard() {
 
         {/* Table */}
         <div className="overflow-hidden rounded-2xl border border-stone-200 bg-white">
-          <div className="hidden grid-cols-[1.6fr_1.1fr_0.9fr_0.9fr_1fr_100px] items-center gap-4 border-b border-stone-200 bg-stone-50/60 px-6 py-3 font-sans text-xs font-semibold uppercase tracking-wider text-stone-500 md:grid">
+          <div className="hidden grid-cols-[1.6fr_1.1fr_0.9fr_0.9fr_1fr_100px] items-center gap-4 border-b border-stone-200 bg-stone-50/60 px-6 py-3 font-sans text-xs font-semibold uppercase tracking-wider text-[#7A6A5A] md:grid">
             <HeaderCell label="Title" />
             <HeaderCell label="Author" />
             <HeaderCell label="Country" />
@@ -623,17 +623,17 @@ function DecisionReviewerDashboard() {
                     aria-hidden="true"
                   />
                   <div className="pl-2">
-                    <p className="font-sans text-[15px] font-semibold leading-snug text-stone-900">
+                    <p className="font-sans text-sm font-medium leading-snug text-[#2C1A0E]">
                       {p.title}
                     </p>
-                    <p className="mt-1 font-sans text-xs text-stone-500">{p.kind}</p>
+                    <p className="mt-1 font-sans text-xs text-[#7A6A5A]">{p.kind}</p>
                   </div>
                   <div>
-                    <p className="font-sans text-sm font-semibold text-stone-900">{p.authorName}</p>
-                    <p className="mt-0.5 font-sans text-xs text-stone-500">{p.authorAffiliation}</p>
+                    <p className="font-sans text-sm font-medium text-[#2C1A0E]">{p.authorName}</p>
+                    <p className="mt-0.5 font-sans text-xs text-[#7A6A5A]">{p.authorAffiliation}</p>
                   </div>
-                  <div className="font-sans text-sm text-stone-700">{p.country}</div>
-                  <div className="font-sans text-sm text-stone-700">
+                  <div className="font-sans text-sm text-[#7A6A5A]">{p.country}</div>
+                  <div className="font-sans text-sm text-[#7A6A5A]">
                     {formatDate(p.submittedAt)}
                   </div>
                   <div>
