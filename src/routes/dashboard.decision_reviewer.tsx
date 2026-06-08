@@ -636,7 +636,7 @@ function DecisionReviewerDashboard() {
                   <div className="font-sans text-sm text-stone-700">
                     {formatDate(p.submittedAt)}
                   </div>
-                  <div className="flex items-center">
+                  <div>
                     <span
                       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-sans text-xs font-medium ${meta.badgeClass}`}
                     >
@@ -647,13 +647,6 @@ function DecisionReviewerDashboard() {
                       />
                       {p.displayStatus || meta.label}
                     </span>
-                    {p.actionRequired && (
-                      <span
-                        className="ml-2 inline-block h-2 w-2 rounded-full bg-amber-500"
-                        title="Action required from you"
-                        aria-label="Action required"
-                      />
-                    )}
                   </div>
                   <div className="flex items-center gap-4 justify-self-end">
                     <button
