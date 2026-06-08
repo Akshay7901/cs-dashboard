@@ -197,29 +197,33 @@ function PortalLoginForm({ portal, onBack }: { portal: PortalConfig; onBack: () 
         body: JSON.stringify({ email: email.trim() }),
       });
       const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      // First-time login — server issued an OTP
       if (res.ok && data.requires_otp) {
         setOtpPurpose((data.purpose as string) || "first_login");
         setStep("otp");
         setInfo("A verification code has been sent to your email.");
         return;
       }
-      if (res.ok && data.token) {
-        goToDashboard(
-          (data.role as ApiRole) || "author",
-          data.token as string,
-          (data.email as string) || email.trim(),
-          data.name as string | undefined,
-        );
+      // 404 — user not registered
+      if (res.status === 404) {
+        setError((data.error as string) || "User not found.");
         return;
       }
-      // First-time / new user — backend explicitly indicates OTP flow
-      if (data.first_login || data.is_new_user || data.purpose === "first_login") {
-        setOtpPurpose("first_login");
-        setStep("otp");
-        setInfo("A verification code has been sent to your email.");
+      // 400 "Password is required" — existing user, prompt for password
+      if (res.status === 400) {
+        const err = ((data.error as string) || "").toLowerCase();
+        if (err.includes("password")) {
+          setStep("password");
+          return;
+        }
+        setError((data.error as string) || "Invalid request.");
         return;
       }
-      // Existing user — needs password
+      if (!res.ok) {
+        setError((data.error as string) || "Unable to sign in.");
+        return;
+      }
+      // Fallback (shouldn't happen per spec) — prompt for password
       setStep("password");
     } catch {
       setError("Network error. Please try again.");
