@@ -1287,6 +1287,7 @@ function ProposalDetailPage() {
                       <>
                         <button
                           type="button"
+                          onClick={openIssueContract}
                           className="flex w-full items-start gap-3 rounded-xl bg-[#5B2EBA] px-4 py-3 text-left text-white transition-colors hover:bg-[#4a2599]"
                         >
                           <FileText className="mt-0.5 h-4 w-4 text-white" />
