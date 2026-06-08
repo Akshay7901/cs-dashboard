@@ -157,8 +157,8 @@ function PortalCards({ onSelect }: { onSelect: (role: Role) => void }) {
 }
 
 function PortalLoginForm({ portal, onBack }: { portal: PortalConfig; onBack: () => void }) {
-  type Step = "password" | "otp" | "set-password";
-  const [step, setStep] = useState<Step>("password");
+  type Step = "email" | "password" | "otp" | "set-password";
+  const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
@@ -179,6 +179,46 @@ function PortalLoginForm({ portal, onBack }: { portal: PortalConfig; onBack: () 
       return;
     }
     navigate({ to: "/dashboard/$role", params: { role } });
+  };
+
+  const onSubmitEmail = async (e: FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setInfo(null);
+    if (!email.trim()) {
+      setError("Please enter your email.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await proposalApiFetch("/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      if (res.ok && data.requires_otp) {
+        setOtpPurpose((data.purpose as string) || "first_login");
+        setStep("otp");
+        setInfo("A verification code has been sent to your email.");
+        return;
+      }
+      if (res.ok && data.token) {
+        goToDashboard(
+          (data.role as ApiRole) || "author",
+          data.token as string,
+          (data.email as string) || email.trim(),
+          data.name as string | undefined,
+        );
+        return;
+      }
+      // Existing user — needs password
+      setStep("password");
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const onSubmitLogin = async (e: FormEvent) => {
