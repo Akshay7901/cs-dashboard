@@ -560,6 +560,7 @@ function ProposalDetailPage() {
     });
     setComments(seeded);
     setCommentsSeeded(true);
+    if (recommendationKey) setReviewRecommendation(recommendationKey);
   }, [commentsSeeded, primaryReview]);
 
   const updateComment = (id: string, patch: Partial<ReviewComment>) =>
