@@ -596,6 +596,79 @@ function ProposalDetailPage() {
                   </Card>
                 )}
 
+                {/* Peer Review(s) returned */}
+                {(reviews.length > 0 || reviewsLoading) && (
+                  <Card>
+                    <CardHeader
+                      title="Peer Review"
+                      subtitle="Returned by the assigned reviewer"
+                    />
+                    {reviewsLoading && (
+                      <p className="px-7 py-6 font-sans text-sm text-stone-500">
+                        Loading review…
+                      </p>
+                    )}
+                    {!reviewsLoading && reviews.map((rv, idx) => {
+                      const rd = (rv.review_data || {}) as Record<string, unknown>;
+                      const rec = (rd.recommendation as string) || "";
+                      const recLabel = RECOMMENDATION_LABELS[rec] || rec;
+                      return (
+                        <div
+                          key={idx}
+                          className={idx > 0 ? "border-t border-stone-200" : ""}
+                        >
+                          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-stone-200 bg-stone-50/60 px-7 py-4">
+                            <div>
+                              <p className="font-sans text-sm font-semibold text-stone-900">
+                                {rv.reviewer_name ||
+                                  displayNameFromEmail(rv.reviewer_email || "")}
+                              </p>
+                              {rv.reviewer_email && (
+                                <p className="font-sans text-xs text-stone-500">
+                                  {rv.reviewer_email}
+                                </p>
+                              )}
+                              {rv.submitted_at && (
+                                <p className="mt-1 font-sans text-xs text-stone-500">
+                                  Submitted {formatDate(rv.submitted_at)}
+                                </p>
+                              )}
+                            </div>
+                            {recLabel && (
+                              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 font-sans text-xs font-medium text-emerald-800 ring-1 ring-emerald-200">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                {recLabel}
+                              </span>
+                            )}
+                          </div>
+                          <div className="space-y-5 px-7 py-6">
+                            {REVIEW_SECTIONS.map(({ key, label }) => {
+                              const v = rd[key] as string | undefined;
+                              if (!v || !v.trim()) return null;
+                              return (
+                                <div key={key}>
+                                  <SectionLabel>{label}</SectionLabel>
+                                  <p className="mt-2 whitespace-pre-line font-sans text-sm leading-relaxed text-stone-700">
+                                    {v}
+                                  </p>
+                                </div>
+                              );
+                            })}
+                            {(rd.note_to_dr as string)?.trim() && (
+                              <div className="rounded-xl bg-amber-50 px-5 py-4 ring-1 ring-amber-200">
+                                <SectionLabel>Private Note to Decision Reviewer</SectionLabel>
+                                <p className="mt-2 whitespace-pre-line font-sans text-sm leading-relaxed text-amber-900">
+                                  {rd.note_to_dr as string}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </Card>
+                )}
+
                 {/* Supporting Documents (placeholder — API does not return files) */}
                 <Card>
                   <CardHeader
