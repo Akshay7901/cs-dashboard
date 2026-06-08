@@ -104,7 +104,13 @@ const normalizeStatus = (raw: string, display?: string): StatusKey => {
     const key = display.trim().toLowerCase();
     if (DISPLAY_STATUS_MAP[key]) return DISPLAY_STATUS_MAP[key];
   }
-  return STATUS_MAP[raw] ?? "submitted";
+  if (raw) {
+    const lower = raw.trim().toLowerCase();
+    const snake = lower.replace(/\s+/g, "_");
+    if (STATUS_MAP[snake]) return STATUS_MAP[snake];
+    if (DISPLAY_STATUS_MAP[lower]) return DISPLAY_STATUS_MAP[lower];
+  }
+  return "submitted";
 };
 
 const mapApiProposal = (p: ApiProposal): ProposalRow => ({
