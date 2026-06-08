@@ -649,11 +649,10 @@ function DecisionReviewerDashboard() {
                     </span>
                     {p.actionRequired && (
                       <span
-                        className="ml-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 font-sans text-[10px] font-semibold uppercase tracking-wide text-amber-800"
+                        className="ml-2 inline-block h-2 w-2 rounded-full bg-amber-500"
                         title="Action required from you"
-                      >
-                        Action
-                      </span>
+                        aria-label="Action required"
+                      />
                     )}
                   </div>
                   <div className="flex items-center gap-4 justify-self-end">
