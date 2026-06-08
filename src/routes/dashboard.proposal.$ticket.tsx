@@ -885,11 +885,11 @@ function ProposalDetailPage() {
               <aside className="space-y-6">
                 {/* Editorial Decision */}
                 <Card>
-                  <div className="px-6 py-5">
-                    <h2 className="font-serif text-xl font-bold text-stone-900">
+                  <div className="border-b border-indigo-200 bg-indigo-50 px-5 py-3.5">
+                    <h2 className="font-serif text-base font-bold text-indigo-900">
                       Editorial Decision
                     </h2>
-                    <p className="mt-1 font-sans text-sm text-stone-500">
+                    <p className="mt-1 font-sans text-sm text-indigo-700/80">
                       {isReviewReturned
                         ? "Review returned — add notes and send to author"
                         : assignedReviewer
@@ -1011,11 +1011,11 @@ function ProposalDetailPage() {
 
                 {/* Internal Notes */}
                 <Card>
-                  <div className="px-6 py-5">
-                    <h2 className="font-serif text-xl font-bold text-stone-900">
+                  <div className="border-b border-indigo-200 bg-indigo-50 px-5 py-3.5">
+                    <h2 className="font-serif text-base font-bold text-indigo-900">
                       Internal Notes
                     </h2>
-                    <p className="mt-1 font-sans text-sm text-stone-500">
+                    <p className="mt-1 font-sans text-sm text-indigo-700/80">
                       Not visible to the author
                     </p>
                   </div>
@@ -1043,10 +1043,10 @@ function ProposalDetailPage() {
 
                 {/* Submission Info */}
                 <Card>
-                  <div className="px-6 py-5">
-                    <p className="font-sans text-[11px] font-semibold uppercase tracking-wider text-stone-500">
+                  <div className="border-b border-indigo-200 bg-indigo-50 px-5 py-3.5">
+                    <h2 className="font-serif text-base font-bold text-indigo-900">
                       Submission Info
-                    </p>
+                    </h2>
                   </div>
                   <dl className="divide-y divide-stone-100 px-6 pb-5 font-sans text-sm">
                     <InfoRow label="Ref" value={data.ticket_number} />
@@ -1292,11 +1292,11 @@ function CardHeader({
   right?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-start justify-between gap-6 border-b border-stone-300 px-7 py-5">
+    <div className="flex items-start justify-between gap-6 border-b border-indigo-200 bg-indigo-50 px-5 py-3.5">
       <div>
-        <h2 className="font-serif text-xl font-bold text-stone-900">{title}</h2>
+        <h2 className="font-serif text-base font-bold text-indigo-900">{title}</h2>
         {subtitle && (
-          <p className="mt-1 font-sans text-sm text-stone-500">{subtitle}</p>
+          <p className="mt-1 font-sans text-sm text-indigo-700/80">{subtitle}</p>
         )}
       </div>
       {right && <div>{right}</div>}
