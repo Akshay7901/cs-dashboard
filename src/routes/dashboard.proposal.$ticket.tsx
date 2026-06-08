@@ -312,6 +312,85 @@ function ProposalDetailPage() {
     }
   };
 
+  const submitReviewToAuthor = async () => {
+    setSubmitReviewLoading(true);
+    setSubmitReviewError(null);
+    setSubmitReviewSuccess(null);
+    try {
+      const token = getPortalToken();
+      // Map comments back to section fields by chapter label
+      const sectionByLabel: Record<string, string> = {};
+      REVIEW_SECTIONS.forEach(({ label }) => (sectionByLabel[label] = ""));
+      const otherBuckets: string[] = [];
+      comments.forEach((c) => {
+        const body = (c.body || "").trim();
+        if (!body) return;
+        const label = (c.chapter || "").trim();
+        if (label && Object.prototype.hasOwnProperty.call(sectionByLabel, label)) {
+          sectionByLabel[label] = sectionByLabel[label]
+            ? `${sectionByLabel[label]}\n\n${body}`
+            : body;
+        } else {
+          otherBuckets.push(label ? `${label}: ${body}` : body);
+        }
+      });
+      const payload: Record<string, unknown> = { recommendation: reviewRecommendation };
+      REVIEW_SECTIONS.forEach(({ key, label }) => {
+        const v = sectionByLabel[label];
+        if (key === "other_comments") {
+          const merged = [v, ...otherBuckets].filter(Boolean).join("\n\n");
+          if (merged) payload[key] = merged;
+        } else if (v) {
+          payload[key] = v;
+        }
+      });
+      if (editorialSummary.trim()) payload.dr_note = editorialSummary.trim();
+      const res = await proposalApiFetch(
+        `/${encodeURIComponent(ticket)}/review/submit`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify(payload),
+        },
+      );
+      const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!res.ok) {
+        setSubmitReviewError(
+          (body.error as string) ||
+            (body.message as string) ||
+            `Failed to submit review (${res.status}).`,
+        );
+        return;
+      }
+      setSubmitReviewSuccess(
+        (body.message as string) || "Review submitted to author.",
+      );
+      // refresh proposal
+      try {
+        const refreshed = await proposalApiFetch(`/${encodeURIComponent(ticket)}`, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        const refreshedBody = (await refreshed.json().catch(() => ({}))) as Record<
+          string,
+          unknown
+        >;
+        if (refreshed.ok) setData(refreshedBody as unknown as ProposalDetail);
+      } catch {
+        // ignore
+      }
+    } catch {
+      setSubmitReviewError("Network error. Please try again.");
+    } finally {
+      setSubmitReviewLoading(false);
+    }
+  };
+
   useEffect(() => {
     try {
       const session = getPortalSession();
