@@ -514,22 +514,22 @@ function ProposalDetailPage() {
                   <>
                     {/* Review Returned hero */}
                     <Card>
-                      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-stone-200 bg-indigo-50/40 px-7 py-5">
+                      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-indigo-200 bg-indigo-50 px-5 py-3.5">
                         <div className="min-w-0">
-                          <h2 className="font-serif text-2xl font-bold text-stone-900">
+                          <h2 className="font-serif text-base font-bold text-indigo-900">
                             Review Returned
                           </h2>
-                          <p className="mt-1 font-sans text-sm text-stone-600">
+                          <p className="mt-1 font-sans text-sm text-indigo-700/80">
                             <span className="font-semibold text-[#0E3D2F]">
                               {reviewerDisplayName}
                             </span>
                             {reviewerInstitution && (
-                              <span className="text-stone-500"> · {reviewerInstitution}</span>
+                              <span className="text-indigo-700/70"> · {reviewerInstitution}</span>
                             )}
                           </p>
                         </div>
                         {recommendationLabel && (
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3.5 py-1.5 font-sans text-xs font-semibold text-amber-800 ring-1 ring-amber-200">
+                          <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-100 px-3 py-1 font-sans text-xs font-semibold text-amber-800">
                             Recommended: {recommendationLabel}
                           </span>
                         )}
