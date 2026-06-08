@@ -187,6 +187,16 @@ function ProposalDetailPage() {
   const [contractLoading, setContractLoading] = useState(false);
   const [contractError, setContractError] = useState<string | null>(null);
   const [contractSuccess, setContractSuccess] = useState<string | null>(null);
+  const [contractStep, setContractStep] = useState<1 | 2>(1);
+  const [contractFields, setContractFields] = useState({
+    language: "English",
+    author_copies: "5",
+    if_two_author_copies: "3",
+    if_three_or_four_author_copies: "2",
+    copies_sold_revenue: "10",
+    secondary_rights_revenue: "50",
+    publishing_agreement: "Standard Publishing Agreement",
+  });
 
   const openIssueContract = () => {
     setContractType("author");
@@ -195,6 +205,7 @@ function ProposalDetailPage() {
     setContractExpiryDays(14);
     setContractError(null);
     setContractSuccess(null);
+    setContractStep(1);
     setContractOpen(true);
   };
 
