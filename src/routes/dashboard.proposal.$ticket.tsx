@@ -1337,7 +1337,7 @@ function ProposalDetailPage() {
       )}
       {reqRevOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/50 px-4 py-8">
-          <div className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-[#FAF6EE] shadow-2xl">
+          <div className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
             <div className="flex items-start justify-between gap-4 px-7 pt-7 pb-5">
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-800">
@@ -1424,7 +1424,7 @@ function ProposalDetailPage() {
                 </p>
               )}
             </div>
-            <div className="flex items-center justify-between gap-3 border-t border-stone-200 bg-white/60 px-7 py-4">
+            <div className="flex items-center justify-between gap-3 border-t border-stone-200 bg-white px-7 py-4">
               <button
                 type="button"
                 onClick={() => setReqRevOpen(false)}
