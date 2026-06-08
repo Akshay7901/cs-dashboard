@@ -43,6 +43,34 @@ type ProposalDetail = {
   timeline?: TimelineStage[];
 };
 
+type SubmittedReview = {
+  reviewer_email?: string;
+  reviewer_name?: string;
+  reviewer_role?: string;
+  is_submitted?: boolean;
+  submitted_at?: string;
+  review_data?: Record<string, unknown>;
+};
+
+const RECOMMENDATION_LABELS: Record<string, string> = {
+  proceed: "Proceed without changes",
+  minor: "Minor revisions needed",
+  major: "Major revisions needed",
+  reject: "Reject",
+};
+
+const REVIEW_SECTIONS: { key: string; label: string }[] = [
+  { key: "scope", label: "Scope" },
+  { key: "purpose_value", label: "Purpose & Value" },
+  { key: "title", label: "Title" },
+  { key: "originality", label: "Originality" },
+  { key: "credibility", label: "Credibility" },
+  { key: "structure", label: "Structure" },
+  { key: "clarity_quality", label: "Clarity & Quality" },
+  { key: "other_comments", label: "Other Comments" },
+  { key: "red_flags", label: "Red Flags" },
+];
+
 export const Route = createFileRoute("/dashboard/proposal/$ticket")({
   head: () => ({ meta: [{ title: "Proposal Details — Editor Portal" }] }),
   component: ProposalDetailPage,
@@ -68,6 +96,9 @@ function ProposalDetailPage() {
   const [assigning, setAssigning] = useState(false);
   const [assignError, setAssignError] = useState<string | null>(null);
   const [assignSuccess, setAssignSuccess] = useState<string | null>(null);
+  const [reviews, setReviews] = useState<SubmittedReview[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsError, setReviewsError] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -110,6 +141,42 @@ function ProposalDetailPage() {
       }
     };
     run();
+    return () => {
+      cancelled = true;
+    };
+  }, [ticket]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setReviewsLoading(true);
+      setReviewsError(null);
+      try {
+        const token = getPortalToken();
+        const res = await proposalApiFetch(`/${encodeURIComponent(ticket)}/review`, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+        if (cancelled) return;
+        if (!res.ok) {
+          setReviewsError((body.error as string) || null);
+          return;
+        }
+        const list = Array.isArray(body.reviews)
+          ? (body.reviews as SubmittedReview[])
+          : body.review
+            ? [body.review as SubmittedReview]
+            : [];
+        setReviews(list.filter((r) => r.is_submitted));
+      } catch {
+        if (!cancelled) setReviewsError(null);
+      } finally {
+        if (!cancelled) setReviewsLoading(false);
+      }
+    })();
     return () => {
       cancelled = true;
     };
