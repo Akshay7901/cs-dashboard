@@ -173,6 +173,10 @@ function ProposalDetailPage() {
   const [declineLoading, setDeclineLoading] = useState(false);
   const [declineError, setDeclineError] = useState<string | null>(null);
   const [declineConfirmOpen, setDeclineConfirmOpen] = useState(false);
+  const [reviewRecommendation, setReviewRecommendation] = useState<string>("proceed");
+  const [submitReviewLoading, setSubmitReviewLoading] = useState(false);
+  const [submitReviewError, setSubmitReviewError] = useState<string | null>(null);
+  const [submitReviewSuccess, setSubmitReviewSuccess] = useState<string | null>(null);
 
   const openRequestRevisions = () => {
     setReqRevMode("revisions");
