@@ -169,6 +169,8 @@ function ProposalDetailPage() {
   const [reqRevError, setReqRevError] = useState<string | null>(null);
   const [reqRevSuccess, setReqRevSuccess] = useState<string | null>(null);
   const [reqRevMode, setReqRevMode] = useState<"revisions" | "major">("revisions");
+  const [declineLoading, setDeclineLoading] = useState(false);
+  const [declineError, setDeclineError] = useState<string | null>(null);
 
   const openRequestRevisions = () => {
     setReqRevMode("revisions");
@@ -251,6 +253,56 @@ function ProposalDetailPage() {
       setReqRevError("Network error. Please try again.");
     } finally {
       setReqRevSubmitting(false);
+    }
+  };
+
+  const handleDecline = async () => {
+    if (
+      !confirm(
+        "Are you sure you want to decline this proposal? This action cannot be undone and the proposal will become read-only.",
+      )
+    )
+      return;
+    setDeclineLoading(true);
+    setDeclineError(null);
+    try {
+      const token = getPortalToken();
+      const res = await proposalApiFetch(`/${encodeURIComponent(ticket)}/decline`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!res.ok) {
+        setDeclineError(
+          (body.error as string) ||
+            (body.message as string) ||
+            `Failed to decline proposal (${res.status}).`,
+        );
+        return;
+      }
+      // Refresh proposal data
+      try {
+        const refreshed = await proposalApiFetch(`/${encodeURIComponent(ticket)}`, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        const refreshedBody = (await refreshed.json().catch(() => ({}))) as Record<
+          string,
+          unknown
+        >;
+        if (refreshed.ok) setData(refreshedBody as unknown as ProposalDetail);
+      } catch {
+        // ignore refresh errors
+      }
+    } catch {
+      setDeclineError("Network error. Please try again.");
+    } finally {
+      setDeclineLoading(false);
     }
   };
 
@@ -1104,14 +1156,23 @@ function ProposalDetailPage() {
                     )}
                     <button
                       type="button"
-                      className="flex w-full items-start gap-3 rounded-xl border border-stone-200 px-4 py-3 text-left transition-colors hover:border-red-300 hover:bg-red-50/50"
+                      onClick={handleDecline}
+                      disabled={declineLoading}
+                      className="flex w-full items-start gap-3 rounded-xl border border-stone-200 px-4 py-3 text-left transition-colors hover:border-red-300 hover:bg-red-50/50 disabled:opacity-50"
                     >
                       <XIcon className="mt-0.5 h-4 w-4 text-stone-500" />
                       <div>
-                        <p className="font-sans text-sm font-semibold text-stone-900">Decline</p>
+                        <p className="font-sans text-sm font-semibold text-stone-900">
+                          {declineLoading ? "Declining…" : "Decline"}
+                        </p>
                         <p className="font-sans text-xs text-stone-500">Not moving forward</p>
                       </div>
                     </button>
+                    {declineError && (
+                      <p className="rounded-lg bg-red-50 px-3 py-2 font-sans text-xs text-red-700 ring-1 ring-red-200">
+                        {declineError}
+                      </p>
+                    )}
                   </div>
                 </Card>
 
