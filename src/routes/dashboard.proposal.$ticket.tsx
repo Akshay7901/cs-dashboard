@@ -886,7 +886,7 @@ function ProposalDetailPage() {
                 {/* Editorial Decision */}
                 <Card>
                   <div className="border-b border-stone-200 px-5 py-3.5">
-                    <h2 className="font-serif text-base font-bold text-indigo-900">
+                    <h2 className="font-serif text-base font-bold text-stone-900">
                       Editorial Decision
                     </h2>
                     <p className="mt-1 font-sans text-sm text-stone-500">
