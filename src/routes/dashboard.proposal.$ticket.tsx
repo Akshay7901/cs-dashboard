@@ -150,10 +150,6 @@ function ProposalDetailPage() {
   const [editorialSummary, setEditorialSummary] = useState("");
   const [originalOpen, setOriginalOpen] = useState(false);
 
-  useEffect(() => {
-    // placeholder anchor
-  }, []);
-
   // Request Revisions (request-info) modal state
   const REVISION_AREAS: { key: string; label: string }[] = [
     { key: "abstract_blurb", label: "Abstract / Blurb" },
