@@ -168,8 +168,20 @@ function ProposalDetailPage() {
   const [reqRevSubmitting, setReqRevSubmitting] = useState(false);
   const [reqRevError, setReqRevError] = useState<string | null>(null);
   const [reqRevSuccess, setReqRevSuccess] = useState<string | null>(null);
+  const [reqRevMode, setReqRevMode] = useState<"revisions" | "major">("revisions");
 
   const openRequestRevisions = () => {
+    setReqRevMode("revisions");
+    setReqRevAreas([]);
+    setReqRevNote("");
+    setReqRevDeadline("");
+    setReqRevError(null);
+    setReqRevSuccess(null);
+    setReqRevOpen(true);
+  };
+
+  const openRequestMajorRevision = () => {
+    setReqRevMode("major");
     setReqRevAreas([]);
     setReqRevNote("");
     setReqRevDeadline("");
