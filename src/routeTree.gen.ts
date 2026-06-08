@@ -17,7 +17,6 @@ import { Route as DashboardDecision_reviewerRouteImport } from './routes/dashboa
 import { Route as DashboardAuthorRouteImport } from './routes/dashboard.author'
 import { Route as DashboardRoleRouteImport } from './routes/dashboard.$role'
 import { Route as DashboardProposalTicketRouteImport } from './routes/dashboard.proposal.$ticket'
-import { Route as ApiProposalsProxySplatRouteImport } from './routes/api/proposals-proxy.$'
 import { Route as DashboardReviewerSubmissionIdRouteImport } from './routes/dashboard.reviewer.submission.$id'
 import { Route as DashboardEditorSubmissionIdRouteImport } from './routes/dashboard.editor.submission.$id'
 
@@ -62,11 +61,6 @@ const DashboardProposalTicketRoute = DashboardProposalTicketRouteImport.update({
   path: '/dashboard/proposal/$ticket',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiProposalsProxySplatRoute = ApiProposalsProxySplatRouteImport.update({
-  id: '/api/proposals-proxy/$',
-  path: '/api/proposals-proxy/$',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DashboardReviewerSubmissionIdRoute =
   DashboardReviewerSubmissionIdRouteImport.update({
     id: '/submission/$id',
@@ -88,7 +82,6 @@ export interface FileRoutesByFullPath {
   '/dashboard/decision_reviewer': typeof DashboardDecision_reviewerRoute
   '/dashboard/editor': typeof DashboardEditorRouteWithChildren
   '/dashboard/reviewer': typeof DashboardReviewerRouteWithChildren
-  '/api/proposals-proxy/$': typeof ApiProposalsProxySplatRoute
   '/dashboard/proposal/$ticket': typeof DashboardProposalTicketRoute
   '/dashboard/editor/submission/$id': typeof DashboardEditorSubmissionIdRoute
   '/dashboard/reviewer/submission/$id': typeof DashboardReviewerSubmissionIdRoute
@@ -101,7 +94,6 @@ export interface FileRoutesByTo {
   '/dashboard/decision_reviewer': typeof DashboardDecision_reviewerRoute
   '/dashboard/editor': typeof DashboardEditorRouteWithChildren
   '/dashboard/reviewer': typeof DashboardReviewerRouteWithChildren
-  '/api/proposals-proxy/$': typeof ApiProposalsProxySplatRoute
   '/dashboard/proposal/$ticket': typeof DashboardProposalTicketRoute
   '/dashboard/editor/submission/$id': typeof DashboardEditorSubmissionIdRoute
   '/dashboard/reviewer/submission/$id': typeof DashboardReviewerSubmissionIdRoute
@@ -115,7 +107,6 @@ export interface FileRoutesById {
   '/dashboard/decision_reviewer': typeof DashboardDecision_reviewerRoute
   '/dashboard/editor': typeof DashboardEditorRouteWithChildren
   '/dashboard/reviewer': typeof DashboardReviewerRouteWithChildren
-  '/api/proposals-proxy/$': typeof ApiProposalsProxySplatRoute
   '/dashboard/proposal/$ticket': typeof DashboardProposalTicketRoute
   '/dashboard/editor/submission/$id': typeof DashboardEditorSubmissionIdRoute
   '/dashboard/reviewer/submission/$id': typeof DashboardReviewerSubmissionIdRoute
@@ -130,7 +121,6 @@ export interface FileRouteTypes {
     | '/dashboard/decision_reviewer'
     | '/dashboard/editor'
     | '/dashboard/reviewer'
-    | '/api/proposals-proxy/$'
     | '/dashboard/proposal/$ticket'
     | '/dashboard/editor/submission/$id'
     | '/dashboard/reviewer/submission/$id'
@@ -143,7 +133,6 @@ export interface FileRouteTypes {
     | '/dashboard/decision_reviewer'
     | '/dashboard/editor'
     | '/dashboard/reviewer'
-    | '/api/proposals-proxy/$'
     | '/dashboard/proposal/$ticket'
     | '/dashboard/editor/submission/$id'
     | '/dashboard/reviewer/submission/$id'
@@ -156,7 +145,6 @@ export interface FileRouteTypes {
     | '/dashboard/decision_reviewer'
     | '/dashboard/editor'
     | '/dashboard/reviewer'
-    | '/api/proposals-proxy/$'
     | '/dashboard/proposal/$ticket'
     | '/dashboard/editor/submission/$id'
     | '/dashboard/reviewer/submission/$id'
@@ -170,7 +158,6 @@ export interface RootRouteChildren {
   DashboardDecision_reviewerRoute: typeof DashboardDecision_reviewerRoute
   DashboardEditorRoute: typeof DashboardEditorRouteWithChildren
   DashboardReviewerRoute: typeof DashboardReviewerRouteWithChildren
-  ApiProposalsProxySplatRoute: typeof ApiProposalsProxySplatRoute
   DashboardProposalTicketRoute: typeof DashboardProposalTicketRoute
 }
 
@@ -232,13 +219,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardProposalTicketRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/proposals-proxy/$': {
-      id: '/api/proposals-proxy/$'
-      path: '/api/proposals-proxy/$'
-      fullPath: '/api/proposals-proxy/$'
-      preLoaderRoute: typeof ApiProposalsProxySplatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/dashboard/reviewer/submission/$id': {
       id: '/dashboard/reviewer/submission/$id'
       path: '/submission/$id'
@@ -287,9 +267,18 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardDecision_reviewerRoute: DashboardDecision_reviewerRoute,
   DashboardEditorRoute: DashboardEditorRouteWithChildren,
   DashboardReviewerRoute: DashboardReviewerRouteWithChildren,
-  ApiProposalsProxySplatRoute: ApiProposalsProxySplatRoute,
   DashboardProposalTicketRoute: DashboardProposalTicketRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
