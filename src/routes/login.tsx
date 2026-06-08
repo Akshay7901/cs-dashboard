@@ -212,8 +212,15 @@ function PortalLoginForm({ portal, onBack }: { portal: PortalConfig; onBack: () 
         );
         return;
       }
-      // Existing user — needs password
-      setStep("password");
+      // Existing user with password set — needs password
+      if (res.ok && (data.requires_password || data.has_password)) {
+        setStep("password");
+        return;
+      }
+      // First-time / new user — backend creates account & sends OTP
+      setOtpPurpose("first_login");
+      setStep("otp");
+      setInfo("A verification code has been sent to your email.");
     } catch {
       setError("Network error. Please try again.");
     } finally {
