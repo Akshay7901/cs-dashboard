@@ -601,7 +601,7 @@ function DecisionReviewerDashboard() {
 
         {/* Table */}
         <div className="overflow-hidden rounded-2xl border border-stone-200 bg-white">
-          <div className="hidden grid-cols-[1.6fr_1.1fr_0.9fr_0.9fr_1fr_auto] items-center gap-4 border-b border-stone-200 bg-stone-50/60 px-6 py-3 font-sans text-xs font-semibold uppercase tracking-wider text-stone-500 md:grid">
+          <div className="hidden grid-cols-[1.6fr_1.1fr_0.9fr_0.9fr_1fr_100px] items-center gap-4 border-b border-stone-200 bg-stone-50/60 px-6 py-3 font-sans text-xs font-semibold uppercase tracking-wider text-stone-500 md:grid">
             <HeaderCell label="Title" />
             <HeaderCell label="Author" />
             <HeaderCell label="Country" />
@@ -616,7 +616,7 @@ function DecisionReviewerDashboard() {
               return (
                 <li
                   key={p.id}
-                  className="relative grid grid-cols-1 items-center gap-4 border-b border-stone-100 px-6 py-5 last:border-b-0 md:grid-cols-[1.6fr_1.1fr_0.9fr_0.9fr_1fr_auto]"
+                  className="relative grid grid-cols-1 items-center gap-4 border-b border-stone-100 px-6 py-5 last:border-b-0 md:grid-cols-[1.6fr_1.1fr_0.9fr_0.9fr_1fr_100px]"
                 >
                   <span
                     className={`absolute left-0 top-0 h-full w-1.5 ${meta.rowBar}`}
