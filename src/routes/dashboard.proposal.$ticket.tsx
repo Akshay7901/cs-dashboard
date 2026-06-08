@@ -271,6 +271,72 @@ function ProposalDetailPage() {
 
   const assignedReviewer = data?.assignments?.[0];
 
+  const isReviewReturned = useMemo(() => {
+    const s = (data?.status || "").toLowerCase().replace(/\s+/g, "_");
+    return s === "review_returned" && reviews.length > 0;
+  }, [data?.status, reviews.length]);
+
+  const primaryReview = reviews[0];
+  const recommendationKey = (primaryReview?.review_data?.recommendation as string) || "";
+  const recommendationLabel = RECOMMENDATION_LABELS[recommendationKey] || recommendationKey;
+  const reviewerDisplayName = primaryReview
+    ? primaryReview.reviewer_name ||
+      displayNameFromEmail(primaryReview.reviewer_email || "")
+    : "";
+  const reviewerInstitution = (primaryReview as { reviewer_institution?: string } | undefined)
+    ?.reviewer_institution;
+  const reviewerSummary = useMemo(() => {
+    if (!primaryReview) return "";
+    const rd = (primaryReview.review_data || {}) as Record<string, unknown>;
+    const candidates = [
+      rd.note_to_dr,
+      rd.other_comments,
+      rd.scope,
+      rd.purpose_value,
+    ];
+    for (const c of candidates) {
+      const s = typeof c === "string" ? c.trim() : "";
+      if (s) return s;
+    }
+    return "";
+  }, [primaryReview]);
+
+  useEffect(() => {
+    if (commentsSeeded || !primaryReview) return;
+    const rd = (primaryReview.review_data || {}) as Record<string, unknown>;
+    const seeded: ReviewComment[] = [];
+    REVIEW_SECTIONS.forEach(({ key, label }) => {
+      const v = rd[key];
+      const text = typeof v === "string" ? v.trim() : "";
+      if (!text) return;
+      seeded.push({
+        id: `${key}-${seeded.length}`,
+        severity: SECTION_SEVERITY[key] || "General",
+        chapter: label,
+        page: "",
+        body: text,
+      });
+    });
+    setComments(seeded);
+    setCommentsSeeded(true);
+  }, [commentsSeeded, primaryReview]);
+
+  const updateComment = (id: string, patch: Partial<ReviewComment>) =>
+    setComments((cs) => cs.map((c) => (c.id === id ? { ...c, ...patch } : c)));
+  const removeComment = (id: string) =>
+    setComments((cs) => cs.filter((c) => c.id !== id));
+  const addComment = () =>
+    setComments((cs) => [
+      ...cs,
+      {
+        id: `new-${Date.now()}`,
+        severity: "General",
+        chapter: "",
+        page: "",
+        body: "",
+      },
+    ]);
+
   const onSaveNotes = (e: FormEvent) => {
     e.preventDefault();
     setSavedAt(new Date().toLocaleTimeString());
