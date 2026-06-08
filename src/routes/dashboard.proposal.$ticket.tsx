@@ -1952,7 +1952,11 @@ function ProposalDetailPage() {
                 disabled={contractLoading}
                 className="rounded-xl bg-[#5B2EBA] px-5 py-2.5 font-sans text-sm font-semibold text-white hover:bg-[#4a2599] disabled:cursor-not-allowed disabled:bg-[#B8A8E0] disabled:text-white/80"
               >
-                {contractLoading ? "Issuing…" : "Issue Contract"}
+                {contractLoading
+                  ? "Issuing…"
+                  : contractStep === 1
+                    ? "Submit"
+                    : "Issue Contract"}
               </button>
             </div>
           </div>
