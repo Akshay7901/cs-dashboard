@@ -1357,7 +1357,9 @@ function ProposalDetailPage() {
                   <SquarePen className="h-5 w-5" />
                 </div>
                 <div>
-                  <h2 className="font-serif text-2xl font-bold text-[#2C1A0E]">Request Revisions</h2>
+                  <h2 className="font-serif text-2xl font-bold text-[#2C1A0E]">
+                    {reqRevMode === "major" ? "Request Major Revision" : "Request Revisions"}
+                  </h2>
                   <p className="mt-1 font-sans text-sm text-[#7A6A5A]">
                     Specify what needs to be updated before the proposal can move forward.
                   </p>
