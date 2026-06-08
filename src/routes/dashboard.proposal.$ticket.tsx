@@ -151,6 +151,102 @@ function ProposalDetailPage() {
   const [originalOpen, setOriginalOpen] = useState(false);
 
   useEffect(() => {
+    // placeholder anchor
+  }, []);
+
+  // Request Revisions (request-info) modal state
+  const REVISION_AREAS: { key: string; label: string }[] = [
+    { key: "abstract_blurb", label: "Abstract / Blurb" },
+    { key: "table_of_contents", label: "Table of Contents" },
+    { key: "supporting_materials", label: "Supporting Materials" },
+    { key: "author_credentials", label: "Author Credentials" },
+    { key: "market_analysis", label: "Market Analysis" },
+    { key: "scope_framing", label: "Scope / Framing" },
+    { key: "word_count", label: "Word Count / Length" },
+    { key: "other", label: "Other" },
+  ];
+  const [reqRevOpen, setReqRevOpen] = useState(false);
+  const [reqRevAreas, setReqRevAreas] = useState<string[]>([]);
+  const [reqRevNote, setReqRevNote] = useState("");
+  const [reqRevDeadline, setReqRevDeadline] = useState("");
+  const [reqRevSubmitting, setReqRevSubmitting] = useState(false);
+  const [reqRevError, setReqRevError] = useState<string | null>(null);
+  const [reqRevSuccess, setReqRevSuccess] = useState<string | null>(null);
+
+  const openRequestRevisions = () => {
+    setReqRevAreas([]);
+    setReqRevNote("");
+    setReqRevDeadline("");
+    setReqRevError(null);
+    setReqRevSuccess(null);
+    setReqRevOpen(true);
+  };
+
+  const toggleReqRevArea = (key: string) =>
+    setReqRevAreas((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+    );
+
+  const submitRequestRevisions = async () => {
+    if (reqRevAreas.length === 0 || !reqRevNote.trim()) return;
+    setReqRevSubmitting(true);
+    setReqRevError(null);
+    setReqRevSuccess(null);
+    try {
+      const token = getPortalToken();
+      const items = REVISION_AREAS.filter((a) => reqRevAreas.includes(a.key)).map(
+        ({ key, label }) => ({ key, label }),
+      );
+      const res = await proposalApiFetch(
+        `/${encodeURIComponent(ticket)}/request-info`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            items,
+            note: reqRevNote.trim(),
+            ...(reqRevDeadline ? { resubmission_deadline: reqRevDeadline } : {}),
+          }),
+        },
+      );
+      const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!res.ok) {
+        setReqRevError(
+          (body.error as string) ||
+            (body.message as string) ||
+            `Failed to send request (${res.status}).`,
+        );
+        return;
+      }
+      setReqRevSuccess((body.message as string) || "Revision request sent to author.");
+      // refresh proposal
+      try {
+        const refreshed = await proposalApiFetch(`/${encodeURIComponent(ticket)}`, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        const refreshedBody = (await refreshed.json().catch(() => ({}))) as Record<
+          string,
+          unknown
+        >;
+        if (refreshed.ok) setData(refreshedBody as unknown as ProposalDetail);
+      } catch {
+        // ignore
+      }
+      setTimeout(() => setReqRevOpen(false), 1200);
+    } catch {
+      setReqRevError("Network error. Please try again.");
+    } finally {
+      setReqRevSubmitting(false);
+    }
+  };
+
+  useEffect(() => {
     try {
       const session = getPortalSession();
       if (!session) {
