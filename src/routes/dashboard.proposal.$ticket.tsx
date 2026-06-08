@@ -1012,7 +1012,7 @@ function ProposalDetailPage() {
                 {/* Internal Notes */}
                 <Card>
                   <div className="border-b border-stone-200 px-5 py-3.5">
-                    <h2 className="font-serif text-base font-bold text-indigo-900">
+                    <h2 className="font-serif text-base font-bold text-stone-900">
                       Internal Notes
                     </h2>
                     <p className="mt-1 font-sans text-sm text-stone-500">
@@ -1044,7 +1044,7 @@ function ProposalDetailPage() {
                 {/* Submission Info */}
                 <Card>
                   <div className="border-b border-stone-200 px-5 py-3.5">
-                    <h2 className="font-serif text-base font-bold text-indigo-900">
+                    <h2 className="font-serif text-base font-bold text-stone-900">
                       Submission Info
                     </h2>
                   </div>
@@ -1294,7 +1294,7 @@ function CardHeader({
   return (
     <div className="flex items-start justify-between gap-6 border-b border-stone-200 px-5 py-3.5">
       <div>
-        <h2 className="font-serif text-base font-bold text-indigo-900">{title}</h2>
+        <h2 className="font-serif text-base font-bold text-stone-900">{title}</h2>
         {subtitle && (
           <p className="mt-1 font-sans text-sm text-stone-500">{subtitle}</p>
         )}
