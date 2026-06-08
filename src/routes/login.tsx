@@ -212,15 +212,15 @@ function PortalLoginForm({ portal, onBack }: { portal: PortalConfig; onBack: () 
         );
         return;
       }
-      // Existing user with password set — needs password
-      if (res.ok && (data.requires_password || data.has_password)) {
-        setStep("password");
+      // First-time / new user — backend explicitly indicates OTP flow
+      if (data.first_login || data.is_new_user || data.purpose === "first_login") {
+        setOtpPurpose("first_login");
+        setStep("otp");
+        setInfo("A verification code has been sent to your email.");
         return;
       }
-      // First-time / new user — backend creates account & sends OTP
-      setOtpPurpose("first_login");
-      setStep("otp");
-      setInfo("A verification code has been sent to your email.");
+      // Existing user — needs password
+      setStep("password");
     } catch {
       setError("Network error. Please try again.");
     } finally {
