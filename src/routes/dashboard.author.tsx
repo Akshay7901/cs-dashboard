@@ -13,7 +13,7 @@ import {
   XCircle,
 } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
-import { clearPortalSession, getPortalSession } from "@/lib/auth";
+import { portalLogout, getPortalSession } from "@/lib/auth";
 import { PROPOSALS, formatDate, type Proposal, type StatusKey } from "@/lib/proposals";
 
 export const Route = createFileRoute("/dashboard/author")({
