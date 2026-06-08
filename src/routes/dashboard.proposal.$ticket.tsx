@@ -1156,14 +1156,23 @@ function ProposalDetailPage() {
                     )}
                     <button
                       type="button"
-                      className="flex w-full items-start gap-3 rounded-xl border border-stone-200 px-4 py-3 text-left transition-colors hover:border-red-300 hover:bg-red-50/50"
+                      onClick={handleDecline}
+                      disabled={declineLoading}
+                      className="flex w-full items-start gap-3 rounded-xl border border-stone-200 px-4 py-3 text-left transition-colors hover:border-red-300 hover:bg-red-50/50 disabled:opacity-50"
                     >
                       <XIcon className="mt-0.5 h-4 w-4 text-stone-500" />
                       <div>
-                        <p className="font-sans text-sm font-semibold text-stone-900">Decline</p>
+                        <p className="font-sans text-sm font-semibold text-stone-900">
+                          {declineLoading ? "Declining…" : "Decline"}
+                        </p>
                         <p className="font-sans text-xs text-stone-500">Not moving forward</p>
                       </div>
                     </button>
+                    {declineError && (
+                      <p className="rounded-lg bg-red-50 px-3 py-2 font-sans text-xs text-red-700 ring-1 ring-red-200">
+                        {declineError}
+                      </p>
+                    )}
                   </div>
                 </Card>
 
