@@ -1,6 +1,15 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { ArrowLeft, Check, LogOut, SquarePen, X as XIcon } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  ChevronDown,
+  FileText,
+  LogOut,
+  Plus,
+  SquarePen,
+  X as XIcon,
+} from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
 import { clearPortalSession, getPortalSession, getPortalToken } from "@/lib/auth";
 import { formatDate, initialsFromName, displayNameFromEmail } from "@/lib/proposals";
@@ -70,6 +79,43 @@ const REVIEW_SECTIONS: { key: string; label: string }[] = [
   { key: "other_comments", label: "Other Comments" },
   { key: "red_flags", label: "Red Flags" },
 ];
+
+const SEVERITY_OPTIONS = [
+  "General",
+  "Minor Concern",
+  "Major Concern",
+  "Suggestion",
+  "Question",
+] as const;
+type Severity = (typeof SEVERITY_OPTIONS)[number];
+
+const SEVERITY_TOKENS: Record<Severity, string> = {
+  General: "bg-stone-50 text-stone-700 ring-stone-200",
+  "Minor Concern": "bg-amber-50 text-amber-800 ring-amber-200",
+  "Major Concern": "bg-rose-50 text-rose-800 ring-rose-200",
+  Suggestion: "bg-sky-50 text-sky-800 ring-sky-200",
+  Question: "bg-violet-50 text-violet-800 ring-violet-200",
+};
+
+const SECTION_SEVERITY: Record<string, Severity> = {
+  scope: "General",
+  purpose_value: "General",
+  title: "Suggestion",
+  originality: "General",
+  credibility: "Minor Concern",
+  structure: "Suggestion",
+  clarity_quality: "Minor Concern",
+  other_comments: "General",
+  red_flags: "Major Concern",
+};
+
+type ReviewComment = {
+  id: string;
+  severity: Severity;
+  chapter: string;
+  page: string;
+  body: string;
+};
 
 export const Route = createFileRoute("/dashboard/proposal/$ticket")({
   head: () => ({ meta: [{ title: "Proposal Details — Editor Portal" }] }),
