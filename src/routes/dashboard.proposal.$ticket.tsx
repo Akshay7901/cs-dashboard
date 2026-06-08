@@ -890,10 +890,14 @@ function ProposalDetailPage() {
                       Editorial Decision
                     </h2>
                     <p className="mt-1 font-sans text-sm text-stone-500">
-                      {assignedReviewer ? "With peer reviewer" : "Awaiting initial assessment"}
+                      {isReviewReturned
+                        ? "Review returned — add notes and send to author"
+                        : assignedReviewer
+                          ? "With peer reviewer"
+                          : "Awaiting initial assessment"}
                     </p>
                   </div>
-                  {assignedReviewer && (
+                  {assignedReviewer && !isReviewReturned && (
                     <div className="mx-5 mb-4 rounded-xl bg-indigo-50/70 px-5 py-4 ring-1 ring-indigo-100">
                       <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.12em] text-indigo-700">
                         Assigned Reviewer
@@ -937,7 +941,37 @@ function ProposalDetailPage() {
                     </div>
                   )}
                   <div className="space-y-3 border-t border-stone-300 px-5 py-4">
-                    {!assignedReviewer && (
+                    {isReviewReturned && (
+                      <>
+                        <button
+                          type="button"
+                          className="flex w-full items-start gap-3 rounded-xl bg-[#5B2EBA] px-4 py-3 text-left text-white transition-colors hover:bg-[#4a2599]"
+                        >
+                          <FileText className="mt-0.5 h-4 w-4 text-white" />
+                          <div>
+                            <p className="font-sans text-sm font-semibold">Issue Contract</p>
+                            <p className="font-sans text-xs text-white/85">
+                              Send contract &amp; review comments to author
+                            </p>
+                          </div>
+                        </button>
+                        <button
+                          type="button"
+                          className="flex w-full items-start gap-3 rounded-xl border border-rose-200 bg-rose-50/60 px-4 py-3 text-left transition-colors hover:bg-rose-50"
+                        >
+                          <SquarePen className="mt-0.5 h-4 w-4 text-rose-700" />
+                          <div>
+                            <p className="font-sans text-sm font-semibold text-rose-900">
+                              Request Major Revisions
+                            </p>
+                            <p className="font-sans text-xs text-rose-700/80">
+                              Send review comments back to author
+                            </p>
+                          </div>
+                        </button>
+                      </>
+                    )}
+                    {!assignedReviewer && !isReviewReturned && (
                       <>
                         <button
                           type="button"
