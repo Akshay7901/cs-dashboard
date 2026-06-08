@@ -621,6 +621,11 @@ function ProposalDetailPage() {
     return s === "review_returned" && reviews.length > 0;
   }, [data?.status, reviews.length]);
 
+  const isDeclined = useMemo(() => {
+    const s = (data?.status || "").toLowerCase().replace(/\s+/g, "_");
+    return s === "declined";
+  }, [data?.status]);
+
   const primaryReview = reviews[0];
   const recommendationKey = (primaryReview?.review_data?.recommendation as string) || "";
   const recommendationLabel = RECOMMENDATION_LABELS[recommendationKey] || recommendationKey;
@@ -1214,14 +1219,16 @@ function ProposalDetailPage() {
                       Editorial Decision
                     </h2>
                     <p className="mt-1 font-sans text-sm text-stone-500">
-                      {isReviewReturned
+                      {isDeclined
+                        ? "Declined"
+                        : isReviewReturned
                         ? "Review returned — add notes and send to author"
                         : assignedReviewer
                           ? "With peer reviewer"
                           : "Awaiting initial assessment"}
                     </p>
                   </div>
-                  {assignedReviewer && !isReviewReturned && (
+                  {assignedReviewer && !isReviewReturned && !isDeclined && (
                     <div className="mx-5 mb-4 rounded-xl bg-indigo-50/70 px-5 py-4 ring-1 ring-indigo-100">
                       <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.12em] text-indigo-700">
                         Assigned Reviewer
@@ -1265,6 +1272,12 @@ function ProposalDetailPage() {
                     </div>
                   )}
                   <div className="space-y-3 border-t border-stone-300 px-5 py-4">
+                    {isDeclined ? (
+                      <p className="py-6 text-center font-sans text-sm text-stone-500">
+                        No actions available
+                      </p>
+                    ) : (
+                      <>
                     {isReviewReturned && (
                       <>
                         <button
@@ -1341,6 +1354,8 @@ function ProposalDetailPage() {
                       <p className="rounded-lg bg-red-50 px-3 py-2 font-sans text-xs text-red-700 ring-1 ring-red-200">
                         {declineError}
                       </p>
+                    )}
+                      </>
                     )}
                   </div>
                 </Card>
