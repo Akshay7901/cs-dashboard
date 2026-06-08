@@ -211,9 +211,7 @@ function ProposalDetailPage() {
 
   const submitIssueContract = async () => {
     if (contractStep === 1) {
-      setContractError(
-        "Missing required fields: language, author_copies, if_two_author_copies, if_three_or_four_author_copies, copies_sold_revenue, secondary_rights_revenue, publishing_agreement",
-      );
+      setContractError(null);
       setContractStep(2);
       return;
     }
