@@ -169,6 +169,8 @@ function ProposalDetailPage() {
   const [reqRevError, setReqRevError] = useState<string | null>(null);
   const [reqRevSuccess, setReqRevSuccess] = useState<string | null>(null);
   const [reqRevMode, setReqRevMode] = useState<"revisions" | "major">("revisions");
+  const [declineLoading, setDeclineLoading] = useState(false);
+  const [declineError, setDeclineError] = useState<string | null>(null);
 
   const openRequestRevisions = () => {
     setReqRevMode("revisions");
