@@ -145,6 +145,10 @@ function ProposalDetailPage() {
   const [reviews, setReviews] = useState<SubmittedReview[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [reviewsError, setReviewsError] = useState<string | null>(null);
+  const [comments, setComments] = useState<ReviewComment[]>([]);
+  const [commentsSeeded, setCommentsSeeded] = useState(false);
+  const [editorialSummary, setEditorialSummary] = useState("");
+  const [originalOpen, setOriginalOpen] = useState(false);
 
   useEffect(() => {
     try {
