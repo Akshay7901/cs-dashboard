@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { ChevronLeft, LogOut, ChevronRight, FileText, Download, CheckCircle2 } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
 import { initialsFromName } from "@/lib/proposals";
-import { clearPortalSession, getPortalSession, getPortalToken } from "@/lib/auth";
+import { portalLogout, getPortalSession, getPortalToken } from "@/lib/auth";
 import { proposalApiFetch } from "@/lib/proposalApi";
 
 export const Route = createFileRoute("/dashboard/reviewer/submission/$id")({
@@ -233,8 +233,8 @@ function ReviewerSubmission() {
     };
   }, [navigate, id]);
 
-  const onLogout = () => {
-    clearPortalSession();
+  const onLogout = async () => {
+    await portalLogout();
     navigate({ to: "/login" });
   };
 

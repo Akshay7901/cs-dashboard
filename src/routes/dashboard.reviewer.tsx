@@ -9,7 +9,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
-import { clearPortalSession, getPortalSession, getPortalToken } from "@/lib/auth";
+import { portalLogout, getPortalSession, getPortalToken } from "@/lib/auth";
 import { initialsFromName, displayNameFromEmail } from "@/lib/proposals";
 import { proposalApiFetch } from "@/lib/proposalApi";
 
@@ -221,8 +221,8 @@ function ReviewerDashboard() {
     }
   }, [navigate]);
 
-  const onLogout = () => {
-    clearPortalSession();
+  const onLogout = async () => {
+    await portalLogout();
     navigate({ to: "/login" });
   };
 

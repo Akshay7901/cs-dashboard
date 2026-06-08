@@ -17,7 +17,7 @@ import {
   Plus,
 } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
-import { clearPortalSession, getPortalSession } from "@/lib/auth";
+import { portalLogout, getPortalSession } from "@/lib/auth";
 import {
   PROPOSALS,
   STATUS_META,
@@ -280,8 +280,8 @@ function SubmissionDetail() {
   const displayName = userEmail ? "James Mitchell" : displayNameFromEmail(userEmail);
   const meta = STATUS_META[effectiveStatus];
 
-  const onLogout = () => {
-    clearPortalSession();
+  const onLogout = async () => {
+    await portalLogout();
     navigate({ to: "/login" });
   };
 

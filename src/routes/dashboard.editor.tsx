@@ -12,7 +12,7 @@ import {
   Trash2,
 } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
-import { clearPortalSession, getPortalSession } from "@/lib/auth";
+import { portalLogout, getPortalSession } from "@/lib/auth";
 import {
   PROPOSALS,
   STATUS_META,
@@ -187,8 +187,8 @@ function EditorDashboard() {
     return list;
   }, [mergedProposals, activeFilter, search, field, sort]);
 
-  const onLogout = () => {
-    clearPortalSession();
+  const onLogout = async () => {
+    await portalLogout();
     navigate({ to: "/login" });
   };
 

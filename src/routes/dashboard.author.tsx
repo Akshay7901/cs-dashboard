@@ -277,8 +277,8 @@ function AuthorDashboard() {
   );
   const doneList = visible.filter((p) => ["signed", "declined"].includes(p.status));
 
-  const onLogout = () => {
-    clearPortalSession();
+  const onLogout = async () => {
+    await portalLogout();
     navigate({ to: "/login" });
   };
 
