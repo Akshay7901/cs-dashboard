@@ -43,6 +43,34 @@ type ProposalDetail = {
   timeline?: TimelineStage[];
 };
 
+type SubmittedReview = {
+  reviewer_email?: string;
+  reviewer_name?: string;
+  reviewer_role?: string;
+  is_submitted?: boolean;
+  submitted_at?: string;
+  review_data?: Record<string, unknown>;
+};
+
+const RECOMMENDATION_LABELS: Record<string, string> = {
+  proceed: "Proceed without changes",
+  minor: "Minor revisions needed",
+  major: "Major revisions needed",
+  reject: "Reject",
+};
+
+const REVIEW_SECTIONS: { key: string; label: string }[] = [
+  { key: "scope", label: "Scope" },
+  { key: "purpose_value", label: "Purpose & Value" },
+  { key: "title", label: "Title" },
+  { key: "originality", label: "Originality" },
+  { key: "credibility", label: "Credibility" },
+  { key: "structure", label: "Structure" },
+  { key: "clarity_quality", label: "Clarity & Quality" },
+  { key: "other_comments", label: "Other Comments" },
+  { key: "red_flags", label: "Red Flags" },
+];
+
 export const Route = createFileRoute("/dashboard/proposal/$ticket")({
   head: () => ({ meta: [{ title: "Proposal Details — Editor Portal" }] }),
   component: ProposalDetailPage,
@@ -68,6 +96,9 @@ function ProposalDetailPage() {
   const [assigning, setAssigning] = useState(false);
   const [assignError, setAssignError] = useState<string | null>(null);
   const [assignSuccess, setAssignSuccess] = useState<string | null>(null);
+  const [reviews, setReviews] = useState<SubmittedReview[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsError, setReviewsError] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -110,6 +141,42 @@ function ProposalDetailPage() {
       }
     };
     run();
+    return () => {
+      cancelled = true;
+    };
+  }, [ticket]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setReviewsLoading(true);
+      setReviewsError(null);
+      try {
+        const token = getPortalToken();
+        const res = await proposalApiFetch(`/${encodeURIComponent(ticket)}/review`, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+        if (cancelled) return;
+        if (!res.ok) {
+          setReviewsError((body.error as string) || null);
+          return;
+        }
+        const list = Array.isArray(body.reviews)
+          ? (body.reviews as SubmittedReview[])
+          : body.review
+            ? [body.review as SubmittedReview]
+            : [];
+        setReviews(list.filter((r) => r.is_submitted));
+      } catch {
+        if (!cancelled) setReviewsError(null);
+      } finally {
+        if (!cancelled) setReviewsLoading(false);
+      }
+    })();
     return () => {
       cancelled = true;
     };
@@ -526,6 +593,79 @@ function ProposalDetailPage() {
                         />
                       )}
                     </div>
+                  </Card>
+                )}
+
+                {/* Peer Review(s) returned */}
+                {(reviews.length > 0 || reviewsLoading) && (
+                  <Card>
+                    <CardHeader
+                      title="Peer Review"
+                      subtitle="Returned by the assigned reviewer"
+                    />
+                    {reviewsLoading && (
+                      <p className="px-7 py-6 font-sans text-sm text-stone-500">
+                        Loading review…
+                      </p>
+                    )}
+                    {!reviewsLoading && reviews.map((rv, idx) => {
+                      const rd = (rv.review_data || {}) as Record<string, unknown>;
+                      const rec = (rd.recommendation as string) || "";
+                      const recLabel = RECOMMENDATION_LABELS[rec] || rec;
+                      return (
+                        <div
+                          key={idx}
+                          className={idx > 0 ? "border-t border-stone-200" : ""}
+                        >
+                          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-stone-200 bg-stone-50/60 px-7 py-4">
+                            <div>
+                              <p className="font-sans text-sm font-semibold text-stone-900">
+                                {rv.reviewer_name ||
+                                  displayNameFromEmail(rv.reviewer_email || "")}
+                              </p>
+                              {rv.reviewer_email && (
+                                <p className="font-sans text-xs text-stone-500">
+                                  {rv.reviewer_email}
+                                </p>
+                              )}
+                              {rv.submitted_at && (
+                                <p className="mt-1 font-sans text-xs text-stone-500">
+                                  Submitted {formatDate(rv.submitted_at)}
+                                </p>
+                              )}
+                            </div>
+                            {recLabel && (
+                              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 font-sans text-xs font-medium text-emerald-800 ring-1 ring-emerald-200">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                {recLabel}
+                              </span>
+                            )}
+                          </div>
+                          <div className="space-y-5 px-7 py-6">
+                            {REVIEW_SECTIONS.map(({ key, label }) => {
+                              const v = rd[key] as string | undefined;
+                              if (!v || !v.trim()) return null;
+                              return (
+                                <div key={key}>
+                                  <SectionLabel>{label}</SectionLabel>
+                                  <p className="mt-2 whitespace-pre-line font-sans text-sm leading-relaxed text-stone-700">
+                                    {v}
+                                  </p>
+                                </div>
+                              );
+                            })}
+                            {(rd.note_to_dr as string)?.trim() && (
+                              <div className="rounded-xl bg-amber-50 px-5 py-4 ring-1 ring-amber-200">
+                                <SectionLabel>Private Note to Decision Reviewer</SectionLabel>
+                                <p className="mt-2 whitespace-pre-line font-sans text-sm leading-relaxed text-amber-900">
+                                  {rd.note_to_dr as string}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </Card>
                 )}
 
