@@ -150,6 +150,98 @@ function ProposalDetailPage() {
   const [editorialSummary, setEditorialSummary] = useState("");
   const [originalOpen, setOriginalOpen] = useState(false);
 
+  // Request Revisions (request-info) modal state
+  const REVISION_AREAS: { key: string; label: string }[] = [
+    { key: "abstract_blurb", label: "Abstract / Blurb" },
+    { key: "table_of_contents", label: "Table of Contents" },
+    { key: "supporting_materials", label: "Supporting Materials" },
+    { key: "author_credentials", label: "Author Credentials" },
+    { key: "market_analysis", label: "Market Analysis" },
+    { key: "scope_framing", label: "Scope / Framing" },
+    { key: "word_count", label: "Word Count / Length" },
+    { key: "other", label: "Other" },
+  ];
+  const [reqRevOpen, setReqRevOpen] = useState(false);
+  const [reqRevAreas, setReqRevAreas] = useState<string[]>([]);
+  const [reqRevNote, setReqRevNote] = useState("");
+  const [reqRevDeadline, setReqRevDeadline] = useState("");
+  const [reqRevSubmitting, setReqRevSubmitting] = useState(false);
+  const [reqRevError, setReqRevError] = useState<string | null>(null);
+  const [reqRevSuccess, setReqRevSuccess] = useState<string | null>(null);
+
+  const openRequestRevisions = () => {
+    setReqRevAreas([]);
+    setReqRevNote("");
+    setReqRevDeadline("");
+    setReqRevError(null);
+    setReqRevSuccess(null);
+    setReqRevOpen(true);
+  };
+
+  const toggleReqRevArea = (key: string) =>
+    setReqRevAreas((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+    );
+
+  const submitRequestRevisions = async () => {
+    if (reqRevAreas.length === 0 || !reqRevNote.trim()) return;
+    setReqRevSubmitting(true);
+    setReqRevError(null);
+    setReqRevSuccess(null);
+    try {
+      const token = getPortalToken();
+      const items = REVISION_AREAS.filter((a) => reqRevAreas.includes(a.key)).map(
+        ({ key, label }) => ({ key, label }),
+      );
+      const res = await proposalApiFetch(
+        `/${encodeURIComponent(ticket)}/request-info`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            items,
+            note: reqRevNote.trim(),
+            ...(reqRevDeadline ? { resubmission_deadline: reqRevDeadline } : {}),
+          }),
+        },
+      );
+      const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!res.ok) {
+        setReqRevError(
+          (body.error as string) ||
+            (body.message as string) ||
+            `Failed to send request (${res.status}).`,
+        );
+        return;
+      }
+      setReqRevSuccess((body.message as string) || "Revision request sent to author.");
+      // refresh proposal
+      try {
+        const refreshed = await proposalApiFetch(`/${encodeURIComponent(ticket)}`, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        const refreshedBody = (await refreshed.json().catch(() => ({}))) as Record<
+          string,
+          unknown
+        >;
+        if (refreshed.ok) setData(refreshedBody as unknown as ProposalDetail);
+      } catch {
+        // ignore
+      }
+      setTimeout(() => setReqRevOpen(false), 1200);
+    } catch {
+      setReqRevError("Network error. Please try again.");
+    } finally {
+      setReqRevSubmitting(false);
+    }
+  };
+
   useEffect(() => {
     try {
       const session = getPortalSession();
@@ -986,6 +1078,7 @@ function ProposalDetailPage() {
                         </button>
                         <button
                           type="button"
+                          onClick={openRequestRevisions}
                           className="flex w-full items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/60 px-4 py-3 text-left transition-colors hover:bg-amber-50"
                         >
                           <SquarePen className="mt-0.5 h-4 w-4 text-amber-700" />
@@ -1237,6 +1330,117 @@ function ProposalDetailPage() {
                 className="rounded-xl bg-[#0E3D2F] px-4 py-2.5 font-sans text-sm font-semibold text-white hover:bg-[#0a2f24] disabled:cursor-not-allowed disabled:bg-stone-300 disabled:text-stone-500"
               >
                 {assigning ? "Assigning…" : "Confirm & Assign Reviewer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {reqRevOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/50 px-4 py-8">
+          <div className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-[#FAF6EE] shadow-2xl">
+            <div className="flex items-start justify-between gap-4 px-7 pt-7 pb-5">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-800">
+                  <SquarePen className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="font-serif text-2xl font-bold text-[#2C1A0E]">Request Revisions</h2>
+                  <p className="mt-1 font-sans text-sm text-[#7A6A5A]">
+                    Specify what needs to be updated before the proposal can move forward.
+                  </p>
+                  <p className="mt-1 font-sans text-sm italic text-[#7A6A5A]">"{title}"</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setReqRevOpen(false)}
+                className="rounded-md p-1 text-stone-500 hover:bg-stone-200 hover:text-stone-700"
+                aria-label="Close"
+              >
+                <XIcon className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-7 pb-5">
+              <div>
+                <p className="font-sans text-sm font-semibold text-[#2C1A0E]">
+                  Areas Requiring Revision <span className="text-rose-600">*</span>
+                </p>
+                <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {REVISION_AREAS.map((area) => {
+                    const checked = reqRevAreas.includes(area.key);
+                    return (
+                      <label
+                        key={area.key}
+                        className={`flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 font-sans text-sm transition-colors ${
+                          checked
+                            ? "border-amber-400 bg-amber-50 text-amber-900"
+                            : "border-stone-200 bg-white text-stone-700 hover:border-stone-300"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleReqRevArea(area.key)}
+                          className="h-4 w-4 rounded border-stone-300 text-amber-600 focus:ring-amber-500"
+                        />
+                        <span>{area.label}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="mt-5">
+                <label className="font-sans text-sm font-semibold text-[#2C1A0E]">
+                  Editorial Feedback <span className="text-rose-600">*</span>
+                </label>
+                <textarea
+                  value={reqRevNote}
+                  onChange={(e) => setReqRevNote(e.target.value)}
+                  rows={5}
+                  placeholder="Explain what needs to be updated and why — this will be shared with the author..."
+                  className="mt-2 w-full resize-none rounded-xl border border-stone-200 bg-white px-3.5 py-3 font-sans text-sm text-stone-800 placeholder:text-stone-400 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-100"
+                />
+              </div>
+              <div className="mt-5">
+                <label className="font-sans text-sm font-semibold text-[#2C1A0E]">
+                  Resubmission Deadline{" "}
+                  <span className="font-normal text-[#7A6A5A]">(optional)</span>
+                </label>
+                <input
+                  type="date"
+                  value={reqRevDeadline}
+                  onChange={(e) => setReqRevDeadline(e.target.value)}
+                  className="mt-2 w-full rounded-xl border border-stone-200 bg-white px-3.5 py-3 font-sans text-sm text-stone-800 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-100"
+                />
+              </div>
+              {reqRevError && (
+                <p className="mt-4 rounded-lg bg-rose-50 px-3 py-2 font-sans text-sm text-rose-700 ring-1 ring-rose-200">
+                  {reqRevError}
+                </p>
+              )}
+              {reqRevSuccess && (
+                <p className="mt-4 rounded-lg bg-emerald-50 px-3 py-2 font-sans text-sm text-emerald-700 ring-1 ring-emerald-200">
+                  {reqRevSuccess}
+                </p>
+              )}
+            </div>
+            <div className="flex items-center justify-between gap-3 border-t border-stone-200 bg-white/60 px-7 py-4">
+              <button
+                type="button"
+                onClick={() => setReqRevOpen(false)}
+                className="rounded-xl px-5 py-2.5 font-sans text-sm font-semibold text-stone-700 hover:bg-stone-100"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={submitRequestRevisions}
+                disabled={
+                  reqRevSubmitting || reqRevAreas.length === 0 || !reqRevNote.trim()
+                }
+                className="rounded-xl bg-[#C97A6A] px-5 py-2.5 font-sans text-sm font-semibold text-white hover:bg-[#b56656] disabled:cursor-not-allowed disabled:bg-[#E9C8C0] disabled:text-white/80"
+              >
+                {reqRevSubmitting ? "Sending…" : "Send Revision Request"}
               </button>
             </div>
           </div>
