@@ -168,8 +168,20 @@ function ProposalDetailPage() {
   const [reqRevSubmitting, setReqRevSubmitting] = useState(false);
   const [reqRevError, setReqRevError] = useState<string | null>(null);
   const [reqRevSuccess, setReqRevSuccess] = useState<string | null>(null);
+  const [reqRevMode, setReqRevMode] = useState<"revisions" | "major">("revisions");
 
   const openRequestRevisions = () => {
+    setReqRevMode("revisions");
+    setReqRevAreas([]);
+    setReqRevNote("");
+    setReqRevDeadline("");
+    setReqRevError(null);
+    setReqRevSuccess(null);
+    setReqRevOpen(true);
+  };
+
+  const openRequestMajorRevision = () => {
+    setReqRevMode("major");
     setReqRevAreas([]);
     setReqRevNote("");
     setReqRevDeadline("");
@@ -1049,6 +1061,7 @@ function ProposalDetailPage() {
                         </button>
                         <button
                           type="button"
+                          onClick={openRequestMajorRevision}
                           className="flex w-full items-start gap-3 rounded-xl border border-rose-200 bg-rose-50/60 px-4 py-3 text-left transition-colors hover:bg-rose-50"
                         >
                           <SquarePen className="mt-0.5 h-4 w-4 text-rose-700" />
@@ -1344,7 +1357,9 @@ function ProposalDetailPage() {
                   <SquarePen className="h-5 w-5" />
                 </div>
                 <div>
-                  <h2 className="font-serif text-2xl font-bold text-[#2C1A0E]">Request Revisions</h2>
+                  <h2 className="font-serif text-2xl font-bold text-[#2C1A0E]">
+                    {reqRevMode === "major" ? "Request Major Revision" : "Request Revisions"}
+                  </h2>
                   <p className="mt-1 font-sans text-sm text-[#7A6A5A]">
                     Specify what needs to be updated before the proposal can move forward.
                   </p>
