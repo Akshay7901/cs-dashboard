@@ -1,7 +1,4 @@
-// Calls go through a same-origin proxy server route to avoid CORS issues
-// from the upstream API (api.cambridgescholars.com does not send
-// Access-Control-Allow-Origin, so browser fetches fail with "Failed to fetch").
-const PROXY_BASE = "/api/proposals-proxy";
+const API_BASE = "https://api.cambridgescholars.com/api/proposals";
 
 export function proposalApiFetch(path: string, init?: RequestInit) {
   let suffix = path ?? "";
@@ -12,6 +9,6 @@ export function proposalApiFetch(path: string, init?: RequestInit) {
     suffix = suffix.slice(0, qIdx);
   }
   if (suffix.startsWith("/")) suffix = suffix.slice(1);
-  const url = `${PROXY_BASE}/${suffix}${query}`;
+  const url = suffix ? `${API_BASE}/${suffix}${query}` : `${API_BASE}${query}`;
   return fetch(url, init);
 }
