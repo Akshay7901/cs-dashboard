@@ -69,3 +69,29 @@ export function clearPortalSession() {
     }
   }
 }
+
+/**
+ * Logout the current portal user: calls the backend /auth/logout endpoint
+ * with the current bearer token (best-effort) and then clears local session
+ * storage. Always resolves — network failures are swallowed so the UI can
+ * still navigate the user back to /login.
+ */
+export async function portalLogout(): Promise<void> {
+  const token = getPortalToken();
+  try {
+    if (token) {
+      const { proposalApiFetch } = await import("./proposalApi");
+      await proposalApiFetch("/auth/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+    }
+  } catch {
+    // ignore network errors — still clear local session below
+  } finally {
+    clearPortalSession();
+  }
+}
