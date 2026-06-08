@@ -319,7 +319,12 @@ function ReviewerSubmission() {
         ...draftPayload(),
         note_to_dr: form.note_to_dr,
         dr_note: form.dr_note,
-        recommendation,
+        recommendation:
+          recommendation === "minor"
+            ? "minor_revision"
+            : recommendation === "major"
+              ? "major_revision"
+              : recommendation,
       };
       const res = await proposalApiFetch(
         `/${encodeURIComponent(proposal.ticket)}/review/submit`,
