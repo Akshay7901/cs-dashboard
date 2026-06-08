@@ -1768,6 +1768,130 @@ function ProposalDetailPage() {
           </div>
         </div>
       )}
+      {contractOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/50 px-4 py-8">
+          <div className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <div className="flex items-start justify-between gap-4 px-7 pt-7 pb-5">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EDE7FA] text-[#5B2EBA]">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="font-serif text-2xl font-bold text-[#2C1A0E]">
+                    Issue Contract &amp; Feedback
+                  </h2>
+                  <p className="mt-1 font-sans text-sm text-[#7A6A5A]">
+                    Send the review outcome and contract to the author.
+                  </p>
+                  <p className="mt-1 font-sans text-sm italic text-[#7A6A5A]">
+                    &ldquo;{title}&rdquo;
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setContractOpen(false)}
+                className="rounded-md p-1 text-stone-500 hover:bg-stone-200 hover:text-stone-700"
+                aria-label="Close"
+              >
+                <XIcon className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-7 pb-5">
+              <div className="rounded-xl bg-[#F3EEFB] px-4 py-3 font-sans text-sm text-[#5B2EBA] ring-1 ring-[#E0D4F5]">
+                The contract and peer review comments will be sent to the author
+                simultaneously. They will be able to review, raise questions, or sign.
+              </div>
+              <div className="mt-5">
+                <label className="font-sans text-sm font-semibold text-[#2C1A0E]">
+                  Contract Type <span className="text-rose-600">*</span>
+                </label>
+                <select
+                  value={contractType}
+                  onChange={(e) => setContractType(e.target.value as "author" | "editor")}
+                  className="mt-2 w-full rounded-xl border border-stone-200 bg-white px-3.5 py-3 font-sans text-sm text-stone-800 focus:border-[#5B2EBA] focus:outline-none focus:ring-2 focus:ring-[#EDE7FA]"
+                >
+                  <option value="author">Standard Publishing Agreement (Author)</option>
+                  <option value="editor">Editor Agreement</option>
+                </select>
+              </div>
+              <div className="mt-5">
+                <label className="font-sans text-sm font-semibold text-[#2C1A0E]">
+                  Contract Amendments{" "}
+                  <span className="font-normal text-[#7A6A5A]">
+                    (optional — note any non-standard terms)
+                  </span>
+                </label>
+                <textarea
+                  value={contractAmendments}
+                  onChange={(e) => setContractAmendments(e.target.value)}
+                  rows={4}
+                  placeholder="e.g. Adjusted royalty rate of 12% on net receipts; translation rights reserved for 18 months…"
+                  className="mt-2 w-full resize-none rounded-xl border border-stone-200 bg-white px-3.5 py-3 font-sans text-sm text-stone-800 placeholder:text-stone-400 focus:border-[#5B2EBA] focus:outline-none focus:ring-2 focus:ring-[#EDE7FA]"
+                />
+              </div>
+              <div className="mt-5">
+                <label className="font-sans text-sm font-semibold text-[#2C1A0E]">
+                  Note to Author{" "}
+                  <span className="font-normal text-[#7A6A5A]">
+                    (optional — included with the contract)
+                  </span>
+                </label>
+                <textarea
+                  value={contractNote}
+                  onChange={(e) => setContractNote(e.target.value)}
+                  rows={4}
+                  placeholder="Any additional context or guidance for the author ahead of signing…"
+                  className="mt-2 w-full resize-none rounded-xl border border-stone-200 bg-white px-3.5 py-3 font-sans text-sm text-stone-800 placeholder:text-stone-400 focus:border-[#5B2EBA] focus:outline-none focus:ring-2 focus:ring-[#EDE7FA]"
+                />
+              </div>
+              <div className="mt-5">
+                <label className="font-sans text-sm font-semibold text-[#2C1A0E]">
+                  Signing Window{" "}
+                  <span className="font-normal text-[#7A6A5A]">(days until expiry)</span>
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={90}
+                  value={contractExpiryDays}
+                  onChange={(e) =>
+                    setContractExpiryDays(Math.max(1, Number(e.target.value) || 14))
+                  }
+                  className="mt-2 w-full rounded-xl border border-stone-200 bg-white px-3.5 py-3 font-sans text-sm text-stone-800 focus:border-[#5B2EBA] focus:outline-none focus:ring-2 focus:ring-[#EDE7FA]"
+                />
+              </div>
+              {contractError && (
+                <p className="mt-4 rounded-lg bg-rose-50 px-3 py-2 font-sans text-sm text-rose-700 ring-1 ring-rose-200">
+                  {contractError}
+                </p>
+              )}
+              {contractSuccess && (
+                <p className="mt-4 rounded-lg bg-emerald-50 px-3 py-2 font-sans text-sm text-emerald-700 ring-1 ring-emerald-200">
+                  {contractSuccess}
+                </p>
+              )}
+            </div>
+            <div className="flex items-center justify-between gap-3 border-t border-stone-200 bg-white px-7 py-4">
+              <button
+                type="button"
+                onClick={() => setContractOpen(false)}
+                className="rounded-xl px-5 py-2.5 font-sans text-sm font-semibold text-stone-700 hover:bg-stone-100"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={submitIssueContract}
+                disabled={contractLoading}
+                className="rounded-xl bg-[#5B2EBA] px-5 py-2.5 font-sans text-sm font-semibold text-white hover:bg-[#4a2599] disabled:cursor-not-allowed disabled:bg-[#B8A8E0] disabled:text-white/80"
+              >
+                {contractLoading ? "Issuing…" : "Issue Contract"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
