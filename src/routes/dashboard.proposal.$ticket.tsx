@@ -178,6 +178,86 @@ function ProposalDetailPage() {
   const [submitReviewError, setSubmitReviewError] = useState<string | null>(null);
   const [submitReviewSuccess, setSubmitReviewSuccess] = useState<string | null>(null);
 
+  // Issue Contract modal state
+  const [contractOpen, setContractOpen] = useState(false);
+  const [contractType, setContractType] = useState<"author" | "editor">("author");
+  const [contractAmendments, setContractAmendments] = useState("");
+  const [contractNote, setContractNote] = useState("");
+  const [contractExpiryDays, setContractExpiryDays] = useState(14);
+  const [contractLoading, setContractLoading] = useState(false);
+  const [contractError, setContractError] = useState<string | null>(null);
+  const [contractSuccess, setContractSuccess] = useState<string | null>(null);
+
+  const openIssueContract = () => {
+    setContractType("author");
+    setContractAmendments("");
+    setContractNote("");
+    setContractExpiryDays(14);
+    setContractError(null);
+    setContractSuccess(null);
+    setContractOpen(true);
+  };
+
+  const submitIssueContract = async () => {
+    setContractLoading(true);
+    setContractError(null);
+    setContractSuccess(null);
+    try {
+      const token = getPortalToken();
+      const payload: Record<string, unknown> = {
+        contract_type: contractType,
+        title: cd.main_title || title,
+        expiry_days: contractExpiryDays,
+      };
+      if (cd.subtitle) payload.subtitle = cd.subtitle;
+      if (contractAmendments.trim()) payload.addendum = contractAmendments.trim();
+      if (contractNote.trim()) payload.notes = contractNote.trim();
+      const res = await proposalApiFetch(
+        `/${encodeURIComponent(ticket)}/contract/send`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify(payload),
+        },
+      );
+      const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!res.ok) {
+        setContractError(
+          (body.error as string) ||
+            (body.message as string) ||
+            `Failed to issue contract (${res.status}).`,
+        );
+        return;
+      }
+      setContractSuccess(
+        (body.message as string) || "Contract sent to author.",
+      );
+      try {
+        const refreshed = await proposalApiFetch(`/${encodeURIComponent(ticket)}`, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        const refreshedBody = (await refreshed.json().catch(() => ({}))) as Record<
+          string,
+          unknown
+        >;
+        if (refreshed.ok) setData(refreshedBody as unknown as ProposalDetail);
+      } catch {
+        // ignore refresh errors
+      }
+      setTimeout(() => setContractOpen(false), 1200);
+    } catch {
+      setContractError("Network error. Please try again.");
+    } finally {
+      setContractLoading(false);
+    }
+  };
+
   const openRequestRevisions = () => {
     setReqRevMode("revisions");
     setReqRevAreas([]);
