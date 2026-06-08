@@ -1061,6 +1061,7 @@ function ProposalDetailPage() {
                         </button>
                         <button
                           type="button"
+                          onClick={openRequestMajorRevision}
                           className="flex w-full items-start gap-3 rounded-xl border border-rose-200 bg-rose-50/60 px-4 py-3 text-left transition-colors hover:bg-rose-50"
                         >
                           <SquarePen className="mt-0.5 h-4 w-4 text-rose-700" />
