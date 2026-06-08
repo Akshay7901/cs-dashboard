@@ -76,6 +76,24 @@ const STATUS_MAP: Record<string, StatusKey> = {
   awaiting_more_info: "revisions",
 };
 
+// Reverse mapping: which raw API status values feed each local bucket.
+// Used to fetch every status when the user picks "All" (the API's default
+// list omits terminal states like declined / signed).
+const API_STATUSES_BY_KEY: Record<StatusKey, string[]> = {
+  submitted: ["new"],
+  revisions: ["awaiting_more_info"],
+  in_review: ["in_review"],
+  review_returned: ["review_returned"],
+  major_revisions: [],
+  contract: ["contract_issued", "awaiting_author_approval", "contract_received"],
+  question: ["queries_raised"],
+  signed: ["author_approved", "locked", "contract_signed"],
+  declined: ["declined"],
+};
+const ALL_API_STATUSES = Array.from(
+  new Set(Object.values(API_STATUSES_BY_KEY).flat()),
+);
+
 // Normalize a free-form display_status string (e.g. "Review Returned",
 // "Contract Issued") to our local StatusKey so the badge style + filter
 // bucket stay in sync with the API's status_summary.
