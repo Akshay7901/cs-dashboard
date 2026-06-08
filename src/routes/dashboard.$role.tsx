@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { clearPortalSession, getPortalSession } from "@/lib/auth";
+import { portalLogout, getPortalSession } from "@/lib/auth";
 
 type Role = "author" | "editor" | "reviewer";
 
@@ -39,8 +39,8 @@ function DashboardPage() {
 
   const label = ROLE_LABEL[role as Role] ?? "Dashboard";
 
-  const onLogout = () => {
-    clearPortalSession();
+  const onLogout = async () => {
+    await portalLogout();
     navigate({ to: "/login" });
   };
 

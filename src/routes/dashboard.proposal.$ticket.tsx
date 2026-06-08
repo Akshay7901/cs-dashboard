@@ -11,7 +11,7 @@ import {
   X as XIcon,
 } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
-import { clearPortalSession, getPortalSession, getPortalToken } from "@/lib/auth";
+import { portalLogout, getPortalSession, getPortalToken } from "@/lib/auth";
 import { formatDate, initialsFromName, displayNameFromEmail } from "@/lib/proposals";
 import { proposalApiFetch } from "@/lib/proposalApi";
 
@@ -338,8 +338,8 @@ function ProposalDetailPage() {
 
   const displayName = userName || displayNameFromEmail(userEmail);
 
-  const onLogout = () => {
-    clearPortalSession();
+  const onLogout = async () => {
+    await portalLogout();
     navigate({ to: "/login" });
   };
 

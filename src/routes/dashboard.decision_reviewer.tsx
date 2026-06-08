@@ -13,7 +13,7 @@ import {
   History,
 } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
-import { clearPortalSession, getPortalSession, getPortalToken } from "@/lib/auth";
+import { portalLogout, getPortalSession, getPortalToken } from "@/lib/auth";
 import {
   STATUS_META,
   type StatusKey,
@@ -452,8 +452,8 @@ function DecisionReviewerDashboard() {
     return list;
   }, [mergedProposals, activeFilter, search, field, sort]);
 
-  const onLogout = () => {
-    clearPortalSession();
+  const onLogout = async () => {
+    await portalLogout();
     navigate({ to: "/login" });
   };
 
