@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useMatchRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ChevronRight,
   LogOut,
@@ -107,24 +107,8 @@ function ReviewerDashboard() {
     matchRoute({ to: "/dashboard/reviewer/submission/$id", fuzzy: true }),
   );
 
-  useEffect(() => {
-    try {
-      const session = getPortalSession();
-      if (!session) {
-        navigate({ to: "/login" });
-        return;
-      }
-      if (session.role !== "reviewer") {
-        navigate({ to: "/login" });
-        return;
-      }
-      setUserEmail(session.email);
-      void loadReviewerProposals(session.email);
-    } catch {
-      navigate({ to: "/login" });
-    }
-    async function loadReviewerProposals(email: string) {
-      setLoading(true);
+  const loadReviewerProposals = useCallback(async (email: string, silent = false) => {
+      if (!silent) setLoading(true);
       setLoadError(null);
       try {
         const token = getPortalToken();
@@ -160,8 +144,7 @@ function ReviewerDashboard() {
         };
         const defaultRes = await fetchList("");
         if (!defaultRes.ok) {
-          setLoadError(defaultRes.error || `Failed to load proposals (${defaultRes.status}).`);
-          setLoading(false);
+          if (!silent) setLoadError(defaultRes.error || `Failed to load proposals (${defaultRes.status}).`);
           return;
         }
         const extraResults = await Promise.all(
@@ -248,12 +231,33 @@ function ReviewerDashboard() {
 
         setAssigned(items);
       } catch {
-        setLoadError("Network error. Please try again.");
+        if (!silent) setLoadError("Network error. Please try again.");
       } finally {
-        setLoading(false);
+        if (!silent) setLoading(false);
       }
+  }, []);
+
+  useEffect(() => {
+    try {
+      const session = getPortalSession();
+      if (!session || session.role !== "reviewer") {
+        navigate({ to: "/login" });
+        return;
+      }
+      setUserEmail(session.email);
+      void loadReviewerProposals(session.email);
+    } catch {
+      navigate({ to: "/login" });
     }
-  }, [navigate]);
+  }, [navigate, loadReviewerProposals]);
+
+  useEffect(() => {
+    if (!userEmail) return;
+    const id = window.setInterval(() => {
+      void loadReviewerProposals(userEmail, true);
+    }, 30000);
+    return () => window.clearInterval(id);
+  }, [userEmail, loadReviewerProposals]);
 
   const onLogout = async () => {
     await portalLogout();
