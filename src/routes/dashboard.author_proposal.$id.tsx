@@ -613,6 +613,9 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
               </div>
             </Card>
           )}
+
+          {/* Catch-all: every other field from the API */}
+          <ExtraFieldsCard cd={cd} />
         </div>
       </div>
     </>
