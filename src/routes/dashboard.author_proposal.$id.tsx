@@ -456,7 +456,7 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
         </div>
 
         <aside id="section-documents" className="row-span-2 scroll-mt-24 overflow-hidden rounded-2xl border border-stone-200 bg-stone-50/60">
-          <h3 className="px-5 pt-5 pb-4 font-serif text-lg font-semibold text-stone-900">Documents</h3>
+          <h3 className="px-5 py-3.5 font-serif text-base font-bold" style={{ color: "#2C1A0E" }}>Documents</h3>
           {allFiles.length === 0 ? (
             <p className="border-t border-stone-200 px-5 py-4 text-sm text-stone-500">No documents uploaded.</p>
           ) : (
