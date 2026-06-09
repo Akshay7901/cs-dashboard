@@ -405,19 +405,19 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
           />
         </div>
 
-        <aside id="section-documents" className="row-span-2 scroll-mt-24 overflow-hidden rounded-2xl border border-amber-200/60 bg-amber-50/40">
+        <aside id="section-documents" className="row-span-2 scroll-mt-24 overflow-hidden rounded-2xl border border-stone-200 bg-stone-50/60">
           <h3 className="px-5 pt-5 pb-4 font-serif text-lg font-semibold text-stone-900">Documents</h3>
           {allFiles.length === 0 ? (
-            <p className="border-t border-amber-200/60 px-5 py-4 text-sm text-stone-500">No documents uploaded.</p>
+            <p className="border-t border-stone-200 px-5 py-4 text-sm text-stone-500">No documents uploaded.</p>
           ) : (
-            <ul className="space-y-3 border-t border-amber-200/60 p-5">
+            <ul className="space-y-3 border-t border-stone-200 p-5">
               {allFiles.map((f, i) => (
                 <li key={`${f.filename}-${i}`}>
                   <a
                     href={f.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="group flex items-start gap-3 rounded-lg border border-transparent p-2 hover:border-amber-200 hover:bg-white"
+                    className="group flex items-start gap-3 rounded-lg border border-transparent p-2 hover:border-stone-200 hover:bg-white"
                   >
                     <FileText className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
                     <div className="min-w-0">
@@ -621,7 +621,7 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-amber-200/60 bg-amber-50/40 px-4 py-5 text-center">
+    <div className="rounded-2xl border border-stone-200 bg-stone-50/60 px-4 py-5 text-center">
       <p className="text-xs font-medium uppercase tracking-wider text-amber-800/80">{label}</p>
       <p className="mt-2 font-serif text-xl font-bold text-stone-900">{value}</p>
     </div>
