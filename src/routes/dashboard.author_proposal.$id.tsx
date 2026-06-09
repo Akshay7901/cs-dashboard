@@ -624,21 +624,21 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
               <div className="space-y-4">
                 {cd.primary_market && (
                   <SubCard label="Primary Market">
-                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
+                    <p className="whitespace-pre-wrap font-sans text-sm font-medium leading-relaxed text-[#2C1A0E]">
                       {cd.primary_market}
                     </p>
                   </SubCard>
                 )}
                 {whyNeededText && (
                   <SubCard label="Why is this book needed?">
-                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
+                    <p className="whitespace-pre-wrap font-sans text-sm font-medium leading-relaxed text-[#2C1A0E]">
                       {whyNeededText}
                     </p>
                   </SubCard>
                 )}
                 {cd.competing_titles && (
                   <SubCard label="Competing Titles">
-                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
+                    <p className="whitespace-pre-wrap font-sans text-sm font-medium leading-relaxed text-[#2C1A0E]">
                       {cd.competing_titles}
                     </p>
                   </SubCard>
@@ -678,21 +678,21 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
               <div className="space-y-4">
                 {cd.additional_info && (
                   <SubCard label="Notes">
-                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
+                    <p className="whitespace-pre-wrap font-sans text-sm font-medium leading-relaxed text-[#2C1A0E]">
                       {cd.additional_info}
                     </p>
                   </SubCard>
                 )}
                 {cd.conferences && (
                   <SubCard label="Conferences">
-                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
+                    <p className="whitespace-pre-wrap font-sans text-sm font-medium leading-relaxed text-[#2C1A0E]">
                       {cd.conferences}
                     </p>
                   </SubCard>
                 )}
                 {cd.promotional_channels && (
                   <SubCard label="Promotional Channels">
-                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
+                    <p className="whitespace-pre-wrap font-sans text-sm font-medium leading-relaxed text-[#2C1A0E]">
                       {cd.promotional_channels}
                     </p>
                   </SubCard>
