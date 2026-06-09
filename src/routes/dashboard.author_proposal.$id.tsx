@@ -67,7 +67,7 @@ function normalizeStatus(raw?: string, display?: string): StatusKey {
 const STATUS_LABEL: Record<StatusKey, string> = {
   submitted: "Submitted",
   revisions: "Revisions Requested",
-  in_review: "Peer Review",
+  in_review: "Under Review",
   review_returned: "Review Returned",
   major_revisions: "Major Revisions Required",
   question: "Question Raised",
