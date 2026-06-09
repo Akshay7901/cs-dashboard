@@ -285,7 +285,7 @@ function configFor(p: Proposal): CardConfig {
       };
     case "in_review":
       return {
-        bannerLabel: "Under Review",
+        bannerLabel: "Peer Review",
         bannerDot: "bg-sky-500",
         bannerTint: "bg-sky-50",
         bannerText: "text-sky-700",
