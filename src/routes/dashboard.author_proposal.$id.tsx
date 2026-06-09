@@ -624,21 +624,21 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
               <div className="space-y-4">
                 {cd.primary_market && (
                   <SubCard label="Primary Market">
-                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
+                    <p className="whitespace-pre-wrap font-sans text-sm font-medium leading-relaxed text-[#2C1A0E]">
                       {cd.primary_market}
                     </p>
                   </SubCard>
                 )}
                 {whyNeededText && (
                   <SubCard label="Why is this book needed?">
-                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
+                    <p className="whitespace-pre-wrap font-sans text-sm font-medium leading-relaxed text-[#2C1A0E]">
                       {whyNeededText}
                     </p>
                   </SubCard>
                 )}
                 {cd.competing_titles && (
                   <SubCard label="Competing Titles">
-                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
+                    <p className="whitespace-pre-wrap font-sans text-sm font-medium leading-relaxed text-[#2C1A0E]">
                       {cd.competing_titles}
                     </p>
                   </SubCard>
@@ -678,21 +678,21 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
               <div className="space-y-4">
                 {cd.additional_info && (
                   <SubCard label="Notes">
-                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
+                    <p className="whitespace-pre-wrap font-sans text-sm font-medium leading-relaxed text-[#2C1A0E]">
                       {cd.additional_info}
                     </p>
                   </SubCard>
                 )}
                 {cd.conferences && (
                   <SubCard label="Conferences">
-                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
+                    <p className="whitespace-pre-wrap font-sans text-sm font-medium leading-relaxed text-[#2C1A0E]">
                       {cd.conferences}
                     </p>
                   </SubCard>
                 )}
                 {cd.promotional_channels && (
                   <SubCard label="Promotional Channels">
-                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
+                    <p className="whitespace-pre-wrap font-sans text-sm font-medium leading-relaxed text-[#2C1A0E]">
                       {cd.promotional_channels}
                     </p>
                   </SubCard>
@@ -719,8 +719,8 @@ function StatCard({ label, value }: { label: string; value: string }) {
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl border border-stone-200 bg-stone-50/60 px-4 py-3">
-      <p className="text-xs font-medium uppercase tracking-wider text-amber-800/80">{label}</p>
-      <p className="mt-1 text-sm font-semibold text-stone-900">{value}</p>
+      <p className="font-sans text-xs font-medium" style={{ color: "#7A6A5A" }}>{label}</p>
+      <p className="mt-0.5 font-sans text-sm font-medium" style={{ color: "#2C1A0E" }}>{value}</p>
     </div>
   );
 }
@@ -740,7 +740,7 @@ function Card({
     <section id={id} className="scroll-mt-24 overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
       <div className="px-5 py-3.5 md:px-5">
         <h2 className="font-serif text-base font-bold" style={{ color: "#2C1A0E" }}>{title}</h2>
-        {subtitle && <p className="mt-1 font-sans text-xs" style={{ color: "#A6814A" }}>{subtitle}</p>}
+        {subtitle && <p className="mt-1 font-sans text-xs font-medium" style={{ color: "#7A6A5A" }}>{subtitle}</p>}
       </div>
       <div className="border-t border-stone-200 px-6 py-6 md:px-7">{children}</div>
     </section>
@@ -794,16 +794,13 @@ function ReviewersList({ raw }: { raw: string }) {
         const lines = block.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
         return (
           <li key={i} className="flex gap-4 border-t border-stone-200 py-4 first:border-t-0 first:pt-0">
-            <span className="font-serif text-lg font-bold text-amber-800/80">{i + 1}.</span>
-            <div className="space-y-0.5 text-[15px]">
+            <span className="font-sans text-sm font-semibold" style={{ color: "#7A6A5A" }}>{i + 1}.</span>
+            <div className="space-y-0.5">
               {lines.map((l, j) => (
                 <p
                   key={j}
-                  className={
-                    j === 0
-                      ? "font-semibold text-stone-900"
-                      : "text-stone-600"
-                  }
+                  className={j === 0 ? "font-sans text-sm font-bold" : "font-sans text-xs font-medium"}
+                  style={{ color: j === 0 ? "#2C1A0E" : "#7A6A5A" }}
                 >
                   {l}
                 </p>
