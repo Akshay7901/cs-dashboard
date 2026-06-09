@@ -479,7 +479,7 @@ function AuthorDashboard() {
                 Cambridge Scholars Publishing
               </span>
               <span className="text-stone-300">|</span>
-              <span className="font-sans text-sm font-medium text-primary">Author Portal</span>
+              <span className="font-sans text-sm font-medium text-portal-author">Author Portal</span>
             </div>
           </div>
           <div className="flex items-center gap-4">
