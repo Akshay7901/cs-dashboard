@@ -405,12 +405,12 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
           />
         </div>
 
-        <aside id="section-documents" className="row-span-2 rounded-2xl border border-amber-200/60 bg-amber-50/40 p-5 scroll-mt-24">
-          <h3 className="font-serif text-lg font-semibold text-stone-900">Documents</h3>
+        <aside id="section-documents" className="row-span-2 scroll-mt-24 overflow-hidden rounded-2xl border border-amber-200/60 bg-amber-50/40">
+          <h3 className="px-5 pt-5 pb-4 font-serif text-lg font-semibold text-stone-900">Documents</h3>
           {allFiles.length === 0 ? (
-            <p className="mt-3 text-sm text-stone-500">No documents uploaded.</p>
+            <p className="border-t border-amber-200/60 px-5 py-4 text-sm text-stone-500">No documents uploaded.</p>
           ) : (
-            <ul className="mt-4 space-y-3">
+            <ul className="space-y-3 border-t border-amber-200/60 p-5">
               {allFiles.map((f, i) => (
                 <li key={`${f.filename}-${i}`}>
                   <a
