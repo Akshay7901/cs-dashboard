@@ -132,16 +132,50 @@ function ReviewerDashboard() {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         };
-        const listRes = await proposalApiFetch("", { headers });
-        const listBody = (await listRes.json().catch(() => ({}))) as Record<string, unknown>;
-        if (!listRes.ok) {
-          setLoadError((listBody.error as string) || `Failed to load proposals (${listRes.status}).`);
+        const EXTRA_STATUSES = [
+          "peer_review_complete",
+          "peer_reviewed",
+          "review_complete",
+          "reviewed",
+          "decision_pending",
+          "accepted",
+          "minor_revisions",
+          "major_revisions",
+          "declined",
+          "contract_issued",
+          "awaiting_author_approval",
+          "contract_received",
+          "author_approved",
+          "locked",
+          "contract_signed",
+        ];
+        const fetchList = async (qs = "") => {
+          const r = await proposalApiFetch(qs, { headers });
+          const b = (await r.json().catch(() => ({}))) as Record<string, unknown>;
+          if (!r.ok) return { ok: false, status: r.status, error: b.error as string };
+          const arr =
+            (b.proposals as ApiProposalListItem[]) ||
+            (Array.isArray(b) ? (b as unknown as ApiProposalListItem[]) : []);
+          return { ok: true, items: arr };
+        };
+        const defaultRes = await fetchList("");
+        if (!defaultRes.ok) {
+          setLoadError(defaultRes.error || `Failed to load proposals (${defaultRes.status}).`);
           setLoading(false);
           return;
         }
-        const proposals =
-          (listBody.proposals as ApiProposalListItem[]) ||
-          (Array.isArray(listBody) ? (listBody as unknown as ApiProposalListItem[]) : []);
+        const extraResults = await Promise.all(
+          EXTRA_STATUSES.map((s) => fetchList(`?status=${encodeURIComponent(s)}`)),
+        );
+        const merged = new Map<string, ApiProposalListItem>();
+        for (const it of defaultRes.items || []) merged.set(it.ticket_number, it);
+        for (const r of extraResults) {
+          if (!r.ok) continue;
+          for (const it of r.items || []) {
+            if (!merged.has(it.ticket_number)) merged.set(it.ticket_number, it);
+          }
+        }
+        const proposals = Array.from(merged.values());
 
         // API already scopes the list to the logged-in peer reviewer.
         // Assignments in the list payload may omit reviewer_email, so trust the server filter.
