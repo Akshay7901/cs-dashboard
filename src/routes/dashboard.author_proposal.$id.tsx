@@ -265,7 +265,7 @@ function AuthorProposalDetails() {
   const initials = initialsFromName(displayName);
 
   return (
-    <main className="min-h-screen bg-[#FAF6EE] font-sans text-stone-900">
+    <main className="min-h-screen bg-[#F9F7F2] font-sans text-stone-900">
       {/* Header */}
       <header className="border-b border-stone-200 bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
