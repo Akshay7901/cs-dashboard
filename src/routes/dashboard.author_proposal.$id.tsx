@@ -719,8 +719,8 @@ function StatCard({ label, value }: { label: string; value: string }) {
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl border border-stone-200 bg-stone-50/60 px-4 py-3">
-      <p className="text-xs font-medium uppercase tracking-wider text-amber-800/80">{label}</p>
-      <p className="mt-1 text-sm font-semibold text-stone-900">{value}</p>
+      <p className="font-sans text-xs font-medium" style={{ color: "#7A6A5A" }}>{label}</p>
+      <p className="mt-0.5 font-sans text-sm font-medium" style={{ color: "#2C1A0E" }}>{value}</p>
     </div>
   );
 }
