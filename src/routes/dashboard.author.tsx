@@ -619,7 +619,7 @@ function Section({
     <section className="mt-10">
       <div className="mb-3 flex items-center gap-2">
         <span className={`h-2.5 w-2.5 rounded-full ${dot}`} />
-        <h2 className="text-xs font-semibold tracking-[0.18em] text-stone-600">{title}</h2>
+        <h2 className="font-sans text-xs font-semibold uppercase tracking-widest text-text-muted">{title}</h2>
       </div>
       <div className="space-y-5">{children}</div>
     </section>
@@ -632,48 +632,47 @@ function ProposalCard({ p }: { p: Proposal }) {
   return (
     <article
       className={
-        "overflow-hidden rounded-2xl border " +
-        (cfg.tag ? "border-stone-200 bg-white shadow-sm" : "border-stone-200 bg-white")
+        "overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm transition-shadow hover:shadow-md"
       }
     >
       {/* Banner */}
-      <div className={`flex items-center justify-between px-5 py-3 ${cfg.bannerTint}`}>
+      <div className={`flex items-center justify-between gap-3 border-b border-orange-100 px-5 py-3 ${cfg.bannerTint}`}>
         <div className="flex items-center gap-2 text-sm">
           <span className={`h-2 w-2 rounded-full ${cfg.bannerDot}`} />
-          <span className={`font-semibold ${cfg.bannerText}`}>{cfg.bannerLabel}</span>
+          <span className={`font-sans text-sm font-semibold ${cfg.bannerText}`}>{cfg.bannerLabel}</span>
           {cfg.tag && (
             <>
               <span className="text-stone-400">—</span>
-              <span className={`text-xs font-bold tracking-wider ${cfg.bannerText}`}>
+              <span className={`font-sans text-xs font-bold tracking-wider ${cfg.bannerText}`}>
                 {cfg.tag}
               </span>
             </>
           )}
         </div>
-        <span className="text-xs text-stone-500">{formatDate(p.updatedAt)}</span>
+        <span className="font-sans text-xs text-text-muted">{formatDate(p.updatedAt)}</span>
       </div>
 
       {/* Body */}
       <div className="p-5">
-        <div className="flex items-start gap-4">
+        <div className="flex items-start gap-3">
           <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${cfg.iconBg}`}>
             <Icon className={`h-5 w-5 ${cfg.iconColor}`} />
           </span>
           <div className="min-w-0 flex-1">
-            <p className={`text-sm font-semibold ${cfg.eyebrowColor}`}>{cfg.eyebrow}</p>
-            <h3 className="mt-0.5 font-serif text-xl font-bold leading-snug">{p.title}</h3>
-            <p className="mt-1 text-sm text-stone-500">{p.kind}</p>
+            <p className={`font-sans text-xs font-semibold ${cfg.eyebrowColor}`}>{cfg.eyebrow}</p>
+            <h3 className="mt-0.5 font-serif text-base font-bold leading-snug text-text">{p.title}</h3>
+            <p className="mt-1 font-sans text-xs text-text-muted">{p.kind}</p>
           </div>
         </div>
 
-        <p className="mt-4 text-[15px] leading-relaxed text-stone-700">{cfg.body}</p>
+        <p className="mt-4 font-sans text-sm leading-relaxed text-text">{cfg.body}</p>
 
         {cfg.cta && (
           <Link
             to="/dashboard/author_proposal/$id"
             params={{ id: p.id }}
             className={
-              "mt-5 flex w-full items-center justify-center gap-2 rounded-xl px-6 py-4 text-base font-semibold shadow-sm transition-colors " +
+              "mt-4 flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3 font-sans text-sm font-semibold shadow-sm transition-colors " +
               cfg.cta.className
             }
           >
@@ -683,7 +682,7 @@ function ProposalCard({ p }: { p: Proposal }) {
         )}
 
         {cfg.footnote && (
-          <p className="mt-4 flex items-start gap-2 text-sm text-stone-500">
+          <p className="mt-4 flex items-start gap-2 font-sans text-xs text-text-muted">
             <span className="mt-0.5">→</span>
             <span>{cfg.footnote}</span>
           </p>
