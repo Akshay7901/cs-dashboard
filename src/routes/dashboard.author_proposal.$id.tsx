@@ -740,7 +740,7 @@ function Card({
     <section id={id} className="scroll-mt-24 overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
       <div className="px-5 py-3.5 md:px-5">
         <h2 className="font-serif text-base font-bold" style={{ color: "#2C1A0E" }}>{title}</h2>
-        {subtitle && <p className="mt-1 font-sans text-xs" style={{ color: "#A6814A" }}>{subtitle}</p>}
+        {subtitle && <p className="mt-1 font-sans text-xs font-medium" style={{ color: "#7A6A5A" }}>{subtitle}</p>}
       </div>
       <div className="border-t border-stone-200 px-6 py-6 md:px-7">{children}</div>
     </section>
