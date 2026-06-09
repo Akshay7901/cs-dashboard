@@ -456,7 +456,7 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
         </div>
 
         <aside id="section-documents" className="row-span-2 scroll-mt-24 overflow-hidden rounded-2xl border border-stone-200 bg-stone-50/60">
-          <h3 className="px-5 pt-5 pb-4 font-serif text-lg font-semibold text-stone-900">Documents</h3>
+          <h3 className="px-5 py-3.5 font-serif text-base font-bold" style={{ color: "#2C1A0E" }}>Documents</h3>
           {allFiles.length === 0 ? (
             <p className="border-t border-stone-200 px-5 py-4 text-sm text-stone-500">No documents uploaded.</p>
           ) : (
@@ -713,9 +713,9 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-stone-200 bg-stone-50/60 px-4 py-5 text-center">
-      <p className="text-xs font-medium uppercase tracking-wider text-amber-800/80">{label}</p>
-      <p className="mt-2 font-serif text-xl font-bold text-stone-900">{value}</p>
+    <div className="rounded-2xl border border-stone-200 bg-stone-50/60 px-4 py-4 text-center">
+      <p className="font-sans text-xs font-medium" style={{ color: "#7A6A5A" }}>{label}</p>
+      <p className="mt-1 font-sans text-sm font-bold" style={{ color: "#2C1A0E" }}>{value}</p>
     </div>
   );
 }
@@ -742,9 +742,9 @@ function Card({
 }) {
   return (
     <section id={id} className="scroll-mt-24 overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
-      <div className="px-6 pb-5 pt-6 md:px-7">
-        <h2 className="font-serif text-xl font-bold text-stone-900">{title}</h2>
-        {subtitle && <p className="mt-1 text-sm text-amber-800/80">{subtitle}</p>}
+      <div className="px-5 py-3.5 md:px-5">
+        <h2 className="font-serif text-base font-bold" style={{ color: "#2C1A0E" }}>{title}</h2>
+        {subtitle && <p className="mt-1 font-sans text-xs" style={{ color: "#A6814A" }}>{subtitle}</p>}
       </div>
       <div className="border-t border-stone-200 px-6 py-6 md:px-7">{children}</div>
     </section>
@@ -763,8 +763,8 @@ function SubCard({ label, children }: { label: string; children: React.ReactNode
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-xs font-medium uppercase tracking-wider text-amber-800/80">{label}</p>
-      <p className="mt-1 text-[15px] font-semibold text-stone-900">{value}</p>
+      <p className="font-sans text-xs font-medium" style={{ color: "#7A6A5A" }}>{label}</p>
+      <p className="mt-0.5 font-sans text-sm font-medium" style={{ color: "#2C1A0E" }}>{value}</p>
     </div>
   );
 }
