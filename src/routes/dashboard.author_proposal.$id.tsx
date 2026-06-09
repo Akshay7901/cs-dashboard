@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronLeft, FileText, Download, Check, Circle } from "lucide-react";
+import { ChevronLeft, FileText, Check, X, Calendar } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
 import { initialsFromName, type StatusKey } from "@/lib/proposals";
 import { portalLogout, getPortalSession, getPortalToken } from "@/lib/auth";
@@ -104,6 +104,15 @@ function formatBytes(n?: number) {
   if (n < 1024) return `${n} B`;
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`;
   return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function formatMonthYear(iso?: string) {
+  if (!iso) return "—";
+  try {
+    return new Date(iso).toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+  } catch {
+    return iso;
+  }
 }
 
 type ManuscriptFile = { url: string; filename: string; size_bytes?: number };
