@@ -794,16 +794,13 @@ function ReviewersList({ raw }: { raw: string }) {
         const lines = block.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
         return (
           <li key={i} className="flex gap-4 border-t border-stone-200 py-4 first:border-t-0 first:pt-0">
-            <span className="font-serif text-lg font-bold text-amber-800/80">{i + 1}.</span>
-            <div className="space-y-0.5 text-[15px]">
+            <span className="font-sans text-sm font-semibold" style={{ color: "#7A6A5A" }}>{i + 1}.</span>
+            <div className="space-y-0.5">
               {lines.map((l, j) => (
                 <p
                   key={j}
-                  className={
-                    j === 0
-                      ? "font-semibold text-stone-900"
-                      : "text-stone-600"
-                  }
+                  className={j === 0 ? "font-sans text-sm font-bold" : "font-sans text-xs font-medium"}
+                  style={{ color: j === 0 ? "#2C1A0E" : "#7A6A5A" }}
                 >
                   {l}
                 </p>
