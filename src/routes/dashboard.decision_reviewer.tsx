@@ -291,9 +291,9 @@ function DecisionReviewerDashboard() {
     fetchReviewers();
   }, []);
 
-  const fetchProposals = async () => {
-    setProposalsLoading(true);
-    setProposalsError(null);
+  const fetchProposals = async (silent = false) => {
+    if (!silent) setProposalsLoading(true);
+    if (!silent) setProposalsError(null);
     try {
       // Fetch the default list (which carries the authoritative status_summary)
       // plus an explicit request per known status, then merge by ticket so
@@ -303,7 +303,7 @@ function DecisionReviewerDashboard() {
       const defaultRes = await proposalApiFetch("?limit=100&sort_order=desc", { headers });
       const defaultBody = (await defaultRes.json().catch(() => ({}))) as Record<string, unknown>;
       if (!defaultRes.ok) {
-        setProposalsError((defaultBody.error as string) || "Failed to load proposals.");
+        if (!silent) setProposalsError((defaultBody.error as string) || "Failed to load proposals.");
         return;
       }
       const merged = new Map<string, ApiProposal>();
@@ -333,14 +333,22 @@ function DecisionReviewerDashboard() {
       setApiProposals(Array.from(merged.values()).map(mapApiProposal));
       setStatusSummary((defaultBody.status_summary as Record<string, number>) || {});
     } catch {
-      setProposalsError("Network error. Please try again.");
+      if (!silent) setProposalsError("Network error. Please try again.");
     } finally {
-      setProposalsLoading(false);
+      if (!silent) setProposalsLoading(false);
     }
   };
 
   useEffect(() => {
     fetchProposals();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      void fetchProposals(true);
+    }, 30000);
+    return () => window.clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
