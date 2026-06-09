@@ -499,17 +499,27 @@ function DecisionReviewerDashboard() {
     const q = search.trim().toLowerCase();
     if (q) {
       list = list.filter((p) => {
-        const inTitle = p.title.toLowerCase().includes(q);
-        const inAuthor = p.authorName.toLowerCase().includes(q);
-        const inCountry = p.country.toLowerCase().includes(q);
-        const inInstitution = (p.institution || "").toLowerCase().includes(q);
-        const inSubject = (p.subject || "").toLowerCase().includes(q);
-        if (field === "title") return inTitle;
-        if (field === "author") return inAuthor;
-        if (field === "institution") return inInstitution;
-        if (field === "country") return inCountry;
-        if (field === "subject") return inSubject;
-        return inTitle || inAuthor || inCountry || inInstitution || inSubject;
+        const has = (v: unknown) =>
+          typeof v === "string" && v.toLowerCase().includes(q);
+        if (field === "title") return has(p.title);
+        if (field === "author") return has(p.authorName);
+        if (field === "institution") return has(p.institution);
+        if (field === "country") return has(p.country);
+        if (field === "subject") return has(p.subject);
+        // All fields: match against every searchable proposal attribute
+        return (
+          has(p.id) ||
+          has(p.title) ||
+          has(p.kind) ||
+          has(p.authorName) ||
+          has(p.authorAffiliation) ||
+          has(p.country) ||
+          has(p.institution) ||
+          has(p.subject) ||
+          has(p.rawStatus) ||
+          has(p.displayStatus) ||
+          has(p.submittedAt)
+        );
       });
     }
     list.sort((a, b) => {
