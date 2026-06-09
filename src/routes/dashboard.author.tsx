@@ -498,7 +498,7 @@ function AuthorDashboard() {
         <div className="h-[3px] bg-orange-500/80" />
       </header>
 
-      <div className="mx-auto max-w-4xl px-6 py-10">
+      <div className="mx-auto max-w-5xl px-6 py-10">
         {/* Hero */}
         <h1 className="font-serif text-4xl font-bold tracking-tight">My Proposals</h1>
         <p className="mt-2 text-stone-600">
