@@ -162,7 +162,7 @@ const PILLS: { key: PillKey; label: string; dot: string; match: (p: Proposal) =>
     dot: "bg-orange-500",
     match: (p) => ATTENTION.includes(p.status),
   },
-  { key: "in_review", label: "Under review", dot: "bg-sky-500", match: (p) => p.status === "in_review" },
+  { key: "in_review", label: "Peer review", dot: "bg-sky-500", match: (p) => p.status === "in_review" },
   {
     key: "revisions",
     label: "Revisions required",
