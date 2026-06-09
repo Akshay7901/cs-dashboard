@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Bell,
   Plus,
@@ -362,14 +362,59 @@ function AuthorDashboard() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
+  const loadMyProposals = useCallback(async (email: string, silent = false) => {
+    if (!silent) setLoading(true);
+    setLoadError(null);
+    try {
+      const token = getPortalToken();
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      };
+      const fetchList = async (qs = "") => {
+        const r = await proposalApiFetch(qs, { headers });
+        const b = (await r.json().catch(() => ({}))) as Record<string, unknown>;
+        if (!r.ok) return { ok: false as const, status: r.status, error: b.error as string };
+        const arr =
+          (b.proposals as ApiProposalItem[]) ||
+          (Array.isArray(b) ? (b as unknown as ApiProposalItem[]) : []);
+        return { ok: true as const, items: arr };
+      };
+      const def = await fetchList("?limit=100&sort_order=desc");
+      if (!def.ok) {
+        if (!silent) setLoadError(def.error || `Failed to load proposals (${def.status}).`);
+        return;
+      }
+      const extras = await Promise.all(
+        EXTRA_STATUSES.map((s) =>
+          fetchList(`?limit=100&sort_order=desc&status=${encodeURIComponent(s)}`),
+        ),
+      );
+      const merged = new Map<string, ApiProposalItem>();
+      for (const it of def.items || []) merged.set(it.ticket_number, it);
+      for (const r of extras) {
+        if (!r.ok) continue;
+        for (const it of r.items || []) {
+          if (!merged.has(it.ticket_number)) merged.set(it.ticket_number, it);
+        }
+      }
+      const lowerEmail = email.toLowerCase();
+      const mine = Array.from(merged.values()).filter((p) => {
+        const e = (p.email || p.current_data?.email || "").toLowerCase();
+        return !e || e === lowerEmail;
+      });
+      setMyProposals(mine.map(toProposal));
+    } catch {
+      if (!silent) setLoadError("Network error. Please try again.");
+    } finally {
+      if (!silent) setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     try {
       const session = getPortalSession();
-      if (!session) {
-        navigate({ to: "/login" });
-        return;
-      }
-      if (session.role !== "author") {
+      if (!session || session.role !== "author") {
         navigate({ to: "/login" });
         return;
       }
@@ -379,57 +424,15 @@ function AuthorDashboard() {
     } catch {
       navigate({ to: "/login" });
     }
+  }, [navigate, loadMyProposals]);
 
-    async function loadMyProposals(email: string) {
-      setLoading(true);
-      setLoadError(null);
-      try {
-        const token = getPortalToken();
-        const headers: Record<string, string> = {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        };
-        const fetchList = async (qs = "") => {
-          const r = await proposalApiFetch(qs, { headers });
-          const b = (await r.json().catch(() => ({}))) as Record<string, unknown>;
-          if (!r.ok) return { ok: false as const, status: r.status, error: b.error as string };
-          const arr =
-            (b.proposals as ApiProposalItem[]) ||
-            (Array.isArray(b) ? (b as unknown as ApiProposalItem[]) : []);
-          return { ok: true as const, items: arr };
-        };
-        const def = await fetchList("?limit=100&sort_order=desc");
-        if (!def.ok) {
-          setLoadError(def.error || `Failed to load proposals (${def.status}).`);
-          setLoading(false);
-          return;
-        }
-        const extras = await Promise.all(
-          EXTRA_STATUSES.map((s) =>
-            fetchList(`?limit=100&sort_order=desc&status=${encodeURIComponent(s)}`),
-          ),
-        );
-        const merged = new Map<string, ApiProposalItem>();
-        for (const it of def.items || []) merged.set(it.ticket_number, it);
-        for (const r of extras) {
-          if (!r.ok) continue;
-          for (const it of r.items || []) {
-            if (!merged.has(it.ticket_number)) merged.set(it.ticket_number, it);
-          }
-        }
-        const lowerEmail = email.toLowerCase();
-        const mine = Array.from(merged.values()).filter((p) => {
-          const e = (p.email || p.current_data?.email || "").toLowerCase();
-          return !e || e === lowerEmail;
-        });
-        setMyProposals(mine.map(toProposal));
-      } catch {
-        setLoadError("Network error. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    }
-  }, [navigate]);
+  useEffect(() => {
+    if (!authorEmail) return;
+    const id = window.setInterval(() => {
+      void loadMyProposals(authorEmail, true);
+    }, 30000);
+    return () => window.clearInterval(id);
+  }, [authorEmail, loadMyProposals]);
 
   const displayName = authorName || (myProposals[0]?.authorName ?? "Author");
   const initials = initialsFromName(displayName);
