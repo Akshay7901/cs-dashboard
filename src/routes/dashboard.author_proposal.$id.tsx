@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronLeft, FileText, Download, Check, Circle } from "lucide-react";
+import { ChevronLeft, FileText, Check, X, Calendar } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
 import { initialsFromName, type StatusKey } from "@/lib/proposals";
 import { portalLogout, getPortalSession, getPortalToken } from "@/lib/auth";
@@ -104,6 +104,15 @@ function formatBytes(n?: number) {
   if (n < 1024) return `${n} B`;
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`;
   return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function formatMonthYear(iso?: string) {
+  if (!iso) return "—";
+  try {
+    return new Date(iso).toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+  } catch {
+    return iso;
+  }
 }
 
 type ManuscriptFile = { url: string; filename: string; size_bytes?: number };
@@ -284,13 +293,13 @@ function AuthorProposalDetails() {
         <div className="h-[3px] bg-orange-500/80" />
       </header>
 
-      <div className="mx-auto max-w-4xl px-6 py-8">
+      <div className="mx-auto max-w-6xl px-6 py-8">
         <Link
           to="/dashboard/author"
           className="inline-flex items-center gap-1 text-sm font-medium text-stone-600 hover:text-stone-900"
         >
           <ChevronLeft className="h-4 w-4" />
-          Back to my proposals
+          Back to dashboard
         </Link>
 
         {loading && (
@@ -331,296 +340,466 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
     "—";
 
   return (
-    <article className="mt-6 overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
-      {/* Status banner */}
-      <div className={`flex items-center justify-between px-6 py-3 ${tint.bg}`}>
-        <div className="flex items-center gap-2 text-sm">
-          <span className={`h-2 w-2 rounded-full ${tint.dot}`} />
-          <span className={`font-semibold ${tint.text}`}>{STATUS_LABEL[status]}</span>
+    <>
+      {/* Hero card: title + status pill + stepper */}
+      <section className="mt-6 rounded-2xl border border-stone-200 bg-white p-6 shadow-sm md:p-8">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="font-serif text-3xl font-bold leading-tight text-stone-900 md:text-4xl">
+              {title}
+            </h1>
+            {subtitle && (
+              <p className="mt-1 font-serif text-lg text-stone-600">{subtitle}</p>
+            )}
+            <p className="mt-3 inline-flex items-center gap-2 text-sm text-stone-500">
+              <Calendar className="h-4 w-4" />
+              Submitted {formatDate(proposal.submittedAt)}
+            </p>
+          </div>
+          <span
+            className={`inline-flex items-center gap-2 rounded-full border border-stone-200 px-3 py-1 text-xs font-semibold ${tint.bg} ${tint.text}`}
+          >
+            <span className={`h-1.5 w-1.5 rounded-full ${tint.dot}`} />
+            {STATUS_LABEL[status]}
+          </span>
         </div>
-        <span className="text-xs text-stone-500">Ref: {proposal.ticket}</span>
+
+        <ProgressStepper timeline={proposal.timeline} status={status} />
+      </section>
+
+      {/* Tabs */}
+      <div className="mt-6 inline-flex rounded-xl border border-stone-200 bg-white p-1 shadow-sm">
+        <button className="rounded-lg bg-[#0f3a2e] px-5 py-2 text-sm font-semibold text-white">
+          Proposal Details
+        </button>
+        <button className="rounded-lg px-5 py-2 text-sm font-semibold text-stone-600 hover:text-stone-900">
+          Status History
+        </button>
       </div>
 
-      <div className="p-6 md:p-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">
-          {kind}
-        </p>
-        <h1 className="mt-2 font-serif text-3xl font-bold leading-tight">{title}</h1>
-        {subtitle && (
-          <p className="mt-1 font-serif text-lg text-stone-600">{subtitle}</p>
-        )}
-
-        {/* Meta grid */}
-        <div className="mt-6 grid grid-cols-1 gap-4 rounded-xl bg-stone-50 p-5 sm:grid-cols-2 md:grid-cols-3">
-          <Meta label="Submitted" value={formatDate(proposal.submittedAt)} />
-          <Meta label="Last updated" value={formatDate(proposal.updatedAt)} />
-          <Meta label="Subject" value={cd.subject || "—"} />
-          {cd.estimated_word_count !== undefined && (
-            <Meta
-              label="Estimated length"
-              value={`${Number(cd.estimated_word_count).toLocaleString()} words`}
-            />
-          )}
-          {cd.estimated_pages !== undefined && cd.estimated_pages !== null && (
-            <Meta label="Estimated pages" value={String(cd.estimated_pages)} />
-          )}
-          {cd.estimated_completion_date && (
-            <Meta label="Est. completion" value={formatDate(cd.estimated_completion_date)} />
-          )}
-          {cd.language && <Meta label="Language" value={cd.language} />}
-          {cd.secondary_subjects && cd.secondary_subjects.length > 0 && (
-            <Meta label="Secondary subjects" value={cd.secondary_subjects.join(", ")} />
-          )}
-          {cd.website_reference_number && (
-            <Meta label="Website ref" value={cd.website_reference_number} />
-          )}
-          {cd.source && <Meta label="Source" value={cd.source} />}
+      {/* Stats row + Documents sidebar */}
+      <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-[1fr_320px]">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <StatCard label="Type" value={kind} />
+          <StatCard
+            label="Word Count"
+            value={
+              cd.estimated_word_count
+                ? Number(cd.estimated_word_count).toLocaleString()
+                : "—"
+            }
+          />
+          <StatCard
+            label="Illustrations"
+            value={
+              cd.has_illustrations
+                ? String(cd.illustration_count ?? "Yes")
+                : "No"
+            }
+          />
+          <StatCard
+            label="Completion"
+            value={formatMonthYear(cd.estimated_completion_date)}
+          />
         </div>
 
-        {/* Author */}
-        <Section title="Author">
-          <div className="text-[15px] leading-relaxed text-stone-700">
-            <p className="font-medium text-stone-900">{authorFullName}</p>
-            {cd.institution && <p className="text-stone-600">{cd.institution}</p>}
-            {cd.address && <p className="text-stone-600">{cd.address}</p>}
-            {cd.country && !cd.address && <p className="text-stone-600">{cd.country}</p>}
-            {cd.email && <p className="text-stone-600">{cd.email}</p>}
-            {cd.phone && <p className="text-stone-600">{cd.phone}</p>}
-            {cd.biography && <p className="mt-3 whitespace-pre-wrap">{cd.biography}</p>}
-            {cd.co_authors && cd.co_authors.length > 0 && (
-              <div className="mt-4">
-                <p className="text-xs font-semibold uppercase tracking-wider text-stone-500">
-                  Co-authors
-                </p>
-                <ul className="mt-1 list-disc pl-5">
-                  {cd.co_authors.map((c, i) => (
-                    <li key={i}>
-                      {typeof c === "string"
-                        ? c
-                        : (c as { name?: string }).name ?? JSON.stringify(c)}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        </Section>
-
-        {/* Overview */}
-        {(cd.detailed_description || cd.overview) && (
-          <Section title="Overview">
-            <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
-              {cd.detailed_description || cd.overview}
-            </p>
-          </Section>
-        )}
-
-        {/* Key features */}
-        {cd.key_features && (
-          <Section title="Key features">
-            <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
-              {cd.key_features}
-            </p>
-          </Section>
-        )}
-
-        {/* USP */}
-        {cd.unique_selling_points && (
-          <Section title="Unique selling points">
-            <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
-              {cd.unique_selling_points}
-            </p>
-          </Section>
-        )}
-
-        {/* Audience */}
-        {cd.target_audience && (
-          <Section title="Intended audience">
-            <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
-              {cd.target_audience}
-            </p>
-          </Section>
-        )}
-
-        {/* Primary market */}
-        {cd.primary_market && (
-          <Section title="Primary market">
-            <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
-              {cd.primary_market}
-            </p>
-          </Section>
-        )}
-
-        {/* TOC */}
-        {cd.table_of_contents && (
-          <Section title="Table of contents">
-            <pre className="whitespace-pre-wrap font-sans text-[15px] leading-relaxed text-stone-700">
-              {cd.table_of_contents}
-            </pre>
-          </Section>
-        )}
-
-        {/* Manuscript details */}
-        <Section title="Manuscript details">
-          <div className="grid grid-cols-1 gap-4 rounded-xl bg-stone-50 p-5 sm:grid-cols-2 md:grid-cols-3">
-            <Meta label="Has tables" value={fmtBool(cd.has_tables)} />
-            <Meta
-              label="Illustrations"
-              value={
-                cd.has_illustrations
-                  ? cd.illustration_count
-                    ? `Yes (${cd.illustration_count})`
-                    : "Yes"
-                  : "No"
-              }
-            />
-            <Meta
-              label="Previously published"
-              value={fmtBool(cd.is_previously_published)}
-            />
-          </div>
-        </Section>
-
-        {/* Market */}
-        {cd.competing_titles && (
-          <Section title="Competing titles">
-            <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
-              {cd.competing_titles}
-            </p>
-          </Section>
-        )}
-
-        {/* Conferences */}
-        {cd.conferences && (
-          <Section title="Conferences">
-            <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
-              {cd.conferences}
-            </p>
-          </Section>
-        )}
-
-        {/* Promotional channels */}
-        {cd.promotional_channels && (
-          <Section title="Promotional channels">
-            <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
-              {cd.promotional_channels}
-            </p>
-          </Section>
-        )}
-
-        {/* Recommended reviewers */}
-        {cd.recommended_reviewers && (
-          <Section title="Recommended reviewers">
-            <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
-              {cd.recommended_reviewers}
-            </p>
-          </Section>
-        )}
-
-        {/* Files */}
-        {allFiles.length > 0 && (
-          <Section title="Supporting documents">
-            <ul className="divide-y divide-stone-100 rounded-xl border border-stone-200">
+        <aside className="row-span-2 rounded-2xl border border-amber-200/60 bg-amber-50/40 p-5">
+          <h3 className="font-serif text-lg font-semibold text-stone-900">Documents</h3>
+          {allFiles.length === 0 ? (
+            <p className="mt-3 text-sm text-stone-500">No documents uploaded.</p>
+          ) : (
+            <ul className="mt-4 space-y-3">
               {allFiles.map((f, i) => (
-                <li
-                  key={`${f.filename}-${i}`}
-                  className="flex items-center justify-between gap-3 px-4 py-3"
-                >
-                  <div className="flex min-w-0 items-center gap-3">
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-stone-100 text-stone-600">
-                      <FileText className="h-4 w-4" />
-                    </span>
+                <li key={`${f.filename}-${i}`}>
+                  <a
+                    href={f.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="group flex items-start gap-3 rounded-lg border border-transparent p-2 hover:border-amber-200 hover:bg-white"
+                  >
+                    <FileText className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-stone-900">
+                      <p className="truncate text-sm font-semibold text-stone-900 group-hover:underline">
                         {f.filename}
                       </p>
                       {f.size_bytes ? (
                         <p className="text-xs text-stone-500">{formatBytes(f.size_bytes)}</p>
                       ) : null}
                     </div>
-                  </div>
-                  <a
-                    href={f.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1 rounded-lg border border-stone-200 px-3 py-1.5 text-sm font-medium text-stone-700 hover:bg-stone-50"
-                  >
-                    <Download className="h-4 w-4" />
-                    Download
                   </a>
                 </li>
               ))}
             </ul>
-          </Section>
-        )}
+          )}
+        </aside>
 
-        {/* Timeline */}
-        {proposal.timeline && proposal.timeline.length > 0 && (
-          <Section title="Progress">
-            <ol className="space-y-3">
-              {proposal.timeline.map((stage) => {
-                const done = !!stage.is_completed;
-                const current = !!stage.is_current;
-                return (
-                  <li
-                    key={stage.stage_name}
-                    className="flex items-start gap-3 rounded-xl border border-stone-200 bg-white px-4 py-3"
-                  >
-                    <span
-                      className={
-                        "mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full " +
-                        (done
-                          ? "bg-emerald-100 text-emerald-700"
-                          : current
-                            ? "bg-sky-100 text-sky-700"
-                            : "bg-stone-100 text-stone-400")
-                      }
-                    >
-                      {done ? (
-                        <Check className="h-3.5 w-3.5" />
-                      ) : (
-                        <Circle className="h-3 w-3" />
-                      )}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-stone-900">
-                        {stage.display_name}
-                      </p>
-                      <p className="text-xs text-stone-500">
-                        {stage.completed_at
-                          ? `Completed ${formatDate(stage.completed_at)}`
-                          : stage.started_at
-                            ? `Started ${formatDate(stage.started_at)}`
-                            : current
-                              ? "In progress"
-                              : "Pending"}
-                      </p>
-                    </div>
-                  </li>
-                );
-              })}
-            </ol>
-          </Section>
-        )}
+        {/* Main content stack (under stats, beside Documents) */}
+        <div className="space-y-5">
+          {/* Primary author card */}
+          <Card title="Primary Author / Editor">
+            <div className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2">
+              <Field label="Name" value={authorFullName} />
+              <Field label="Email" value={cd.email || "—"} />
+              {cd.institution && <Field label="Institution" value={cd.institution} />}
+              {cd.country && <Field label="Country" value={cd.country} />}
+            </div>
+            {cd.address && (
+              <div className="mt-6 rounded-xl border border-stone-200 bg-stone-50/60 p-4">
+                <p className="text-xs font-medium uppercase tracking-wider text-amber-800/80">
+                  Mailing Address
+                </p>
+                <p className="mt-1 text-[15px] text-stone-800">{cd.address}</p>
+              </div>
+            )}
+            {cd.biography && (
+              <div className="mt-4">
+                <p className="text-xs font-medium uppercase tracking-wider text-amber-800/80">
+                  Biography
+                </p>
+                <p className="mt-1 whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
+                  {cd.biography}
+                </p>
+              </div>
+            )}
+          </Card>
+
+          {/* Summary & Description */}
+          {(cd.detailed_description ||
+            cd.overview ||
+            cd.key_features ||
+            cd.target_audience) && (
+            <Card title="Summary & Description">
+              <p className="-mt-2 text-sm text-amber-800/80">
+                {[cd.subject, cd.secondary_subjects?.join(" / ")]
+                  .filter(Boolean)
+                  .join(" · ") || "—"}
+              </p>
+              <div className="mt-5 space-y-4">
+                {(cd.detailed_description || cd.overview) && (
+                  <SubCard label="Overview">
+                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
+                      {cd.detailed_description || cd.overview}
+                    </p>
+                    {cd.secondary_subjects && cd.secondary_subjects.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {cd.secondary_subjects.map((t) => (
+                          <span
+                            key={t}
+                            className="rounded-full bg-amber-100/70 px-3 py-1 text-xs font-medium text-amber-900"
+                          >
+                            {t}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </SubCard>
+                )}
+                {cd.key_features && (
+                  <SubCard label="Key Features & Unique Contribution">
+                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
+                      {cd.key_features}
+                    </p>
+                  </SubCard>
+                )}
+                {cd.unique_selling_points && (
+                  <SubCard label="Unique Selling Points">
+                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
+                      {cd.unique_selling_points}
+                    </p>
+                  </SubCard>
+                )}
+                {cd.target_audience && (
+                  <SubCard label="Intended Audience">
+                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
+                      {cd.target_audience}
+                    </p>
+                  </SubCard>
+                )}
+                {cd.language && (
+                  <SubCard label="Contains Non-English Content">
+                    <p className="text-[15px] text-stone-900">
+                      {cd.language.toLowerCase() === "english" ? "No" : `Yes (${cd.language})`}
+                    </p>
+                  </SubCard>
+                )}
+              </div>
+            </Card>
+          )}
+
+          {/* TOC */}
+          {cd.table_of_contents && (
+            <Card title="Table of Contents">
+              <TocList raw={cd.table_of_contents} />
+            </Card>
+          )}
+
+          {/* Market & Competition */}
+          {(cd.unique_selling_points || cd.competing_titles || cd.primary_market) && (
+            <Card title="Market & Competition">
+              <div className="space-y-4">
+                {cd.primary_market && (
+                  <SubCard label="Primary Market">
+                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
+                      {cd.primary_market}
+                    </p>
+                  </SubCard>
+                )}
+                {cd.unique_selling_points && (
+                  <SubCard label="Why is this book needed?">
+                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
+                      {cd.unique_selling_points}
+                    </p>
+                  </SubCard>
+                )}
+                {cd.competing_titles && (
+                  <SubCard label="Competing Titles">
+                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
+                      {cd.competing_titles}
+                    </p>
+                  </SubCard>
+                )}
+              </div>
+            </Card>
+          )}
+
+          {/* Suggested reviewers */}
+          {cd.recommended_reviewers && (
+            <Card title="Suggested Reviewers" subtitle="Nominated for consideration">
+              <ReviewersList raw={cd.recommended_reviewers} />
+            </Card>
+          )}
+
+          {/* Manuscript details / extras */}
+          <Card title="Manuscript Details">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <MiniStat label="Has tables" value={fmtBool(cd.has_tables)} />
+              <MiniStat
+                label="Illustrations"
+                value={
+                  cd.has_illustrations
+                    ? cd.illustration_count
+                      ? `Yes (${cd.illustration_count})`
+                      : "Yes"
+                    : "No"
+                }
+              />
+              <MiniStat
+                label="Previously published"
+                value={fmtBool(cd.is_previously_published)}
+              />
+            </div>
+          </Card>
+
+          {/* Additional notes */}
+          {(cd.conferences || cd.promotional_channels) && (
+            <Card title="Additional Notes" subtitle="Copyright, permissions, special considerations">
+              <div className="space-y-4">
+                {cd.conferences && (
+                  <SubCard label="Conferences">
+                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
+                      {cd.conferences}
+                    </p>
+                  </SubCard>
+                )}
+                {cd.promotional_channels && (
+                  <SubCard label="Promotional Channels">
+                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
+                      {cd.promotional_channels}
+                    </p>
+                  </SubCard>
+                )}
+              </div>
+            </Card>
+          )}
+        </div>
       </div>
-    </article>
+    </>
   );
 }
 
-function Meta({ label, value }: { label: string; value: string }) {
+function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div>
-      <p className="text-xs font-medium uppercase tracking-wider text-stone-500">{label}</p>
-      <p className="mt-1 text-sm text-stone-900">{value}</p>
+    <div className="rounded-2xl border border-amber-200/60 bg-amber-50/40 px-4 py-5 text-center">
+      <p className="text-xs font-medium uppercase tracking-wider text-amber-800/80">{label}</p>
+      <p className="mt-2 font-serif text-xl font-bold text-stone-900">{value}</p>
     </div>
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function MiniStat({ label, value }: { label: string; value: string }) {
   return (
-    <section className="mt-8">
-      <h2 className="font-serif text-lg font-semibold text-stone-900">{title}</h2>
-      <div className="mt-3">{children}</div>
+    <div className="rounded-xl border border-stone-200 bg-stone-50/60 px-4 py-3">
+      <p className="text-xs font-medium uppercase tracking-wider text-amber-800/80">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-stone-900">{value}</p>
+    </div>
+  );
+}
+
+function Card({
+  title,
+  subtitle,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm md:p-7">
+      <h2 className="font-serif text-xl font-bold text-stone-900">{title}</h2>
+      {subtitle && <p className="mt-1 text-sm text-amber-800/80">{subtitle}</p>}
+      <div className={subtitle ? "mt-5" : "mt-5"}>{children}</div>
     </section>
+  );
+}
+
+function SubCard({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border border-stone-200 bg-stone-50/60 p-5">
+      <p className="text-xs font-semibold uppercase tracking-wider text-amber-800/80">{label}</p>
+      <div className="mt-2">{children}</div>
+    </div>
+  );
+}
+
+function Field({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-xs font-medium uppercase tracking-wider text-amber-800/80">{label}</p>
+      <p className="mt-1 text-[15px] font-semibold text-stone-900">{value}</p>
+    </div>
+  );
+}
+
+function TocList({ raw }: { raw: string }) {
+  const items = raw
+    .split(/\r?\n/)
+    .map((l) => l.replace(/^\s*\d+[\).\s-]*/, "").trim())
+    .filter(Boolean);
+  if (items.length === 0) return null;
+  return (
+    <div className="rounded-xl border border-stone-200 bg-stone-50/60 p-5">
+      <ol className="space-y-2 text-[15px] text-stone-800">
+        {items.map((item, i) => (
+          <li key={i} className="flex gap-2">
+            <span className="font-semibold text-amber-800/80">{i + 1}.</span>
+            <span>{item}</span>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+function ReviewersList({ raw }: { raw: string }) {
+  const blocks = raw
+    .split(/\n\s*\n|;\s*/)
+    .map((b) => b.trim())
+    .filter(Boolean);
+  return (
+    <ol className="space-y-4">
+      {blocks.map((block, i) => {
+        const lines = block.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        return (
+          <li key={i} className="flex gap-4 rounded-xl border border-stone-200 bg-stone-50/60 p-4">
+            <span className="font-serif text-lg font-bold text-amber-800/80">{i + 1}.</span>
+            <div className="space-y-0.5 text-[15px]">
+              {lines.map((l, j) => (
+                <p
+                  key={j}
+                  className={
+                    j === 0
+                      ? "font-semibold text-stone-900"
+                      : "text-stone-600"
+                  }
+                >
+                  {l}
+                </p>
+              ))}
+            </div>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+function ProgressStepper({
+  timeline,
+  status,
+}: {
+  timeline?: TimelineStage[];
+  status: StatusKey;
+}) {
+  // Build a normalized 4-stage stepper: Submitted → Peer Review → Decision → Final
+  const declined = status === "declined";
+  const finalLabel = declined
+    ? "Declined"
+    : status === "signed"
+      ? "Signed"
+      : status === "contract"
+        ? "Contract"
+        : "Decision";
+
+  const submittedDone = true;
+  const reviewDone =
+    !!timeline?.some((t) => /review/i.test(t.stage_name) && t.is_completed) ||
+    ["review_returned", "contract", "signed", "declined", "major_revisions"].includes(status);
+  const decisionDone =
+    !!timeline?.some((t) => /decision|contract/i.test(t.stage_name) && t.is_completed) ||
+    ["contract", "signed", "declined"].includes(status);
+  const finalDone = ["signed", "declined"].includes(status);
+
+  const stages = [
+    { label: "Submitted", done: submittedDone, failed: false },
+    { label: "Peer Review", done: reviewDone, failed: false },
+    { label: "Decision", done: decisionDone, failed: false },
+    { label: finalLabel, done: finalDone, failed: declined },
+  ];
+
+  return (
+    <div className="mt-8">
+      <div className="flex items-start">
+        {stages.map((s, i) => (
+          <div key={s.label} className="flex flex-1 flex-col items-center">
+            <div className="flex w-full items-center">
+              {i > 0 && (
+                <div
+                  className={`h-[3px] flex-1 ${
+                    stages[i - 1].done ? "bg-[#0f3a2e]" : "bg-stone-200"
+                  }`}
+                />
+              )}
+              <span
+                className={
+                  "grid h-9 w-9 shrink-0 place-items-center rounded-full " +
+                  (s.failed
+                    ? "bg-stone-300 text-white"
+                    : s.done
+                      ? "bg-[#0f3a2e] text-white"
+                      : "bg-stone-200 text-stone-500")
+                }
+              >
+                {s.failed ? (
+                  <X className="h-4 w-4" />
+                ) : s.done ? (
+                  <Check className="h-4 w-4" />
+                ) : (
+                  <span className="text-sm font-semibold">{i + 1}</span>
+                )}
+              </span>
+              {i < stages.length - 1 && (
+                <div
+                  className={`h-[3px] flex-1 ${
+                    s.done ? "bg-[#0f3a2e]" : "bg-stone-200"
+                  }`}
+                />
+              )}
+            </div>
+            <p className="mt-2 text-sm font-medium text-stone-700">{s.label}</p>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
