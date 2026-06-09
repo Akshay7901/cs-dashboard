@@ -259,9 +259,11 @@ function AuthorDashboard() {
   const myProposals = useMemo(
     () => {
       const email = authorEmail.toLowerCase();
-      // Demo alias: the seeded demo author maps to Dr. Sarah Chen's proposals.
-      const aliased = email === "author@university.edu" ? "s.chen@oxford.ac.uk" : email;
-      return PROPOSALS.filter((p) => p.authorEmail.toLowerCase() === aliased);
+      const direct = PROPOSALS.filter((p) => p.authorEmail.toLowerCase() === email);
+      if (direct.length > 0) return direct;
+      // Demo fallback: real backend accounts won't match seeded fixture emails,
+      // so surface Dr. Sarah Chen's seeded proposals as the demo author set.
+      return PROPOSALS.filter((p) => p.authorEmail.toLowerCase() === "s.chen@oxford.ac.uk");
     },
     [authorEmail],
   );
