@@ -411,7 +411,7 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
             </p>
           </div>
           <span
-            className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 font-sans text-xs font-semibold ${tint.bg} ${tint.text} ${tint.border ?? "border-stone-200"}`}
+            className={`inline-flex items-center gap-1.5 rounded-md border border-stone-200 px-2.5 py-1 font-sans text-xs font-semibold ${tint.bg} ${tint.text}`}
           >
             <span className={`h-1.5 w-1.5 rounded-full ${tint.dot}`} />
             {STATUS_LABEL[status]}
