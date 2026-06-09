@@ -15,6 +15,7 @@ const STATUS_MAP: Record<string, StatusKey> = {
   new: "submitted",
   submitted: "submitted",
   in_review: "in_review",
+  peer_review: "in_review",
   review_returned: "review_returned",
   contract_issued: "contract",
   contract_received: "contract",
@@ -33,6 +34,7 @@ const STATUS_MAP: Record<string, StatusKey> = {
 const DISPLAY_STATUS_MAP: Record<string, StatusKey> = {
   "in review": "in_review",
   "under review": "in_review",
+  "peer review": "in_review",
   "review returned": "review_returned",
   "contract issued": "contract",
   "contract received": "contract",
@@ -65,7 +67,7 @@ function normalizeStatus(raw?: string, display?: string): StatusKey {
 const STATUS_LABEL: Record<StatusKey, string> = {
   submitted: "Submitted",
   revisions: "Revisions Requested",
-  in_review: "Under Review",
+  in_review: "Peer Review",
   review_returned: "Review Returned",
   major_revisions: "Major Revisions Required",
   question: "Question Raised",

@@ -39,6 +39,7 @@ const STATUS_MAP: Record<string, StatusKey> = {
   new: "submitted",
   submitted: "submitted",
   in_review: "in_review",
+  peer_review: "in_review",
   review_returned: "review_returned",
   contract_issued: "contract",
   contract_received: "contract",
@@ -57,6 +58,7 @@ const STATUS_MAP: Record<string, StatusKey> = {
 const DISPLAY_STATUS_MAP: Record<string, StatusKey> = {
   "in review": "in_review",
   "under review": "in_review",
+  "peer review": "in_review",
   "review returned": "review_returned",
   "contract issued": "contract",
   "contract received": "contract",
@@ -283,7 +285,7 @@ function configFor(p: Proposal): CardConfig {
       };
     case "in_review":
       return {
-        bannerLabel: "Under Review",
+        bannerLabel: "Peer Review",
         bannerDot: "bg-sky-500",
         bannerTint: "bg-sky-50",
         bannerText: "text-sky-700",
