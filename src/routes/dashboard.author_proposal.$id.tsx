@@ -446,7 +446,7 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
               {cd.country && <Field label="Country" value={cd.country} />}
             </div>
             {cd.address && (
-              <div className="mt-6 rounded-xl border border-stone-200 bg-stone-50/60 p-4">
+              <div className="mt-6 border-t border-stone-200 pt-5">
                 <p className="text-xs font-medium uppercase tracking-wider text-amber-800/80">
                   Mailing Address
                 </p>
@@ -454,7 +454,7 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
               </div>
             )}
             {cd.biography && (
-              <div className="mt-4">
+              <div className="mt-5 border-t border-stone-200 pt-5">
                 <p className="text-xs font-medium uppercase tracking-wider text-amber-800/80">
                   Biography
                 </p>
