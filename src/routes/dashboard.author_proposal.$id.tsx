@@ -933,7 +933,7 @@ function ProgressStepper({
               type="button"
               onClick={() => scrollTo(s.anchor)}
               className={
-                "mt-2 text-center text-sm font-medium hover:underline focus:outline-none " +
+                "mt-2 text-center font-sans text-xs font-medium hover:underline focus:outline-none " +
                 (s.current ? "text-amber-700" : s.done ? "text-stone-900" : "text-stone-500")
               }
             >
