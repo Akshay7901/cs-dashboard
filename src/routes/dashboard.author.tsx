@@ -547,8 +547,8 @@ function AuthorDashboard() {
                   "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition-colors " +
                   (active
                     ? isAll
-                      ? "border-emerald-900 bg-emerald-900 text-white"
-                      : "border-stone-900 bg-stone-900 text-white"
+                      ? "border-[#00422F] bg-[#00422F] text-white"
+                      : "border-[#00422F] bg-[#00422F] text-white"
                     : "border-stone-200 bg-white text-stone-700 hover:border-stone-300")
                 }
               >
@@ -568,12 +568,12 @@ function AuthorDashboard() {
         </div>
 
         {/* Submit a proposal */}
-        <div className="mt-6 flex items-center justify-between rounded-2xl border border-stone-200 bg-white p-5">
+        <div className="mb-6 mt-6 flex items-center justify-between rounded-xl border border-stone-200 bg-white p-4">
           <div>
-            <p className="font-semibold">Have a new book idea?</p>
-            <p className="text-sm text-stone-600">Submit a new proposal to our editorial team.</p>
+            <p className="font-sans text-sm font-semibold text-text">Have a new book idea?</p>
+            <p className="font-sans text-xs text-text-muted mt-0.5">Submit a new proposal to our editorial team.</p>
           </div>
-          <button className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-5 py-3 font-medium text-white shadow-sm hover:bg-orange-600">
+          <button className="inline-flex items-center gap-2 rounded-xl bg-[#E6674A] px-4 py-2.5 font-sans text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#d35a3f]">
             <Plus className="h-4 w-4" />
             Submit a proposal
           </button>
