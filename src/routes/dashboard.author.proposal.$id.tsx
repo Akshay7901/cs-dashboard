@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronLeft, FileText, Download } from "lucide-react";
+import { ChevronLeft, FileText, Download, Check, Circle } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
 import { initialsFromName, type StatusKey } from "@/lib/proposals";
 import { portalLogout, getPortalSession, getPortalToken } from "@/lib/auth";
@@ -124,14 +124,19 @@ type CurrentData = Record<string, unknown> & {
   author_last_name?: string;
   author_title?: string;
   email?: string;
+  phone?: string;
+  address?: string;
   institution?: string;
   country?: string;
   biography?: string;
+  co_authors?: unknown[];
   estimated_word_count?: number;
   estimated_pages?: number | null;
   estimated_completion_date?: string;
+  has_tables?: boolean;
   has_illustrations?: boolean;
   illustration_count?: number;
+  is_previously_published?: boolean;
   detailed_description?: string;
   overview?: string;
   table_of_contents?: string;
@@ -140,7 +145,21 @@ type CurrentData = Record<string, unknown> & {
   target_audience?: string;
   primary_market?: string;
   competing_titles?: string;
+  conferences?: string;
+  promotional_channels?: string;
+  recommended_reviewers?: string;
+  website_reference_number?: string;
+  source?: string;
   manuscript_files?: ManuscriptFiles;
+};
+
+type TimelineStage = {
+  stage_name: string;
+  display_name: string;
+  completed_at?: string | null;
+  started_at?: string | null;
+  is_current?: boolean;
+  is_completed?: boolean;
 };
 
 type ProposalState = {
@@ -149,6 +168,9 @@ type ProposalState = {
   displayStatus?: string;
   submittedAt?: string;
   updatedAt?: string;
+  internalStatus?: string;
+  websiteRef?: string;
+  timeline?: TimelineStage[];
   cd: CurrentData;
 };
 
@@ -205,6 +227,8 @@ function AuthorProposalDetails() {
             displayStatus: body.display_status as string | undefined,
             submittedAt: body.submitted_at as string | undefined,
             updatedAt: body.updated_at as string | undefined,
+            internalStatus: body.internal_status as string | undefined,
+            timeline: (body.timeline as TimelineStage[]) || [],
             cd,
           });
           setLoading(false);
