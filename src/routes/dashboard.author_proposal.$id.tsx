@@ -735,8 +735,25 @@ function ProgressStepper({
 }) {
   const declined = status === "declined";
 
+  function anchorFor(stageName?: string, label?: string): string {
+    const s = `${stageName || ""} ${label || ""}`.toLowerCase();
+    if (/submit|new|receiv/.test(s)) return "section-hero";
+    if (/review|peer|assess/.test(s)) return "section-reviewers";
+    if (/contract|sign|approv|lock/.test(s)) return "section-documents";
+    if (/decision|editor/.test(s)) return "section-summary";
+    if (/revis|info|question|quer/.test(s)) return "section-summary";
+    if (/declin|reject/.test(s)) return "section-hero";
+    if (/final|publish|product/.test(s)) return "section-documents";
+    return "section-hero";
+  }
+
+  function scrollTo(id: string) {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   // Prefer the timeline returned by the API; fall back to a 4-stage default.
-  const stages: { label: string; done: boolean; current: boolean; failed: boolean }[] =
+  const stages: { label: string; done: boolean; current: boolean; failed: boolean; anchor: string }[] =
     timeline && timeline.length > 0
       ? timeline.map((t) => {
           const isDeclineStage = /declin|reject/i.test(t.stage_name) || /declin|reject/i.test(t.display_name);
@@ -745,27 +762,31 @@ function ProgressStepper({
             done: !!t.is_completed,
             current: !!t.is_current,
             failed: isDeclineStage && (!!t.is_completed || !!t.is_current),
+            anchor: anchorFor(t.stage_name, t.display_name),
           };
         })
       : [
-          { label: "Submitted", done: true, current: false, failed: false },
+          { label: "Submitted", done: true, current: false, failed: false, anchor: "section-hero" },
           {
             label: "Peer Review",
             done: ["review_returned", "contract", "signed", "declined", "major_revisions"].includes(status),
             current: status === "in_review",
             failed: false,
+            anchor: "section-reviewers",
           },
           {
             label: "Decision",
             done: ["contract", "signed", "declined"].includes(status),
             current: status === "review_returned",
             failed: false,
+            anchor: "section-summary",
           },
           {
             label: declined ? "Declined" : status === "signed" ? "Signed" : status === "contract" ? "Contract" : "Decision",
             done: ["signed", "declined"].includes(status),
             current: status === "contract",
             failed: declined,
+            anchor: "section-documents",
           },
         ];
 
@@ -782,9 +803,12 @@ function ProgressStepper({
                   }`}
                 />
               )}
-              <span
+              <button
+                type="button"
+                onClick={() => scrollTo(s.anchor)}
+                title={`Jump to ${s.label}`}
                 className={
-                  "grid h-9 w-9 shrink-0 place-items-center rounded-full " +
+                  "grid h-9 w-9 shrink-0 place-items-center rounded-full transition hover:scale-110 focus:outline-none focus:ring-2 focus:ring-amber-300 " +
                   (s.failed
                     ? "bg-stone-300 text-white"
                     : s.done
@@ -801,7 +825,7 @@ function ProgressStepper({
                 ) : (
                   <span className="text-sm font-semibold">{i + 1}</span>
                 )}
-              </span>
+              </button>
               {i < stages.length - 1 && (
                 <div
                   className={`h-[3px] flex-1 ${
@@ -810,14 +834,16 @@ function ProgressStepper({
                 />
               )}
             </div>
-            <p
+            <button
+              type="button"
+              onClick={() => scrollTo(s.anchor)}
               className={
-                "mt-2 text-center text-sm font-medium " +
+                "mt-2 text-center text-sm font-medium hover:underline focus:outline-none " +
                 (s.current ? "text-amber-700" : s.done ? "text-stone-900" : "text-stone-500")
               }
             >
               {s.label}
-            </p>
+            </button>
           </div>
         ))}
       </div>
