@@ -41,6 +41,7 @@ type ApiProposal = {
   status: string;
   display_status?: string;
   action_required?: boolean;
+  current_data?: Record<string, string | undefined>;
   assignments?: Array<{
     reviewer_email?: string;
     assigned_at?: string;
@@ -56,6 +57,8 @@ type ProposalRow = {
   authorName: string;
   authorAffiliation: string;
   country: string;
+  institution: string;
+  subject: string;
   submittedAt: string;
   status: StatusKey;
   rawStatus: string;
@@ -131,19 +134,26 @@ const normalizeStatus = (raw: string, display?: string): StatusKey => {
   return "submitted";
 };
 
-const mapApiProposal = (p: ApiProposal): ProposalRow => ({
-  id: p.ticket_number,
-  title: p.title,
-  kind: "Proposal",
-  authorName: p.corresponding_author || displayNameFromEmail(p.email || ""),
-  authorAffiliation: p.email || "",
-  country: p.country || "—",
-  submittedAt: p.submitted_at,
-  status: deriveProposalStatus(p),
-  rawStatus: p.status,
-  displayStatus: deriveDisplayStatus(p),
-  actionRequired: p.action_required,
-});
+const mapApiProposal = (p: ApiProposal): ProposalRow => {
+  const cd = p.current_data || {};
+  const institution = cd.affiliation || cd.institution || "";
+  const subject = cd.discipline || cd.subject_area || cd.subject || "";
+  return {
+    id: p.ticket_number,
+    title: p.title,
+    kind: "Proposal",
+    authorName: p.corresponding_author || displayNameFromEmail(p.email || ""),
+    authorAffiliation: institution || p.email || "",
+    country: p.country || "—",
+    institution,
+    subject,
+    submittedAt: p.submitted_at,
+    status: deriveProposalStatus(p),
+    rawStatus: p.status,
+    displayStatus: deriveDisplayStatus(p),
+    actionRequired: p.action_required,
+  };
+};
 
 // When the API still reports raw status="new" but a peer review has been
 // returned, the proposal effectively belongs in In Review / Review Returned.
@@ -195,7 +205,9 @@ function DecisionReviewerDashboard() {
   const [userName, setUserName] = useState<string>("");
   const [activeFilter, setActiveFilter] = useState<"all" | StatusKey>("all");
   const [search, setSearch] = useState("");
-  const [field, setField] = useState<"all" | "title" | "author" | "country">("all");
+  const [field, setField] = useState<
+    "all" | "title" | "author" | "institution" | "country" | "subject"
+  >("all");
   const [sort, setSort] = useState<"newest" | "oldest">("newest");
   const [statusOverrides, setStatusOverrides] = useState<Record<string, StatusKey>>({});
   const [assignedProposalIds, setAssignedProposalIds] = useState<Set<string>>(new Set());
@@ -490,10 +502,14 @@ function DecisionReviewerDashboard() {
         const inTitle = p.title.toLowerCase().includes(q);
         const inAuthor = p.authorName.toLowerCase().includes(q);
         const inCountry = p.country.toLowerCase().includes(q);
+        const inInstitution = (p.institution || "").toLowerCase().includes(q);
+        const inSubject = (p.subject || "").toLowerCase().includes(q);
         if (field === "title") return inTitle;
         if (field === "author") return inAuthor;
+        if (field === "institution") return inInstitution;
         if (field === "country") return inCountry;
-        return inTitle || inAuthor || inCountry;
+        if (field === "subject") return inSubject;
+        return inTitle || inAuthor || inCountry || inInstitution || inSubject;
       });
     }
     list.sort((a, b) => {
@@ -614,13 +630,25 @@ function DecisionReviewerDashboard() {
           <div className="relative">
             <select
               value={field}
-              onChange={(e) => setField(e.target.value as "all" | "title" | "author" | "country")}
+              onChange={(e) =>
+                setField(
+                  e.target.value as
+                    | "all"
+                    | "title"
+                    | "author"
+                    | "institution"
+                    | "country"
+                    | "subject",
+                )
+              }
               className="appearance-none rounded-xl border border-stone-200 bg-white py-2.5 pl-4 pr-9 font-sans text-sm text-stone-700 focus:outline-none focus:ring-2 focus:ring-stone-300"
             >
               <option value="all">All fields</option>
               <option value="title">Title</option>
               <option value="author">Author</option>
+              <option value="institution">Institution</option>
               <option value="country">Country</option>
+              <option value="subject">Subject</option>
             </select>
             <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
           </div>
