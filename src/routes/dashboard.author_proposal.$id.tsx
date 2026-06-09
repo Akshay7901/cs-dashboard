@@ -750,7 +750,7 @@ function Card({
 function SubCard({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="border-t border-stone-200 pt-5 first:border-t-0 first:pt-0">
-      <p className="font-sans text-xs font-medium" style={{ color: "#7A6A5A" }}>{label}</p>
+      <p className="font-sans text-xs font-semibold uppercase tracking-wide" style={{ color: "#7A6A5A" }}>{label}</p>
       <div className="mt-2">{children}</div>
     </div>
   );
