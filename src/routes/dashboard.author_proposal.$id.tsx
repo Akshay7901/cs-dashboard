@@ -649,10 +649,12 @@ function Card({
   id?: string;
 }) {
   return (
-    <section id={id} className="scroll-mt-24 rounded-2xl border border-stone-200 bg-white p-6 shadow-sm md:p-7">
-      <h2 className="font-serif text-xl font-bold text-stone-900">{title}</h2>
-      {subtitle && <p className="mt-1 text-sm text-amber-800/80">{subtitle}</p>}
-      <div className={subtitle ? "mt-5" : "mt-5"}>{children}</div>
+    <section id={id} className="scroll-mt-24 overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
+      <div className="px-6 pb-5 pt-6 md:px-7">
+        <h2 className="font-serif text-xl font-bold text-stone-900">{title}</h2>
+        {subtitle && <p className="mt-1 text-sm text-amber-800/80">{subtitle}</p>}
+      </div>
+      <div className="border-t border-stone-200 px-6 py-6 md:px-7">{children}</div>
     </section>
   );
 }
