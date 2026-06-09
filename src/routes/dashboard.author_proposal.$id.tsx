@@ -824,12 +824,10 @@ function renderValue(v: unknown): React.ReactNode {
 }
 
 function ExtraFieldsCard({ cd }: { cd: CurrentData }) {
-  const entries = Object.entries(cd).filter(
-    ([k, v]) => !HANDLED_KEYS.has(k) && !isEmptyValue(v),
-  );
+  const entries = Object.entries(cd).filter(([, v]) => !isEmptyValue(v));
   if (entries.length === 0) return null;
   return (
-    <Card title="Additional Submission Information" id="section-extra">
+    <Card title="Full Submission Data" subtitle="All fields returned by the API" id="section-extra">
       <dl className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2">
         {entries.map(([k, v]) => (
           <div key={k} className="min-w-0">
