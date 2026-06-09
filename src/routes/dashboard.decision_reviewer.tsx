@@ -41,6 +41,7 @@ type ApiProposal = {
   status: string;
   display_status?: string;
   action_required?: boolean;
+  current_data?: Record<string, string | undefined>;
   assignments?: Array<{
     reviewer_email?: string;
     assigned_at?: string;
@@ -56,6 +57,8 @@ type ProposalRow = {
   authorName: string;
   authorAffiliation: string;
   country: string;
+  institution: string;
+  subject: string;
   submittedAt: string;
   status: StatusKey;
   rawStatus: string;
@@ -131,19 +134,26 @@ const normalizeStatus = (raw: string, display?: string): StatusKey => {
   return "submitted";
 };
 
-const mapApiProposal = (p: ApiProposal): ProposalRow => ({
-  id: p.ticket_number,
-  title: p.title,
-  kind: "Proposal",
-  authorName: p.corresponding_author || displayNameFromEmail(p.email || ""),
-  authorAffiliation: p.email || "",
-  country: p.country || "—",
-  submittedAt: p.submitted_at,
-  status: deriveProposalStatus(p),
-  rawStatus: p.status,
-  displayStatus: deriveDisplayStatus(p),
-  actionRequired: p.action_required,
-});
+const mapApiProposal = (p: ApiProposal): ProposalRow => {
+  const cd = p.current_data || {};
+  const institution = cd.affiliation || cd.institution || "";
+  const subject = cd.discipline || cd.subject_area || cd.subject || "";
+  return {
+    id: p.ticket_number,
+    title: p.title,
+    kind: "Proposal",
+    authorName: p.corresponding_author || displayNameFromEmail(p.email || ""),
+    authorAffiliation: institution || p.email || "",
+    country: p.country || "—",
+    institution,
+    subject,
+    submittedAt: p.submitted_at,
+    status: deriveProposalStatus(p),
+    rawStatus: p.status,
+    displayStatus: deriveDisplayStatus(p),
+    actionRequired: p.action_required,
+  };
+};
 
 // When the API still reports raw status="new" but a peer review has been
 // returned, the proposal effectively belongs in In Review / Review Returned.
