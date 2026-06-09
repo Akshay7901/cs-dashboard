@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
 import { portalLogout, getPortalSession } from "@/lib/auth";
-import { PROPOSALS, formatDate, type Proposal, type StatusKey } from "@/lib/proposals";
+import { PROPOSALS, formatDate, initialsFromName, type Proposal, type StatusKey } from "@/lib/proposals";
 
 export const Route = createFileRoute("/dashboard/author")({
   head: () => ({ meta: [{ title: "Author Portal — My Proposals" }] }),
