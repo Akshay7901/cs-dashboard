@@ -731,31 +731,41 @@ function ProgressStepper({
   timeline?: TimelineStage[];
   status: StatusKey;
 }) {
-  // Build a normalized 4-stage stepper: Submitted → Peer Review → Decision → Final
   const declined = status === "declined";
-  const finalLabel = declined
-    ? "Declined"
-    : status === "signed"
-      ? "Signed"
-      : status === "contract"
-        ? "Contract"
-        : "Decision";
 
-  const submittedDone = true;
-  const reviewDone =
-    !!timeline?.some((t) => /review/i.test(t.stage_name) && t.is_completed) ||
-    ["review_returned", "contract", "signed", "declined", "major_revisions"].includes(status);
-  const decisionDone =
-    !!timeline?.some((t) => /decision|contract/i.test(t.stage_name) && t.is_completed) ||
-    ["contract", "signed", "declined"].includes(status);
-  const finalDone = ["signed", "declined"].includes(status);
-
-  const stages = [
-    { label: "Submitted", done: submittedDone, failed: false },
-    { label: "Peer Review", done: reviewDone, failed: false },
-    { label: "Decision", done: decisionDone, failed: false },
-    { label: finalLabel, done: finalDone, failed: declined },
-  ];
+  // Prefer the timeline returned by the API; fall back to a 4-stage default.
+  const stages: { label: string; done: boolean; current: boolean; failed: boolean }[] =
+    timeline && timeline.length > 0
+      ? timeline.map((t) => {
+          const isDeclineStage = /declin|reject/i.test(t.stage_name) || /declin|reject/i.test(t.display_name);
+          return {
+            label: t.display_name || t.stage_name,
+            done: !!t.is_completed,
+            current: !!t.is_current,
+            failed: isDeclineStage && (!!t.is_completed || !!t.is_current),
+          };
+        })
+      : [
+          { label: "Submitted", done: true, current: false, failed: false },
+          {
+            label: "Peer Review",
+            done: ["review_returned", "contract", "signed", "declined", "major_revisions"].includes(status),
+            current: status === "in_review",
+            failed: false,
+          },
+          {
+            label: "Decision",
+            done: ["contract", "signed", "declined"].includes(status),
+            current: status === "review_returned",
+            failed: false,
+          },
+          {
+            label: declined ? "Declined" : status === "signed" ? "Signed" : status === "contract" ? "Contract" : "Decision",
+            done: ["signed", "declined"].includes(status),
+            current: status === "contract",
+            failed: declined,
+          },
+        ];
 
   return (
     <div className="mt-8">
@@ -777,7 +787,9 @@ function ProgressStepper({
                     ? "bg-stone-300 text-white"
                     : s.done
                       ? "bg-[#0f3a2e] text-white"
-                      : "bg-stone-200 text-stone-500")
+                      : s.current
+                        ? "bg-amber-500 text-white ring-4 ring-amber-100"
+                        : "bg-stone-200 text-stone-500")
                 }
               >
                 {s.failed ? (
@@ -796,7 +808,14 @@ function ProgressStepper({
                 />
               )}
             </div>
-            <p className="mt-2 text-sm font-medium text-stone-700">{s.label}</p>
+            <p
+              className={
+                "mt-2 text-center text-sm font-medium " +
+                (s.current ? "text-amber-700" : s.done ? "text-stone-900" : "text-stone-500")
+              }
+            >
+              {s.label}
+            </p>
           </div>
         ))}
       </div>
