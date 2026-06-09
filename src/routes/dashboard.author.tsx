@@ -13,8 +13,9 @@ import {
   XCircle,
 } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
-import { portalLogout, getPortalSession } from "@/lib/auth";
-import { PROPOSALS, formatDate, initialsFromName, type Proposal, type StatusKey } from "@/lib/proposals";
+import { portalLogout, getPortalSession, getPortalToken } from "@/lib/auth";
+import { formatDate, initialsFromName, type Proposal, type StatusKey } from "@/lib/proposals";
+import { proposalApiFetch } from "@/lib/proposalApi";
 
 export const Route = createFileRoute("/dashboard/author")({
   head: () => ({ meta: [{ title: "Author Portal — My Proposals" }] }),
@@ -32,6 +33,124 @@ type PillKey =
   | "declined";
 
 const ATTENTION: StatusKey[] = ["revisions", "contract", "major_revisions", "question"];
+
+// API → local status mapping (mirrors dashboard.decision_reviewer.tsx).
+const STATUS_MAP: Record<string, StatusKey> = {
+  new: "submitted",
+  submitted: "submitted",
+  in_review: "in_review",
+  review_returned: "review_returned",
+  contract_issued: "contract",
+  contract_received: "contract",
+  awaiting_author_approval: "contract",
+  queries_raised: "question",
+  question_raised: "question",
+  author_approved: "signed",
+  locked: "signed",
+  contract_signed: "signed",
+  declined: "declined",
+  awaiting_more_info: "revisions",
+  revisions_requested: "revisions",
+  major_revisions: "major_revisions",
+};
+
+const DISPLAY_STATUS_MAP: Record<string, StatusKey> = {
+  "in review": "in_review",
+  "under review": "in_review",
+  "review returned": "review_returned",
+  "contract issued": "contract",
+  "contract received": "contract",
+  "awaiting author approval": "contract",
+  "queries raised": "question",
+  "question raised": "question",
+  "author approved": "signed",
+  "contract signed": "signed",
+  "awaiting more info": "revisions",
+  "additional info required": "revisions",
+  "revisions requested": "revisions",
+  "major revisions required": "major_revisions",
+  "major revisions": "major_revisions",
+};
+
+const EXTRA_STATUSES = [
+  "new",
+  "in_review",
+  "review_returned",
+  "contract_issued",
+  "contract_received",
+  "awaiting_author_approval",
+  "queries_raised",
+  "author_approved",
+  "locked",
+  "contract_signed",
+  "declined",
+  "awaiting_more_info",
+  "major_revisions",
+];
+
+function normalizeStatus(raw?: string, display?: string): StatusKey {
+  if (display) {
+    const k = display.trim().toLowerCase();
+    if (DISPLAY_STATUS_MAP[k]) return DISPLAY_STATUS_MAP[k];
+  }
+  if (raw) {
+    const lower = raw.trim().toLowerCase();
+    const snake = lower.replace(/\s+/g, "_");
+    if (STATUS_MAP[snake]) return STATUS_MAP[snake];
+    if (DISPLAY_STATUS_MAP[lower]) return DISPLAY_STATUS_MAP[lower];
+  }
+  return "submitted";
+}
+
+type ApiProposalItem = {
+  ticket_number: string;
+  title?: string;
+  status?: string;
+  display_status?: string;
+  submitted_at?: string;
+  updated_at?: string;
+  corresponding_author?: string;
+  email?: string;
+  current_data?: Record<string, string | undefined>;
+};
+
+function toProposal(p: ApiProposalItem): Proposal {
+  const cd = p.current_data || {};
+  const title = p.title || cd.main_title || p.ticket_number;
+  const kind = cd.book_type || cd.proposal_type || "Proposal";
+  return {
+    id: p.ticket_number,
+    ref: p.ticket_number,
+    title,
+    kind,
+    status: normalizeStatus(p.status, p.display_status),
+    authorName: p.corresponding_author || cd.author_name || "",
+    authorEmail: p.email || "",
+    authorAffiliation: cd.affiliation || cd.institution || "",
+    country: cd.country || "",
+    mailingAddress: "",
+    biography: "",
+    submittedAt: p.submitted_at || "",
+    updatedAt: p.updated_at || p.submitted_at || "",
+    wordCount: 0,
+    illustrations: 0,
+    nonEnglish: false,
+    estCompletion: "",
+    discipline: cd.discipline || "",
+    subdiscipline: "",
+    overview: cd.overview || "",
+    keywords: [],
+    keyFeatures: "",
+    intendedAudience: "",
+    tableOfContents: [],
+    whyNeeded: "",
+    competingTitles: "",
+    suggestedReviewers: [],
+    additionalNotes: "",
+    supportingDocs: [],
+    decisionSummary: "",
+  };
+}
 
 const PILLS: { key: PillKey; label: string; dot: string; match: (p: Proposal) => boolean }[] = [
   { key: "all", label: "All proposals", dot: "", match: () => true },
@@ -237,6 +356,9 @@ function AuthorDashboard() {
   const [activePill, setActivePill] = useState<PillKey>("all");
   const [authorEmail, setAuthorEmail] = useState<string>("");
   const [authorName, setAuthorName] = useState<string>("");
+  const [myProposals, setMyProposals] = useState<Proposal[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -251,22 +373,61 @@ function AuthorDashboard() {
       }
       setAuthorEmail(session.email);
       if (session.name) setAuthorName(session.name);
+      void loadMyProposals(session.email);
     } catch {
       navigate({ to: "/login" });
     }
-  }, [navigate]);
 
-  const myProposals = useMemo(
-    () => {
-      const email = authorEmail.toLowerCase();
-      const direct = PROPOSALS.filter((p) => p.authorEmail.toLowerCase() === email);
-      if (direct.length > 0) return direct;
-      // Demo fallback: real backend accounts won't match seeded fixture emails,
-      // so surface Dr. Sarah Chen's seeded proposals as the demo author set.
-      return PROPOSALS.filter((p) => p.authorEmail.toLowerCase() === "s.chen@oxford.ac.uk");
-    },
-    [authorEmail],
-  );
+    async function loadMyProposals(email: string) {
+      setLoading(true);
+      setLoadError(null);
+      try {
+        const token = getPortalToken();
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        };
+        const fetchList = async (qs = "") => {
+          const r = await proposalApiFetch(qs, { headers });
+          const b = (await r.json().catch(() => ({}))) as Record<string, unknown>;
+          if (!r.ok) return { ok: false as const, status: r.status, error: b.error as string };
+          const arr =
+            (b.proposals as ApiProposalItem[]) ||
+            (Array.isArray(b) ? (b as unknown as ApiProposalItem[]) : []);
+          return { ok: true as const, items: arr };
+        };
+        const def = await fetchList("?limit=100&sort_order=desc");
+        if (!def.ok) {
+          setLoadError(def.error || `Failed to load proposals (${def.status}).`);
+          setLoading(false);
+          return;
+        }
+        const extras = await Promise.all(
+          EXTRA_STATUSES.map((s) =>
+            fetchList(`?limit=100&sort_order=desc&status=${encodeURIComponent(s)}`),
+          ),
+        );
+        const merged = new Map<string, ApiProposalItem>();
+        for (const it of def.items || []) merged.set(it.ticket_number, it);
+        for (const r of extras) {
+          if (!r.ok) continue;
+          for (const it of r.items || []) {
+            if (!merged.has(it.ticket_number)) merged.set(it.ticket_number, it);
+          }
+        }
+        const lowerEmail = email.toLowerCase();
+        const mine = Array.from(merged.values()).filter((p) => {
+          const e = (p.email || p.current_data?.email || "").toLowerCase();
+          return !e || e === lowerEmail;
+        });
+        setMyProposals(mine.map(toProposal));
+      } catch {
+        setLoadError("Network error. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    }
+  }, [navigate]);
 
   const displayName = authorName || (myProposals[0]?.authorName ?? "Author");
   const initials = initialsFromName(displayName);
@@ -343,6 +504,18 @@ function AuthorDashboard() {
         <p className="mt-2 text-stone-600">
           Here you can see all of your book proposals and what is happening with each one.
         </p>
+
+        {loading && (
+          <p className="mt-6 text-sm text-stone-500">Loading your proposals…</p>
+        )}
+        {loadError && (
+          <p className="mt-6 text-sm text-rose-600">{loadError}</p>
+        )}
+        {!loading && !loadError && myProposals.length === 0 && (
+          <p className="mt-6 text-sm text-stone-500">
+            You don't have any proposals yet.
+          </p>
+        )}
 
         {/* Attention banner */}
         {attentionCount > 0 && (
