@@ -661,7 +661,7 @@ function Card({
 
 function SubCard({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-stone-200 bg-stone-50/60 p-5">
+    <div className="border-t border-stone-200 pt-5 first:border-t-0 first:pt-0">
       <p className="text-xs font-semibold uppercase tracking-wider text-amber-800/80">{label}</p>
       <div className="mt-2">{children}</div>
     </div>
@@ -684,16 +684,14 @@ function TocList({ raw }: { raw: string }) {
     .filter(Boolean);
   if (items.length === 0) return null;
   return (
-    <div className="rounded-xl border border-stone-200 bg-stone-50/60 p-5">
-      <ol className="space-y-2 text-[15px] text-stone-800">
-        {items.map((item, i) => (
-          <li key={i} className="flex gap-2">
-            <span className="font-semibold text-amber-800/80">{i + 1}.</span>
-            <span>{item}</span>
-          </li>
-        ))}
-      </ol>
-    </div>
+    <ol className="space-y-3 text-[15px] text-stone-800">
+      {items.map((item, i) => (
+        <li key={i} className="flex gap-2">
+          <span className="font-semibold text-amber-800/80">{i + 1}.</span>
+          <span>{item}</span>
+        </li>
+      ))}
+    </ol>
   );
 }
 
@@ -703,11 +701,11 @@ function ReviewersList({ raw }: { raw: string }) {
     .map((b) => b.trim())
     .filter(Boolean);
   return (
-    <ol className="space-y-4">
+    <ol>
       {blocks.map((block, i) => {
         const lines = block.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
         return (
-          <li key={i} className="flex gap-4 rounded-xl border border-stone-200 bg-stone-50/60 p-4">
+          <li key={i} className="flex gap-4 border-t border-stone-200 py-4 first:border-t-0 first:pt-0">
             <span className="font-serif text-lg font-bold text-amber-800/80">{i + 1}.</span>
             <div className="space-y-0.5 text-[15px]">
               {lines.map((l, j) => (
