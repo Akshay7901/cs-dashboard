@@ -691,11 +691,11 @@ function ProposalCard({ p }: { p: Proposal }) {
         )}
 
         {!cfg.cta && !cfg.footnote && (
-          <div className="mt-4 border-t border-stone-100 pt-4 text-right">
+          <div className="mt-4 flex justify-end border-t border-stone-100 pt-3">
             <Link
               to="/dashboard/author_proposal/$id"
               params={{ id: p.id }}
-              className="inline-flex items-center gap-1 text-sm font-semibold text-emerald-800 hover:text-emerald-900"
+              className="inline-flex items-center gap-1 font-sans text-sm font-medium text-[#00422F] transition-colors hover:text-[#00321f]"
             >
               View full details <ChevronRight className="h-4 w-4" />
             </Link>
@@ -703,11 +703,11 @@ function ProposalCard({ p }: { p: Proposal }) {
         )}
 
         {!cfg.cta && cfg.footnote && (
-          <div className="mt-4 border-t border-stone-100 pt-4 text-right">
+          <div className="mt-4 flex justify-end border-t border-stone-100 pt-3">
             <Link
               to="/dashboard/author_proposal/$id"
               params={{ id: p.id }}
-              className="inline-flex items-center gap-1 text-sm font-semibold text-emerald-800 hover:text-emerald-900"
+              className="inline-flex items-center gap-1 font-sans text-sm font-medium text-[#00422F] transition-colors hover:text-[#00321f]"
             >
               View full details <ChevronRight className="h-4 w-4" />
             </Link>
