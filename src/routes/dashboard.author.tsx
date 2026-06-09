@@ -257,7 +257,12 @@ function AuthorDashboard() {
   }, [navigate]);
 
   const myProposals = useMemo(
-    () => PROPOSALS.filter((p) => p.authorEmail.toLowerCase() === authorEmail.toLowerCase()),
+    () => {
+      const email = authorEmail.toLowerCase();
+      // Demo alias: the seeded demo author maps to Dr. Sarah Chen's proposals.
+      const aliased = email === "author@university.edu" ? "s.chen@oxford.ac.uk" : email;
+      return PROPOSALS.filter((p) => p.authorEmail.toLowerCase() === aliased);
+    },
     [authorEmail],
   );
 
