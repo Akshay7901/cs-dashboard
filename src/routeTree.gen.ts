@@ -17,9 +17,9 @@ import { Route as DashboardDecision_reviewerRouteImport } from './routes/dashboa
 import { Route as DashboardAuthorRouteImport } from './routes/dashboard.author'
 import { Route as DashboardRoleRouteImport } from './routes/dashboard.$role'
 import { Route as DashboardProposalTicketRouteImport } from './routes/dashboard.proposal.$ticket'
+import { Route as DashboardAuthor_proposalIdRouteImport } from './routes/dashboard.author_proposal.$id'
 import { Route as DashboardReviewerSubmissionIdRouteImport } from './routes/dashboard.reviewer.submission.$id'
 import { Route as DashboardEditorSubmissionIdRouteImport } from './routes/dashboard.editor.submission.$id'
-import { Route as DashboardAuthorProposalIdRouteImport } from './routes/dashboard.author.proposal.$id'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -62,6 +62,12 @@ const DashboardProposalTicketRoute = DashboardProposalTicketRouteImport.update({
   path: '/dashboard/proposal/$ticket',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardAuthor_proposalIdRoute =
+  DashboardAuthor_proposalIdRouteImport.update({
+    id: '/dashboard/author_proposal/$id',
+    path: '/dashboard/author_proposal/$id',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const DashboardReviewerSubmissionIdRoute =
   DashboardReviewerSubmissionIdRouteImport.update({
     id: '/submission/$id',
@@ -74,23 +80,17 @@ const DashboardEditorSubmissionIdRoute =
     path: '/submission/$id',
     getParentRoute: () => DashboardEditorRoute,
   } as any)
-const DashboardAuthorProposalIdRoute =
-  DashboardAuthorProposalIdRouteImport.update({
-    id: '/proposal/$id',
-    path: '/proposal/$id',
-    getParentRoute: () => DashboardAuthorRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/dashboard/$role': typeof DashboardRoleRoute
-  '/dashboard/author': typeof DashboardAuthorRouteWithChildren
+  '/dashboard/author': typeof DashboardAuthorRoute
   '/dashboard/decision_reviewer': typeof DashboardDecision_reviewerRoute
   '/dashboard/editor': typeof DashboardEditorRouteWithChildren
   '/dashboard/reviewer': typeof DashboardReviewerRouteWithChildren
+  '/dashboard/author_proposal/$id': typeof DashboardAuthor_proposalIdRoute
   '/dashboard/proposal/$ticket': typeof DashboardProposalTicketRoute
-  '/dashboard/author/proposal/$id': typeof DashboardAuthorProposalIdRoute
   '/dashboard/editor/submission/$id': typeof DashboardEditorSubmissionIdRoute
   '/dashboard/reviewer/submission/$id': typeof DashboardReviewerSubmissionIdRoute
 }
@@ -98,12 +98,12 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/dashboard/$role': typeof DashboardRoleRoute
-  '/dashboard/author': typeof DashboardAuthorRouteWithChildren
+  '/dashboard/author': typeof DashboardAuthorRoute
   '/dashboard/decision_reviewer': typeof DashboardDecision_reviewerRoute
   '/dashboard/editor': typeof DashboardEditorRouteWithChildren
   '/dashboard/reviewer': typeof DashboardReviewerRouteWithChildren
+  '/dashboard/author_proposal/$id': typeof DashboardAuthor_proposalIdRoute
   '/dashboard/proposal/$ticket': typeof DashboardProposalTicketRoute
-  '/dashboard/author/proposal/$id': typeof DashboardAuthorProposalIdRoute
   '/dashboard/editor/submission/$id': typeof DashboardEditorSubmissionIdRoute
   '/dashboard/reviewer/submission/$id': typeof DashboardReviewerSubmissionIdRoute
 }
@@ -112,12 +112,12 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/dashboard/$role': typeof DashboardRoleRoute
-  '/dashboard/author': typeof DashboardAuthorRouteWithChildren
+  '/dashboard/author': typeof DashboardAuthorRoute
   '/dashboard/decision_reviewer': typeof DashboardDecision_reviewerRoute
   '/dashboard/editor': typeof DashboardEditorRouteWithChildren
   '/dashboard/reviewer': typeof DashboardReviewerRouteWithChildren
+  '/dashboard/author_proposal/$id': typeof DashboardAuthor_proposalIdRoute
   '/dashboard/proposal/$ticket': typeof DashboardProposalTicketRoute
-  '/dashboard/author/proposal/$id': typeof DashboardAuthorProposalIdRoute
   '/dashboard/editor/submission/$id': typeof DashboardEditorSubmissionIdRoute
   '/dashboard/reviewer/submission/$id': typeof DashboardReviewerSubmissionIdRoute
 }
@@ -131,8 +131,8 @@ export interface FileRouteTypes {
     | '/dashboard/decision_reviewer'
     | '/dashboard/editor'
     | '/dashboard/reviewer'
+    | '/dashboard/author_proposal/$id'
     | '/dashboard/proposal/$ticket'
-    | '/dashboard/author/proposal/$id'
     | '/dashboard/editor/submission/$id'
     | '/dashboard/reviewer/submission/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -144,8 +144,8 @@ export interface FileRouteTypes {
     | '/dashboard/decision_reviewer'
     | '/dashboard/editor'
     | '/dashboard/reviewer'
+    | '/dashboard/author_proposal/$id'
     | '/dashboard/proposal/$ticket'
-    | '/dashboard/author/proposal/$id'
     | '/dashboard/editor/submission/$id'
     | '/dashboard/reviewer/submission/$id'
   id:
@@ -157,8 +157,8 @@ export interface FileRouteTypes {
     | '/dashboard/decision_reviewer'
     | '/dashboard/editor'
     | '/dashboard/reviewer'
+    | '/dashboard/author_proposal/$id'
     | '/dashboard/proposal/$ticket'
-    | '/dashboard/author/proposal/$id'
     | '/dashboard/editor/submission/$id'
     | '/dashboard/reviewer/submission/$id'
   fileRoutesById: FileRoutesById
@@ -167,10 +167,11 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
   DashboardRoleRoute: typeof DashboardRoleRoute
-  DashboardAuthorRoute: typeof DashboardAuthorRouteWithChildren
+  DashboardAuthorRoute: typeof DashboardAuthorRoute
   DashboardDecision_reviewerRoute: typeof DashboardDecision_reviewerRoute
   DashboardEditorRoute: typeof DashboardEditorRouteWithChildren
   DashboardReviewerRoute: typeof DashboardReviewerRouteWithChildren
+  DashboardAuthor_proposalIdRoute: typeof DashboardAuthor_proposalIdRoute
   DashboardProposalTicketRoute: typeof DashboardProposalTicketRoute
 }
 
@@ -232,6 +233,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardProposalTicketRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/author_proposal/$id': {
+      id: '/dashboard/author_proposal/$id'
+      path: '/dashboard/author_proposal/$id'
+      fullPath: '/dashboard/author_proposal/$id'
+      preLoaderRoute: typeof DashboardAuthor_proposalIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/reviewer/submission/$id': {
       id: '/dashboard/reviewer/submission/$id'
       path: '/submission/$id'
@@ -246,27 +254,8 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardEditorSubmissionIdRouteImport
       parentRoute: typeof DashboardEditorRoute
     }
-    '/dashboard/author/proposal/$id': {
-      id: '/dashboard/author/proposal/$id'
-      path: '/proposal/$id'
-      fullPath: '/dashboard/author/proposal/$id'
-      preLoaderRoute: typeof DashboardAuthorProposalIdRouteImport
-      parentRoute: typeof DashboardAuthorRoute
-    }
   }
 }
-
-interface DashboardAuthorRouteChildren {
-  DashboardAuthorProposalIdRoute: typeof DashboardAuthorProposalIdRoute
-}
-
-const DashboardAuthorRouteChildren: DashboardAuthorRouteChildren = {
-  DashboardAuthorProposalIdRoute: DashboardAuthorProposalIdRoute,
-}
-
-const DashboardAuthorRouteWithChildren = DashboardAuthorRoute._addFileChildren(
-  DashboardAuthorRouteChildren,
-)
 
 interface DashboardEditorRouteChildren {
   DashboardEditorSubmissionIdRoute: typeof DashboardEditorSubmissionIdRoute
@@ -295,12 +284,23 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
   DashboardRoleRoute: DashboardRoleRoute,
-  DashboardAuthorRoute: DashboardAuthorRouteWithChildren,
+  DashboardAuthorRoute: DashboardAuthorRoute,
   DashboardDecision_reviewerRoute: DashboardDecision_reviewerRoute,
   DashboardEditorRoute: DashboardEditorRouteWithChildren,
   DashboardReviewerRoute: DashboardReviewerRouteWithChildren,
+  DashboardAuthor_proposalIdRoute: DashboardAuthor_proposalIdRoute,
   DashboardProposalTicketRoute: DashboardProposalTicketRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
