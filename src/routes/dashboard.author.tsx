@@ -235,6 +235,8 @@ function configFor(p: Proposal): CardConfig {
 function AuthorDashboard() {
   const navigate = useNavigate();
   const [activePill, setActivePill] = useState<PillKey>("all");
+  const [authorEmail, setAuthorEmail] = useState<string>("");
+  const [authorName, setAuthorName] = useState<string>("");
 
   useEffect(() => {
     try {
@@ -243,11 +245,24 @@ function AuthorDashboard() {
         navigate({ to: "/login" });
         return;
       }
-      if (session.role !== "author") navigate({ to: "/login" });
+      if (session.role !== "author") {
+        navigate({ to: "/login" });
+        return;
+      }
+      setAuthorEmail(session.email);
+      if (session.name) setAuthorName(session.name);
     } catch {
       navigate({ to: "/login" });
     }
   }, [navigate]);
+
+  const myProposals = useMemo(
+    () => PROPOSALS.filter((p) => p.authorEmail.toLowerCase() === authorEmail.toLowerCase()),
+    [authorEmail],
+  );
+
+  const displayName = authorName || (myProposals[0]?.authorName ?? "Author");
+  const initials = initialsFromName(displayName);
 
   const counts = useMemo(() => {
     const c: Record<PillKey, number> = {
@@ -260,16 +275,16 @@ function AuthorDashboard() {
       signed: 0,
       declined: 0,
     };
-    for (const p of PROPOSALS) {
+    for (const p of myProposals) {
       for (const pill of PILLS) if (pill.match(p)) c[pill.key]++;
     }
     return c;
-  }, []);
+  }, [myProposals]);
 
   const visible = useMemo(() => {
     const pill = PILLS.find((p) => p.key === activePill)!;
-    return PROPOSALS.filter(pill.match);
-  }, [activePill]);
+    return myProposals.filter(pill.match);
+  }, [activePill, myProposals]);
 
   const attentionList = visible.filter((p) => ATTENTION.includes(p.status));
   const progressList = visible.filter((p) =>
@@ -302,9 +317,9 @@ function AuthorDashboard() {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <span className="grid h-9 w-9 place-items-center rounded-full bg-orange-100 text-sm font-semibold text-orange-700">
-                DS
+                {initials}
               </span>
-              <span className="text-sm font-medium">Dr. Sarah Chen</span>
+              <span className="text-sm font-medium">{displayName}</span>
             </div>
             <span className="text-stone-300">|</span>
             <button onClick={onLogout} className="text-sm text-stone-600 hover:text-stone-900">
