@@ -346,13 +346,52 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
     ...(files.sampleChapter ? [files.sampleChapter] : []),
     ...(files.additionalFiles || []),
   ];
-  const fmtBool = (v?: boolean) => (v ? "Yes" : "No");
+  const fmtBool = (v?: boolean | string) => {
+    if (typeof v === "string") {
+      const s = v.trim().toLowerCase();
+      if (["yes", "true", "y", "1"].includes(s)) return "Yes";
+      if (["no", "false", "n", "0", ""].includes(s)) return "No";
+      return v;
+    }
+    return v ? "Yes" : "No";
+  };
   const authorFullName =
     cd.corresponding_author_name ||
     [cd.author_title, cd.author_first_name, cd.author_last_name]
       .filter(Boolean)
       .join(" ") ||
     "—";
+
+  const wordCount = cd.estimated_word_count ?? cd.word_count;
+  const completionDate = cd.estimated_completion_date || cd.expected_completion_date;
+  const illustrationsValue = (() => {
+    if (cd.figures_tables_count) return String(cd.figures_tables_count);
+    if (cd.has_illustrations) return String(cd.illustration_count ?? "Yes");
+    if (cd.has_illustrations === false) return "No";
+    return "—";
+  })();
+  const overviewText = cd.short_description || cd.detailed_description || cd.overview;
+  const keyFeaturesText = cd.key_features || cd.detailed_description;
+  const audienceText = cd.target_audience || cd.marketing_info;
+  const whyNeededText = cd.unique_selling_points || cd.marketing_info;
+  const reviewersRaw = cd.recommended_reviewers || cd.referees_reviewers;
+  const keywordTags: string[] = cd.secondary_subjects && cd.secondary_subjects.length > 0
+    ? cd.secondary_subjects
+    : (cd.keywords ? cd.keywords.split(/[,;]+/).map((s) => s.trim()).filter(Boolean) : []);
+  const coAuthorsList: Array<Record<string, unknown>> = (() => {
+    if (Array.isArray(cd.co_authors) && cd.co_authors.length > 0) {
+      return cd.co_authors as Array<Record<string, unknown>>;
+    }
+    if (cd.co_authors_editors) {
+      return cd.co_authors_editors
+        .split(/\n|;/)
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .map((name) => ({ name }));
+    }
+    return [];
+  })();
+  const hasNotes = !!(cd.additional_info || cd.conferences || cd.promotional_channels || cd.permissions_required || cd.under_review_elsewhere);
 
   return (
     <>
@@ -398,23 +437,15 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
           <StatCard label="Type" value={kind} />
           <StatCard
             label="Word Count"
-            value={
-              cd.estimated_word_count
-                ? Number(cd.estimated_word_count).toLocaleString()
-                : "—"
-            }
+            value={wordCount ? Number(wordCount).toLocaleString() : "—"}
           />
           <StatCard
             label="Illustrations"
-            value={
-              cd.has_illustrations
-                ? String(cd.illustration_count ?? "Yes")
-                : "No"
-            }
+            value={illustrationsValue}
           />
           <StatCard
             label="Completion"
-            value={formatMonthYear(cd.estimated_completion_date)}
+            value={formatMonthYear(completionDate)}
           />
         </div>
 
@@ -457,6 +488,9 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
               <Field label="Email" value={cd.email || "—"} />
               {cd.institution && <Field label="Institution" value={cd.institution} />}
               {cd.country && <Field label="Country" value={cd.country} />}
+              {cd.job_title && <Field label="Job Title" value={cd.job_title} />}
+              {cd.phone && <Field label="Phone" value={cd.phone} />}
+              {cd.secondary_email && <Field label="Secondary Email" value={cd.secondary_email} />}
             </div>
             {cd.address && (
               <div className="mt-6 border-t border-stone-200 pt-5">
@@ -478,11 +512,45 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
             )}
           </Card>
 
+          {/* Additional Authors / Editors */}
+          {coAuthorsList.length > 0 && (
+            <Card
+              title="Additional Authors / Editors"
+              subtitle={`${coAuthorsList.length} co-author${coAuthorsList.length > 1 ? "s" : ""}`}
+              id="section-co-authors"
+            >
+              <div className="space-y-6">
+                {coAuthorsList.map((ca, i) => {
+                  const name = (ca.name as string) || [ca.first_name, ca.last_name].filter(Boolean).join(" ") || `Co-author ${i + 1}`;
+                  return (
+                    <div key={i} className="border-t border-stone-200 pt-5 first:border-t-0 first:pt-0">
+                      <div className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2">
+                        <Field label="Name" value={String(name)} />
+                        {ca.email ? <Field label="Email" value={String(ca.email)} /> : null}
+                        {ca.institution ? <Field label="Institution" value={String(ca.institution)} /> : null}
+                        {ca.country ? <Field label="Country" value={String(ca.country)} /> : null}
+                      </div>
+                      {ca.address ? (
+                        <div className="mt-4">
+                          <p className="text-xs font-medium uppercase tracking-wider text-amber-800/80">Mailing Address</p>
+                          <p className="mt-1 text-[15px] text-stone-800">{String(ca.address)}</p>
+                        </div>
+                      ) : null}
+                      {ca.biography ? (
+                        <div className="mt-4">
+                          <p className="text-xs font-medium uppercase tracking-wider text-amber-800/80">Biography</p>
+                          <p className="mt-1 whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">{String(ca.biography)}</p>
+                        </div>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+          )}
+
           {/* Summary & Description */}
-          {(cd.detailed_description ||
-            cd.overview ||
-            cd.key_features ||
-            cd.target_audience) && (
+          {(overviewText || keyFeaturesText || audienceText || keywordTags.length > 0) && (
             <Card title="Summary & Description" id="section-summary">
               <p className="-mt-2 text-sm text-amber-800/80">
                 {[cd.subject, cd.secondary_subjects?.join(" / ")]
@@ -490,14 +558,14 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
                   .join(" · ") || "—"}
               </p>
               <div className="mt-5 space-y-4">
-                {(cd.detailed_description || cd.overview) && (
+                {overviewText && (
                   <SubCard label="Overview">
                     <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
-                      {cd.detailed_description || cd.overview}
+                      {overviewText}
                     </p>
-                    {cd.secondary_subjects && cd.secondary_subjects.length > 0 && (
+                    {keywordTags.length > 0 && (
                       <div className="mt-3 flex flex-wrap gap-2">
-                        {cd.secondary_subjects.map((t) => (
+                        {keywordTags.map((t) => (
                           <span
                             key={t}
                             className="rounded-full bg-amber-100/70 px-3 py-1 text-xs font-medium text-amber-900"
@@ -509,10 +577,10 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
                     )}
                   </SubCard>
                 )}
-                {cd.key_features && (
+                {keyFeaturesText && keyFeaturesText !== overviewText && (
                   <SubCard label="Key Features & Unique Contribution">
                     <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
-                      {cd.key_features}
+                      {keyFeaturesText}
                     </p>
                   </SubCard>
                 )}
@@ -523,10 +591,10 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
                     </p>
                   </SubCard>
                 )}
-                {cd.target_audience && (
+                {audienceText && (
                   <SubCard label="Intended Audience">
                     <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
-                      {cd.target_audience}
+                      {audienceText}
                     </p>
                   </SubCard>
                 )}
@@ -549,7 +617,7 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
           )}
 
           {/* Market & Competition */}
-          {(cd.unique_selling_points || cd.competing_titles || cd.primary_market) && (
+          {(whyNeededText || cd.competing_titles || cd.primary_market) && (
             <Card title="Market & Competition" id="section-market">
               <div className="space-y-4">
                 {cd.primary_market && (
@@ -559,10 +627,10 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
                     </p>
                   </SubCard>
                 )}
-                {cd.unique_selling_points && (
+                {whyNeededText && (
                   <SubCard label="Why is this book needed?">
                     <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
-                      {cd.unique_selling_points}
+                      {whyNeededText}
                     </p>
                   </SubCard>
                 )}
@@ -578,9 +646,9 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
           )}
 
           {/* Suggested reviewers */}
-          {cd.recommended_reviewers && (
+          {reviewersRaw && (
             <Card title="Suggested Reviewers" subtitle="Nominated for consideration" id="section-reviewers">
-              <ReviewersList raw={cd.recommended_reviewers} />
+              <ReviewersList raw={reviewersRaw} />
             </Card>
           )}
 
@@ -590,25 +658,29 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
               <MiniStat label="Has tables" value={fmtBool(cd.has_tables)} />
               <MiniStat
                 label="Illustrations"
-                value={
-                  cd.has_illustrations
-                    ? cd.illustration_count
-                      ? `Yes (${cd.illustration_count})`
-                      : "Yes"
-                    : "No"
-                }
+                value={illustrationsValue}
               />
               <MiniStat
                 label="Previously published"
-                value={fmtBool(cd.is_previously_published)}
+                value={fmtBool(cd.under_review_elsewhere ?? cd.is_previously_published)}
               />
+              {cd.permissions_required !== undefined && (
+                <MiniStat label="Permissions Required" value={fmtBool(cd.permissions_required)} />
+              )}
             </div>
           </Card>
 
           {/* Additional notes */}
-          {(cd.conferences || cd.promotional_channels) && (
+          {hasNotes && (
             <Card title="Additional Notes" subtitle="Copyright, permissions, special considerations" id="section-notes">
               <div className="space-y-4">
+                {cd.additional_info && (
+                  <SubCard label="Notes">
+                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
+                      {cd.additional_info}
+                    </p>
+                  </SubCard>
+                )}
                 {cd.conferences && (
                   <SubCard label="Conferences">
                     <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
