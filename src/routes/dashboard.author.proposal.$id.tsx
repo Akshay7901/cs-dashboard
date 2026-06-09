@@ -322,6 +322,13 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
     ...(files.sampleChapter ? [files.sampleChapter] : []),
     ...(files.additionalFiles || []),
   ];
+  const fmtBool = (v?: boolean) => (v ? "Yes" : "No");
+  const authorFullName =
+    cd.corresponding_author_name ||
+    [cd.author_title, cd.author_first_name, cd.author_last_name]
+      .filter(Boolean)
+      .join(" ") ||
+    "—";
 
   return (
     <article className="mt-6 overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
@@ -354,26 +361,48 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
               value={`${Number(cd.estimated_word_count).toLocaleString()} words`}
             />
           )}
+          {cd.estimated_pages !== undefined && cd.estimated_pages !== null && (
+            <Meta label="Estimated pages" value={String(cd.estimated_pages)} />
+          )}
           {cd.estimated_completion_date && (
             <Meta label="Est. completion" value={formatDate(cd.estimated_completion_date)} />
           )}
           {cd.language && <Meta label="Language" value={cd.language} />}
+          {cd.secondary_subjects && cd.secondary_subjects.length > 0 && (
+            <Meta label="Secondary subjects" value={cd.secondary_subjects.join(", ")} />
+          )}
+          {cd.website_reference_number && (
+            <Meta label="Website ref" value={cd.website_reference_number} />
+          )}
+          {cd.source && <Meta label="Source" value={cd.source} />}
         </div>
 
         {/* Author */}
         <Section title="Author">
           <div className="text-[15px] leading-relaxed text-stone-700">
-            <p className="font-medium text-stone-900">
-              {cd.corresponding_author_name ||
-                [cd.author_title, cd.author_first_name, cd.author_last_name]
-                  .filter(Boolean)
-                  .join(" ") ||
-                "—"}
-            </p>
+            <p className="font-medium text-stone-900">{authorFullName}</p>
             {cd.institution && <p className="text-stone-600">{cd.institution}</p>}
-            {cd.country && <p className="text-stone-600">{cd.country}</p>}
+            {cd.address && <p className="text-stone-600">{cd.address}</p>}
+            {cd.country && !cd.address && <p className="text-stone-600">{cd.country}</p>}
             {cd.email && <p className="text-stone-600">{cd.email}</p>}
+            {cd.phone && <p className="text-stone-600">{cd.phone}</p>}
             {cd.biography && <p className="mt-3 whitespace-pre-wrap">{cd.biography}</p>}
+            {cd.co_authors && cd.co_authors.length > 0 && (
+              <div className="mt-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-stone-500">
+                  Co-authors
+                </p>
+                <ul className="mt-1 list-disc pl-5">
+                  {cd.co_authors.map((c, i) => (
+                    <li key={i}>
+                      {typeof c === "string"
+                        ? c
+                        : (c as { name?: string }).name ?? JSON.stringify(c)}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </Section>
 
@@ -395,11 +424,29 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
           </Section>
         )}
 
+        {/* USP */}
+        {cd.unique_selling_points && (
+          <Section title="Unique selling points">
+            <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
+              {cd.unique_selling_points}
+            </p>
+          </Section>
+        )}
+
         {/* Audience */}
-        {(cd.target_audience || cd.primary_market) && (
+        {cd.target_audience && (
           <Section title="Intended audience">
             <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
-              {cd.target_audience || cd.primary_market}
+              {cd.target_audience}
+            </p>
+          </Section>
+        )}
+
+        {/* Primary market */}
+        {cd.primary_market && (
+          <Section title="Primary market">
+            <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
+              {cd.primary_market}
             </p>
           </Section>
         )}
@@ -413,11 +460,59 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
           </Section>
         )}
 
+        {/* Manuscript details */}
+        <Section title="Manuscript details">
+          <div className="grid grid-cols-1 gap-4 rounded-xl bg-stone-50 p-5 sm:grid-cols-2 md:grid-cols-3">
+            <Meta label="Has tables" value={fmtBool(cd.has_tables)} />
+            <Meta
+              label="Illustrations"
+              value={
+                cd.has_illustrations
+                  ? cd.illustration_count
+                    ? `Yes (${cd.illustration_count})`
+                    : "Yes"
+                  : "No"
+              }
+            />
+            <Meta
+              label="Previously published"
+              value={fmtBool(cd.is_previously_published)}
+            />
+          </div>
+        </Section>
+
         {/* Market */}
         {cd.competing_titles && (
           <Section title="Competing titles">
             <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
               {cd.competing_titles}
+            </p>
+          </Section>
+        )}
+
+        {/* Conferences */}
+        {cd.conferences && (
+          <Section title="Conferences">
+            <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
+              {cd.conferences}
+            </p>
+          </Section>
+        )}
+
+        {/* Promotional channels */}
+        {cd.promotional_channels && (
+          <Section title="Promotional channels">
+            <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
+              {cd.promotional_channels}
+            </p>
+          </Section>
+        )}
+
+        {/* Recommended reviewers */}
+        {cd.recommended_reviewers && (
+          <Section title="Recommended reviewers">
+            <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
+              {cd.recommended_reviewers}
             </p>
           </Section>
         )}
@@ -456,6 +551,55 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
                 </li>
               ))}
             </ul>
+          </Section>
+        )}
+
+        {/* Timeline */}
+        {proposal.timeline && proposal.timeline.length > 0 && (
+          <Section title="Progress">
+            <ol className="space-y-3">
+              {proposal.timeline.map((stage) => {
+                const done = !!stage.is_completed;
+                const current = !!stage.is_current;
+                return (
+                  <li
+                    key={stage.stage_name}
+                    className="flex items-start gap-3 rounded-xl border border-stone-200 bg-white px-4 py-3"
+                  >
+                    <span
+                      className={
+                        "mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full " +
+                        (done
+                          ? "bg-emerald-100 text-emerald-700"
+                          : current
+                            ? "bg-sky-100 text-sky-700"
+                            : "bg-stone-100 text-stone-400")
+                      }
+                    >
+                      {done ? (
+                        <Check className="h-3.5 w-3.5" />
+                      ) : (
+                        <Circle className="h-3 w-3" />
+                      )}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-stone-900">
+                        {stage.display_name}
+                      </p>
+                      <p className="text-xs text-stone-500">
+                        {stage.completed_at
+                          ? `Completed ${formatDate(stage.completed_at)}`
+                          : stage.started_at
+                            ? `Started ${formatDate(stage.started_at)}`
+                            : current
+                              ? "In progress"
+                              : "Pending"}
+                      </p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
           </Section>
         )}
       </div>
