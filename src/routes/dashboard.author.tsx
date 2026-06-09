@@ -475,11 +475,11 @@ function AuthorDashboard() {
           <div className="flex items-center gap-3">
             <img src={cspLogo} alt="CSP" className="h-10 w-10" />
             <div className="flex items-center gap-3">
-              <span className="font-serif text-lg font-semibold text-stone-900">
+              <span className="font-serif text-base font-bold text-text">
                 Cambridge Scholars Publishing
               </span>
               <span className="text-stone-300">|</span>
-              <span className="text-orange-600">Author Portal</span>
+              <span className="font-sans text-sm font-medium text-portal-author">Author Portal</span>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -487,10 +487,10 @@ function AuthorDashboard() {
               <span className="grid h-9 w-9 place-items-center rounded-full bg-orange-100 text-sm font-semibold text-orange-700">
                 {initials}
               </span>
-              <span className="text-sm font-medium">{displayName}</span>
+              <span className="font-sans text-sm text-text">{displayName}</span>
             </div>
             <span className="text-stone-300">|</span>
-            <button onClick={onLogout} className="text-sm text-stone-600 hover:text-stone-900">
+            <button onClick={onLogout} className="font-sans text-sm text-text-muted transition-colors hover:text-text">
               Logout
             </button>
           </div>
@@ -500,8 +500,8 @@ function AuthorDashboard() {
 
       <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">
         {/* Hero */}
-        <h1 className="font-serif text-4xl font-bold tracking-tight">My Proposals</h1>
-        <p className="mt-2 text-stone-600">
+        <h1 className="font-serif text-3xl font-bold text-text">My Proposals</h1>
+        <p className="mt-1.5 font-sans text-sm leading-relaxed text-text-muted">
           Here you can see all of your book proposals and what is happening with each one.
         </p>
 
