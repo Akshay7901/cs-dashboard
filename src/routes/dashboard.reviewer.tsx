@@ -279,30 +279,30 @@ function ReviewerDashboard() {
   return (
     <div className="min-h-screen bg-[#FAF6EE] font-sans text-stone-800">
       {/* Top bar */}
-      <header className="border-b border-stone-200 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4">
+      <header className="bg-white">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-5">
           <div className="flex items-center gap-3">
             <Link to="/login" className="flex items-center gap-3">
               <img src={cspLogo} alt="CSP" width={32} height={32} />
-              <span className="font-serif text-xl font-bold text-stone-900">
+              <span className="font-serif text-base font-bold leading-none text-[#2C1A0E]">
                 Cambridge Scholars Publishing
               </span>
             </Link>
-            <span className="mx-2 h-5 w-px bg-stone-300" />
-            <span className="font-sans text-base text-[#0E3D2F]">Reviewer Portal</span>
+            <span className="mx-1 text-stone-300">|</span>
+            <span className="font-sans text-sm font-medium text-sky-600">Reviewer Portal</span>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-100 font-sans text-xs font-semibold text-sky-700">
               {initialsFromName(displayName)}
             </div>
-            <span className="font-sans text-sm font-medium text-stone-800">
+            <span className="font-sans text-sm text-[#2C1A0E]">
               {displayName}
             </span>
-            <span className="h-5 w-px bg-stone-300" />
+            <span className="text-stone-300">|</span>
             <button
               type="button"
               onClick={onLogout}
-              className="inline-flex items-center gap-1.5 font-sans text-sm text-stone-600 hover:text-stone-900"
+              className="inline-flex items-center gap-1.5 font-sans text-sm text-[#7A6A5A] hover:text-stone-900 transition-colors"
             >
               <LogOut className="h-4 w-4" />
               Logout
@@ -314,10 +314,10 @@ function ReviewerDashboard() {
       <main className="mx-auto max-w-5xl px-6 py-10">
         {/* Heading */}
         <div className="mb-8">
-          <h1 className="font-serif text-4xl font-bold tracking-tight text-stone-900">
+          <h1 className="font-serif text-3xl font-bold tracking-tight text-[#2C1A0E]">
             Your Reviews
           </h1>
-          <p className="mt-2 font-sans text-base text-amber-700/80">
+          <p className="mt-1.5 font-sans text-sm text-[#7A6A5A]">
             {REVIEWER_PROFILE.affiliation} ·{" "}
             {REVIEWER_PROFILE.expertise.join(", ")}
           </p>
@@ -338,7 +338,7 @@ function ReviewerDashboard() {
 
         {/* Awaiting Your Review */}
         <section className="mb-10">
-          <h2 className="mb-4 flex items-center gap-2 font-serif text-2xl font-bold text-stone-900">
+          <h2 className="mb-4 flex items-center gap-2 font-serif text-lg font-bold text-[#2C1A0E]">
             <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
             Awaiting Your Review
           </h2>
@@ -369,7 +369,7 @@ function ReviewerDashboard() {
 
         {/* Completed */}
         <section>
-          <h2 className="mb-4 flex items-center gap-2 font-serif text-2xl font-bold text-stone-900">
+          <h2 className="mb-4 flex items-center gap-2 font-serif text-lg font-bold text-[#2C1A0E]">
             <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
             Completed Reviews
           </h2>
@@ -414,28 +414,28 @@ function StatCard({
     { wrap: string; value: string; label: string }
   > = {
     sky: {
-      wrap: "bg-sky-50 ring-2 ring-sky-200",
-      value: "text-sky-900",
-      label: "text-sky-800",
+      wrap: "bg-sky-50 border border-sky-200",
+      value: "text-sky-700",
+      label: "text-sky-700",
     },
     amber: {
-      wrap: "bg-amber-50 ring-2 ring-amber-200",
-      value: "text-amber-900",
-      label: "text-amber-800",
+      wrap: "bg-amber-50 border border-amber-200",
+      value: "text-amber-700",
+      label: "text-amber-700",
     },
     green: {
-      wrap: "bg-emerald-50 ring-2 ring-emerald-200",
-      value: "text-emerald-900",
-      label: "text-emerald-800",
+      wrap: "bg-emerald-50 border border-emerald-200",
+      value: "text-emerald-700",
+      label: "text-emerald-700",
     },
   };
   const t = tones[tone];
   return (
-    <div className={`rounded-2xl px-5 py-5 text-center ${t.wrap}`}>
-      <div className={`font-serif text-4xl font-bold leading-none ${t.value}`}>
+    <div className={`rounded-xl p-5 text-center ${t.wrap}`}>
+      <div className={`font-serif text-3xl font-bold leading-none ${t.value}`}>
         {value}
       </div>
-      <div className={`mt-2 font-sans text-sm font-medium ${t.label}`}>{label}</div>
+      <div className={`mt-1 font-sans text-xs font-medium ${t.label}`}>{label}</div>
     </div>
   );
 }
