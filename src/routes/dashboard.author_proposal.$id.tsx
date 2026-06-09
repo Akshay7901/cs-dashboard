@@ -342,7 +342,7 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
   return (
     <>
       {/* Hero card: title + status pill + stepper */}
-      <section className="mt-6 rounded-2xl border border-stone-200 bg-white p-6 shadow-sm md:p-8">
+      <section id="section-hero" className="mt-6 rounded-2xl border border-stone-200 bg-white p-6 shadow-sm md:p-8 scroll-mt-24">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
             <h1 className="font-serif text-3xl font-bold leading-tight text-stone-900 md:text-4xl">
@@ -403,7 +403,7 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
           />
         </div>
 
-        <aside className="row-span-2 rounded-2xl border border-amber-200/60 bg-amber-50/40 p-5">
+        <aside id="section-documents" className="row-span-2 rounded-2xl border border-amber-200/60 bg-amber-50/40 p-5 scroll-mt-24">
           <h3 className="font-serif text-lg font-semibold text-stone-900">Documents</h3>
           {allFiles.length === 0 ? (
             <p className="mt-3 text-sm text-stone-500">No documents uploaded.</p>
@@ -436,7 +436,7 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
         {/* Main content stack (under stats, beside Documents) */}
         <div className="space-y-5">
           {/* Primary author card */}
-          <Card title="Primary Author / Editor">
+          <Card title="Primary Author / Editor" id="section-author">
             <div className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2">
               <Field label="Name" value={authorFullName} />
               <Field label="Email" value={cd.email || "—"} />
@@ -468,7 +468,7 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
             cd.overview ||
             cd.key_features ||
             cd.target_audience) && (
-            <Card title="Summary & Description">
+            <Card title="Summary & Description" id="section-summary">
               <p className="-mt-2 text-sm text-amber-800/80">
                 {[cd.subject, cd.secondary_subjects?.join(" / ")]
                   .filter(Boolean)
@@ -528,14 +528,14 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
 
           {/* TOC */}
           {cd.table_of_contents && (
-            <Card title="Table of Contents">
+            <Card title="Table of Contents" id="section-toc">
               <TocList raw={cd.table_of_contents} />
             </Card>
           )}
 
           {/* Market & Competition */}
           {(cd.unique_selling_points || cd.competing_titles || cd.primary_market) && (
-            <Card title="Market & Competition">
+            <Card title="Market & Competition" id="section-market">
               <div className="space-y-4">
                 {cd.primary_market && (
                   <SubCard label="Primary Market">
@@ -564,13 +564,13 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
 
           {/* Suggested reviewers */}
           {cd.recommended_reviewers && (
-            <Card title="Suggested Reviewers" subtitle="Nominated for consideration">
+            <Card title="Suggested Reviewers" subtitle="Nominated for consideration" id="section-reviewers">
               <ReviewersList raw={cd.recommended_reviewers} />
             </Card>
           )}
 
           {/* Manuscript details / extras */}
-          <Card title="Manuscript Details">
+          <Card title="Manuscript Details" id="section-manuscript">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <MiniStat label="Has tables" value={fmtBool(cd.has_tables)} />
               <MiniStat
@@ -592,7 +592,7 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
 
           {/* Additional notes */}
           {(cd.conferences || cd.promotional_channels) && (
-            <Card title="Additional Notes" subtitle="Copyright, permissions, special considerations">
+            <Card title="Additional Notes" subtitle="Copyright, permissions, special considerations" id="section-notes">
               <div className="space-y-4">
                 {cd.conferences && (
                   <SubCard label="Conferences">
@@ -639,13 +639,15 @@ function Card({
   title,
   subtitle,
   children,
+  id,
 }: {
   title: string;
   subtitle?: string;
   children: React.ReactNode;
+  id?: string;
 }) {
   return (
-    <section className="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm md:p-7">
+    <section id={id} className="scroll-mt-24 rounded-2xl border border-stone-200 bg-white p-6 shadow-sm md:p-7">
       <h2 className="font-serif text-xl font-bold text-stone-900">{title}</h2>
       {subtitle && <p className="mt-1 text-sm text-amber-800/80">{subtitle}</p>}
       <div className={subtitle ? "mt-5" : "mt-5"}>{children}</div>
@@ -733,8 +735,25 @@ function ProgressStepper({
 }) {
   const declined = status === "declined";
 
+  function anchorFor(stageName?: string, label?: string): string {
+    const s = `${stageName || ""} ${label || ""}`.toLowerCase();
+    if (/submit|new|receiv/.test(s)) return "section-hero";
+    if (/review|peer|assess/.test(s)) return "section-reviewers";
+    if (/contract|sign|approv|lock/.test(s)) return "section-documents";
+    if (/decision|editor/.test(s)) return "section-summary";
+    if (/revis|info|question|quer/.test(s)) return "section-summary";
+    if (/declin|reject/.test(s)) return "section-hero";
+    if (/final|publish|product/.test(s)) return "section-documents";
+    return "section-hero";
+  }
+
+  function scrollTo(id: string) {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   // Prefer the timeline returned by the API; fall back to a 4-stage default.
-  const stages: { label: string; done: boolean; current: boolean; failed: boolean }[] =
+  const stages: { label: string; done: boolean; current: boolean; failed: boolean; anchor: string }[] =
     timeline && timeline.length > 0
       ? timeline.map((t) => {
           const isDeclineStage = /declin|reject/i.test(t.stage_name) || /declin|reject/i.test(t.display_name);
@@ -743,27 +762,31 @@ function ProgressStepper({
             done: !!t.is_completed,
             current: !!t.is_current,
             failed: isDeclineStage && (!!t.is_completed || !!t.is_current),
+            anchor: anchorFor(t.stage_name, t.display_name),
           };
         })
       : [
-          { label: "Submitted", done: true, current: false, failed: false },
+          { label: "Submitted", done: true, current: false, failed: false, anchor: "section-hero" },
           {
             label: "Peer Review",
             done: ["review_returned", "contract", "signed", "declined", "major_revisions"].includes(status),
             current: status === "in_review",
             failed: false,
+            anchor: "section-reviewers",
           },
           {
             label: "Decision",
             done: ["contract", "signed", "declined"].includes(status),
             current: status === "review_returned",
             failed: false,
+            anchor: "section-summary",
           },
           {
             label: declined ? "Declined" : status === "signed" ? "Signed" : status === "contract" ? "Contract" : "Decision",
             done: ["signed", "declined"].includes(status),
             current: status === "contract",
             failed: declined,
+            anchor: "section-documents",
           },
         ];
 
@@ -780,9 +803,12 @@ function ProgressStepper({
                   }`}
                 />
               )}
-              <span
+              <button
+                type="button"
+                onClick={() => scrollTo(s.anchor)}
+                title={`Jump to ${s.label}`}
                 className={
-                  "grid h-9 w-9 shrink-0 place-items-center rounded-full " +
+                  "grid h-9 w-9 shrink-0 place-items-center rounded-full transition hover:scale-110 focus:outline-none focus:ring-2 focus:ring-amber-300 " +
                   (s.failed
                     ? "bg-stone-300 text-white"
                     : s.done
@@ -799,7 +825,7 @@ function ProgressStepper({
                 ) : (
                   <span className="text-sm font-semibold">{i + 1}</span>
                 )}
-              </span>
+              </button>
               {i < stages.length - 1 && (
                 <div
                   className={`h-[3px] flex-1 ${
@@ -808,14 +834,16 @@ function ProgressStepper({
                 />
               )}
             </div>
-            <p
+            <button
+              type="button"
+              onClick={() => scrollTo(s.anchor)}
               className={
-                "mt-2 text-center text-sm font-medium " +
+                "mt-2 text-center text-sm font-medium hover:underline focus:outline-none " +
                 (s.current ? "text-amber-700" : s.done ? "text-stone-900" : "text-stone-500")
               }
             >
               {s.label}
-            </p>
+            </button>
           </div>
         ))}
       </div>
