@@ -500,18 +500,14 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
             </div>
             {cd.address && (
               <div className="mt-6 border-t border-stone-200 pt-5">
-                <p className="text-xs font-medium uppercase tracking-wider text-amber-800/80">
-                  Mailing Address
-                </p>
-                <p className="mt-1 text-[15px] text-stone-800">{cd.address}</p>
+                <p className="font-sans text-xs font-medium" style={{ color: "#7A6A5A" }}>Mailing Address</p>
+                <p className="mt-0.5 font-sans text-sm font-medium" style={{ color: "#2C1A0E" }}>{cd.address}</p>
               </div>
             )}
             {cd.biography && (
               <div className="mt-5 border-t border-stone-200 pt-5">
-                <p className="text-xs font-medium uppercase tracking-wider text-amber-800/80">
-                  Biography
-                </p>
-                <p className="mt-1 whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
+                <p className="font-sans text-xs font-medium" style={{ color: "#7A6A5A" }}>Biography</p>
+                <p className="mt-0.5 whitespace-pre-wrap font-sans text-sm font-medium leading-relaxed" style={{ color: "#2C1A0E" }}>
                   {cd.biography}
                 </p>
               </div>
@@ -538,14 +534,14 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
                       </div>
                       {ca.address ? (
                         <div className="mt-4">
-                          <p className="text-xs font-medium uppercase tracking-wider text-amber-800/80">Mailing Address</p>
-                          <p className="mt-1 text-[15px] text-stone-800">{String(ca.address)}</p>
+                          <p className="font-sans text-xs font-medium" style={{ color: "#7A6A5A" }}>Mailing Address</p>
+                          <p className="mt-0.5 font-sans text-sm font-medium" style={{ color: "#2C1A0E" }}>{String(ca.address)}</p>
                         </div>
                       ) : null}
                       {ca.biography ? (
                         <div className="mt-4">
-                          <p className="text-xs font-medium uppercase tracking-wider text-amber-800/80">Biography</p>
-                          <p className="mt-1 whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">{String(ca.biography)}</p>
+                          <p className="font-sans text-xs font-medium" style={{ color: "#7A6A5A" }}>Biography</p>
+                          <p className="mt-0.5 whitespace-pre-wrap font-sans text-sm font-medium leading-relaxed" style={{ color: "#2C1A0E" }}>{String(ca.biography)}</p>
                         </div>
                       ) : null}
                     </div>
@@ -558,7 +554,7 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
           {/* Summary & Description */}
           {(overviewText || keyFeaturesText || audienceText || keywordTags.length > 0) && (
             <Card title="Summary & Description" id="section-summary">
-              <p className="-mt-2 text-sm text-amber-800/80">
+              <p className="-mt-2 font-sans text-sm font-medium" style={{ color: "#A6814A" }}>
                 {[cd.subject, cd.secondary_subjects?.join(" / ")]
                   .filter(Boolean)
                   .join(" · ") || "—"}
@@ -566,7 +562,7 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
               <div className="mt-5 space-y-4">
                 {overviewText && (
                   <SubCard label="Overview">
-                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
+                    <p className="whitespace-pre-wrap font-sans text-sm font-medium leading-relaxed" style={{ color: "#2C1A0E" }}>
                       {overviewText}
                     </p>
                     {keywordTags.length > 0 && (
@@ -585,28 +581,28 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
                 )}
                 {keyFeaturesText && keyFeaturesText !== overviewText && (
                   <SubCard label="Key Features & Unique Contribution">
-                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
+                    <p className="whitespace-pre-wrap font-sans text-sm font-medium leading-relaxed" style={{ color: "#2C1A0E" }}>
                       {keyFeaturesText}
                     </p>
                   </SubCard>
                 )}
                 {cd.unique_selling_points && (
                   <SubCard label="Unique Selling Points">
-                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
+                    <p className="whitespace-pre-wrap font-sans text-sm font-medium leading-relaxed" style={{ color: "#2C1A0E" }}>
                       {cd.unique_selling_points}
                     </p>
                   </SubCard>
                 )}
                 {audienceText && (
                   <SubCard label="Intended Audience">
-                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700">
+                    <p className="whitespace-pre-wrap font-sans text-sm font-medium leading-relaxed" style={{ color: "#2C1A0E" }}>
                       {audienceText}
                     </p>
                   </SubCard>
                 )}
                 {cd.language && (
                   <SubCard label="Contains Non-English Content">
-                    <p className="text-[15px] text-stone-900">
+                    <p className="font-sans text-sm font-medium" style={{ color: "#2C1A0E" }}>
                       {cd.language.toLowerCase() === "english" ? "No" : `Yes (${cd.language})`}
                     </p>
                   </SubCard>
@@ -754,7 +750,7 @@ function Card({
 function SubCard({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="border-t border-stone-200 pt-5 first:border-t-0 first:pt-0">
-      <p className="text-xs font-semibold uppercase tracking-wider text-amber-800/80">{label}</p>
+      <p className="font-sans text-xs font-medium" style={{ color: "#7A6A5A" }}>{label}</p>
       <div className="mt-2">{children}</div>
     </div>
   );
