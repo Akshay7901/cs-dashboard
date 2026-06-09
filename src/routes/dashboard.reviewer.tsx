@@ -414,19 +414,19 @@ function StatCard({
     { wrap: string; value: string; label: string }
   > = {
     sky: {
-      wrap: "bg-sky-50 border border-sky-200",
-      value: "text-sky-700",
-      label: "text-sky-700",
+      wrap: "bg-sky-100/60 border border-sky-200/70",
+      value: "text-sky-800",
+      label: "text-sky-800",
     },
     amber: {
-      wrap: "bg-amber-50 border border-amber-200",
-      value: "text-amber-700",
-      label: "text-amber-700",
+      wrap: "bg-sky-100/60 border border-sky-200/70",
+      value: "text-sky-800",
+      label: "text-sky-800",
     },
     green: {
-      wrap: "bg-emerald-50 border border-emerald-200",
-      value: "text-emerald-700",
-      label: "text-emerald-700",
+      wrap: "bg-sky-100/60 border border-sky-200/70",
+      value: "text-sky-800",
+      label: "text-sky-800",
     },
   };
   const t = tones[tone];
