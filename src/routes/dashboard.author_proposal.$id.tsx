@@ -311,7 +311,7 @@ function AuthorProposalDetails() {
       <div className="mx-auto max-w-6xl px-6 py-8">
         <Link
           to="/dashboard/author"
-          className="inline-flex items-center gap-1 text-sm font-medium text-stone-600 hover:text-stone-900"
+          className="inline-flex items-center gap-1.5 font-sans text-sm text-[#7A6A5A] hover:text-stone-900 transition-colors mb-6"
         >
           <ChevronLeft className="h-4 w-4" />
           Back to dashboard
