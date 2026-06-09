@@ -670,7 +670,7 @@ function ProposalCard({ p }: { p: Proposal }) {
 
         {cfg.cta && (
           <Link
-            to="/dashboard/author/proposal/$id"
+            to="/dashboard/author_proposal/$id"
             params={{ id: p.id }}
             className={
               "mt-5 flex w-full items-center justify-center gap-2 rounded-xl px-6 py-4 text-base font-semibold shadow-sm transition-colors " +
@@ -692,7 +692,7 @@ function ProposalCard({ p }: { p: Proposal }) {
         {!cfg.cta && !cfg.footnote && (
           <div className="mt-4 border-t border-stone-100 pt-4 text-right">
             <Link
-              to="/dashboard/author/proposal/$id"
+              to="/dashboard/author_proposal/$id"
               params={{ id: p.id }}
               className="inline-flex items-center gap-1 text-sm font-semibold text-emerald-800 hover:text-emerald-900"
             >
@@ -704,7 +704,7 @@ function ProposalCard({ p }: { p: Proposal }) {
         {!cfg.cta && cfg.footnote && (
           <div className="mt-4 border-t border-stone-100 pt-4 text-right">
             <Link
-              to="/dashboard/author/proposal/$id"
+              to="/dashboard/author_proposal/$id"
               params={{ id: p.id }}
               className="inline-flex items-center gap-1 text-sm font-semibold text-emerald-800 hover:text-emerald-900"
             >

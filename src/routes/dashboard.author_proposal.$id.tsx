@@ -6,7 +6,7 @@ import { initialsFromName, type StatusKey } from "@/lib/proposals";
 import { portalLogout, getPortalSession, getPortalToken } from "@/lib/auth";
 import { proposalApiFetch } from "@/lib/proposalApi";
 
-export const Route = createFileRoute("/dashboard/author/proposal/$id")({
+export const Route = createFileRoute("/dashboard/author_proposal/$id")({
   head: () => ({ meta: [{ title: "Proposal Details — Author Portal" }] }),
   component: AuthorProposalDetails,
 });
