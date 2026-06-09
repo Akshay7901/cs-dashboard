@@ -277,7 +277,7 @@ function ReviewerDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF6EE] font-sans text-stone-800">
+    <div className="min-h-screen bg-[#F9F7F2] font-sans text-stone-800">
       {/* Top bar */}
       <header className="bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-5">
