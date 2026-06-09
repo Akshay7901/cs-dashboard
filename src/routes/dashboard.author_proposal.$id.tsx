@@ -293,13 +293,13 @@ function AuthorProposalDetails() {
         <div className="h-[3px] bg-orange-500/80" />
       </header>
 
-      <div className="mx-auto max-w-4xl px-6 py-8">
+      <div className="mx-auto max-w-6xl px-6 py-8">
         <Link
           to="/dashboard/author"
           className="inline-flex items-center gap-1 text-sm font-medium text-stone-600 hover:text-stone-900"
         >
           <ChevronLeft className="h-4 w-4" />
-          Back to my proposals
+          Back to dashboard
         </Link>
 
         {loading && (
