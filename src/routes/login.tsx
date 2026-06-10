@@ -173,6 +173,20 @@ function PortalLoginForm({ portal, onBack }: { portal: PortalConfig; onBack: () 
 
   const goToDashboard = (apiRole: ApiRole, token: string, userEmail: string, name?: string) => {
     const role = roleToPortal(apiRole);
+    // Enforce that the API role matches the selected portal
+    const allowedApiRoles: Record<Role, string[]> = {
+      author: ["author"],
+      editor: ["editor", "admin"],
+      reviewer: ["reviewer", "decision_reviewer"],
+      decision_reviewer: ["decision_reviewer"],
+    };
+    const normalized = (apiRole || "").toLowerCase();
+    if (!allowedApiRoles[portal.id].includes(normalized)) {
+      setError(
+        `This account is registered as ${normalized || "unknown"}. Please sign in via the ${normalized || "correct"} portal.`,
+      );
+      return;
+    }
     persistPortalSession({ token, email: userEmail, name, role });
     if (role === "decision_reviewer") {
       navigate({ to: "/dashboard/decision_reviewer" });
