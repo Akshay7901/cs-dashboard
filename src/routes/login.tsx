@@ -173,18 +173,8 @@ function PortalLoginForm({ portal, onBack }: { portal: PortalConfig; onBack: () 
 
   const goToDashboard = (apiRole: ApiRole, token: string, userEmail: string, name?: string) => {
     const role = roleToPortal(apiRole);
-    // Enforce that the API role matches the selected portal
-    const allowedApiRoles: Record<Role, string[]> = {
-      author: ["author"],
-      editor: ["editor", "admin"],
-      reviewer: ["reviewer", "decision_reviewer"],
-      decision_reviewer: ["decision_reviewer"],
-    };
-    const normalized = (apiRole || "").toLowerCase();
-    if (!allowedApiRoles[portal.id].includes(normalized)) {
-      setError(
-        `This account is registered as ${normalized || "unknown"}. Please sign in via the ${normalized || "correct"} portal.`,
-      );
+    if (!isRoleAllowedForPortal(apiRole)) {
+      setError(buildRoleMismatchError(apiRole));
       return;
     }
     persistPortalSession({ token, email: userEmail, name, role });
@@ -211,6 +201,13 @@ function PortalLoginForm({ portal, onBack }: { portal: PortalConfig; onBack: () 
         body: JSON.stringify({ email: email.trim() }),
       });
       const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      // If the API hints at the user's role at this stage, validate it now
+      // so the user gets immediate feedback before entering password/OTP.
+      const hintedRole = (data.role as string | undefined) || undefined;
+      if (hintedRole && !isRoleAllowedForPortal(hintedRole)) {
+        setError(buildRoleMismatchError(hintedRole));
+        return;
+      }
       // First-time login — server issued an OTP
       if (res.ok && data.requires_otp) {
         setOtpPurpose((data.purpose as string) || "first_login");
@@ -244,6 +241,22 @@ function PortalLoginForm({ portal, onBack }: { portal: PortalConfig; onBack: () 
     } finally {
       setLoading(false);
     }
+  };
+
+  const isRoleAllowedForPortal = (apiRole: ApiRole | undefined): boolean => {
+    const allowed: Record<Role, string[]> = {
+      author: ["author"],
+      editor: ["editor", "admin"],
+      reviewer: ["reviewer", "decision_reviewer"],
+      decision_reviewer: ["decision_reviewer"],
+    };
+    const normalized = (apiRole || "").toLowerCase();
+    return allowed[portal.id].includes(normalized);
+  };
+
+  const buildRoleMismatchError = (apiRole: ApiRole | undefined): string => {
+    const normalized = (apiRole || "").toLowerCase() || "unknown";
+    return `This account is registered as "${normalized}". Please sign in via the ${normalized} portal.`;
   };
 
   const onSubmitLogin = async (e: FormEvent) => {
