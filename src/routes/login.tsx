@@ -247,7 +247,7 @@ function PortalLoginForm({ portal, onBack }: { portal: PortalConfig; onBack: () 
     const allowed: Record<Role, string[]> = {
       author: ["author"],
       editor: ["editor", "admin", "decision_reviewer"],
-      reviewer: ["reviewer"],
+      reviewer: ["reviewer", "peer_reviewer"],
       decision_reviewer: ["decision_reviewer"],
     };
     const normalized = (apiRole || "").toLowerCase();
