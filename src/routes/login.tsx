@@ -246,8 +246,8 @@ function PortalLoginForm({ portal, onBack }: { portal: PortalConfig; onBack: () 
   const isRoleAllowedForPortal = (apiRole: ApiRole | undefined): boolean => {
     const allowed: Record<Role, string[]> = {
       author: ["author"],
-      editor: ["editor", "admin"],
-      reviewer: ["reviewer", "decision_reviewer"],
+      editor: ["editor", "admin", "decision_reviewer"],
+      reviewer: ["reviewer"],
       decision_reviewer: ["decision_reviewer"],
     };
     const normalized = (apiRole || "").toLowerCase();
