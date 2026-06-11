@@ -173,10 +173,6 @@ function PortalLoginForm({ portal, onBack }: { portal: PortalConfig; onBack: () 
 
   const goToDashboard = (apiRole: ApiRole, token: string, userEmail: string, name?: string) => {
     const role = roleToPortal(apiRole);
-    if (!isRoleAllowedForPortal(apiRole)) {
-      setError(buildRoleMismatchError(apiRole));
-      return;
-    }
     persistPortalSession({ token, email: userEmail, name, role });
     if (role === "decision_reviewer") {
       navigate({ to: "/dashboard/decision_reviewer" });
