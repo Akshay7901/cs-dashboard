@@ -4,6 +4,10 @@
   "installCommand": "bun install",
   "outputDirectory": "dist-spa",
   "rewrites": [
+    {
+      "source": "/api/proposals/:path*",
+      "destination": "https://api.cambridgescholars.com/api/proposals/:path*"
+    },
     { "source": "/(.*)", "destination": "/index.spa.html" }
   ]
 }

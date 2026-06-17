@@ -1,4 +1,10 @@
-const API_BASE = "https://api.cambridgescholars.com/api/proposals";
+const EXTERNAL_API_BASE = "https://api.cambridgescholars.com/api/proposals";
+
+function getApiBase() {
+  if (typeof window === "undefined") return EXTERNAL_API_BASE;
+  if (window.location.hostname.endsWith("vercel.app")) return "/api/proposals";
+  return EXTERNAL_API_BASE;
+}
 
 export function proposalApiFetch(path: string, init?: RequestInit) {
   let suffix = path ?? "";
@@ -9,6 +15,7 @@ export function proposalApiFetch(path: string, init?: RequestInit) {
     suffix = suffix.slice(0, qIdx);
   }
   if (suffix.startsWith("/")) suffix = suffix.slice(1);
-  const url = suffix ? `${API_BASE}/${suffix}${query}` : `${API_BASE}${query}`;
+  const apiBase = getApiBase();
+  const url = suffix ? `${apiBase}/${suffix}${query}` : `${apiBase}${query}`;
   return fetch(url, init);
 }
