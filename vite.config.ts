@@ -1,10 +1,12 @@
 import { defineConfig } from "vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import { nitroV2Plugin } from "@tanstack/nitro-v2-vite-plugin";
 import viteReact from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import tsConfigPaths from "vite-tsconfig-paths";
 
-// Vercel build target — outputs to .vercel/output/ which Vercel auto-detects.
+// Vercel build target — Nitro auto-detects Vercel from CI env vars
+// and emits .vercel/output/ which Vercel serves automatically.
 export default defineConfig({
   server: {
     host: "::",
@@ -13,9 +15,8 @@ export default defineConfig({
   plugins: [
     tsConfigPaths({ projects: ["./tsconfig.json"] }),
     tailwindcss(),
-    tanstackStart({
-      target: "vercel",
-    }),
+    tanstackStart(),
+    nitroV2Plugin({ preset: "vercel" }),
     viteReact(),
   ],
 });
