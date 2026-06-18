@@ -461,6 +461,11 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
         <ProgressStepper timeline={proposal.timeline} status={status} />
       </section>
 
+      <InfoRequestPanel
+        ticket={proposal.ticket}
+        infoRequests={proposal.infoRequests}
+      />
+
       {/* Tabs */}
       <div className="mt-6 inline-flex gap-1 rounded-xl border border-stone-200 bg-white p-1 shadow-sm">
         <button
