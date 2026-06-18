@@ -983,3 +983,306 @@ function ProgressStepper({
     </div>
   );
 }
+
+function pickOpenInfoRequest(reqs?: InfoRequest[]): InfoRequest | null {
+  if (!reqs || reqs.length === 0) return null;
+  const isClosed = (s?: string) => {
+    const v = (s || "").toLowerCase();
+    return v === "closed" || v === "completed" || v === "submitted" || v === "responded";
+  };
+  const open = reqs.find((r) => !isClosed(r.status) && !r.response?.submitted_at);
+  return open || reqs[reqs.length - 1];
+}
+
+function InfoRequestPanel({
+  ticket,
+  infoRequests,
+}: {
+  ticket: string;
+  infoRequests?: InfoRequest[];
+}) {
+  const req = useMemo(() => pickOpenInfoRequest(infoRequests), [infoRequests]);
+  const initialDraft = req?.draft || req?.response || null;
+  const isAlreadySubmitted = !!req?.response?.submitted_at && !req?.response?.is_draft;
+
+  const initialItems: InfoRequestItem[] = useMemo(() => {
+    const base = req?.items || [];
+    const draftItems = initialDraft?.items || [];
+    return base.map((it) => {
+      const d = draftItems.find((d) => d.key === it.key);
+      return { ...it, response_text: d?.response_text || "" };
+    });
+  }, [req, initialDraft]);
+
+  const [items, setItems] = useState<InfoRequestItem[]>(initialItems);
+  const [note, setNote] = useState<string>(initialDraft?.note || "");
+  const [files, setFiles] = useState<InfoRequestFile[]>(initialDraft?.files || []);
+  const [busy, setBusy] = useState<"" | "save" | "submit" | "upload">("");
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    setItems(initialItems);
+    setNote(initialDraft?.note || "");
+    setFiles(initialDraft?.files || []);
+  }, [initialItems, initialDraft]);
+
+  if (!req) return null;
+
+  const updateItem = (idx: number, text: string) => {
+    setItems((prev) => prev.map((it, i) => (i === idx ? { ...it, response_text: text } : it)));
+  };
+
+  const authHeaders = (json = true): Record<string, string> => {
+    const token = getPortalToken();
+    const h: Record<string, string> = {};
+    if (json) h["Content-Type"] = "application/json";
+    if (token) h.Authorization = `Bearer ${token}`;
+    return h;
+  };
+
+  const buildPayload = () => ({
+    request_info_id: req.id,
+    note: note.trim(),
+    items: items.map((it) => ({
+      key: it.key,
+      label: it.label,
+      response_text: it.response_text || "",
+    })),
+    files,
+  });
+
+  const doSave = async () => {
+    setBusy("save");
+    setError(null);
+    setSuccess(null);
+    try {
+      const res = await proposalApiFetch(
+        `/${encodeURIComponent(ticket)}/request-info/save`,
+        { method: "POST", headers: authHeaders(), body: JSON.stringify(buildPayload()) },
+      );
+      const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!res.ok) {
+        setError((body.error as string) || (body.message as string) || `Failed to save (${res.status}).`);
+        return;
+      }
+      setSuccess((body.message as string) || "Draft saved.");
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setBusy("");
+    }
+  };
+
+  const doSubmit = async () => {
+    if (!note.trim() && items.every((it) => !(it.response_text || "").trim()) && files.length === 0) {
+      setError("Please add a response, fill in at least one item, or upload a file before submitting.");
+      return;
+    }
+    setBusy("submit");
+    setError(null);
+    setSuccess(null);
+    try {
+      const res = await proposalApiFetch(
+        `/${encodeURIComponent(ticket)}/request-info/respond`,
+        { method: "POST", headers: authHeaders(), body: JSON.stringify(buildPayload()) },
+      );
+      const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!res.ok) {
+        setError((body.error as string) || (body.message as string) || `Failed to submit (${res.status}).`);
+        return;
+      }
+      setSuccess((body.message as string) || "Response submitted to the editor.");
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setBusy("");
+    }
+  };
+
+  const doUpload = async (file: File) => {
+    setBusy("upload");
+    setError(null);
+    setSuccess(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      if (req.id != null) fd.append("request_info_id", String(req.id));
+      const res = await proposalApiFetch(
+        `/${encodeURIComponent(ticket)}/request-info/upload`,
+        { method: "POST", headers: authHeaders(false), body: fd },
+      );
+      const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!res.ok) {
+        setError((body.error as string) || (body.message as string) || `Failed to upload (${res.status}).`);
+        return;
+      }
+      const uploaded: InfoRequestFile = {
+        url: (body.url as string) || (body.file_url as string) || ((body.file as Record<string, unknown> | undefined)?.url as string),
+        filename: (body.filename as string) || file.name,
+        size_bytes: (body.size_bytes as number) || file.size,
+      };
+      setFiles((prev) => [...prev, uploaded]);
+      setSuccess("File uploaded.");
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setBusy("");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const onPickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) void doUpload(f);
+  };
+
+  const deadline = req.resubmission_deadline || req.deadline;
+
+  return (
+    <section
+      id="section-info-request"
+      className="mt-6 overflow-hidden rounded-2xl border border-amber-200 bg-amber-50/60 shadow-sm scroll-mt-24"
+    >
+      <div className="flex items-center gap-2 border-b border-amber-200 bg-amber-100/60 px-6 py-3">
+        <AlertCircle className="h-4 w-4 text-amber-700" />
+        <span className="font-sans text-sm font-semibold text-amber-800">
+          Awaiting More Info — Action Required
+        </span>
+        {deadline && (
+          <span className="ml-auto inline-flex items-center gap-1 font-sans text-xs text-amber-800">
+            <Calendar className="h-3.5 w-3.5" />
+            Respond by {formatDate(deadline)}
+          </span>
+        )}
+      </div>
+
+      <div className="space-y-5 p-6">
+        <div>
+          <h2 className="font-serif text-xl font-bold text-stone-900">
+            Editor needs additional information
+          </h2>
+          {(req.note || req.message) && (
+            <p className="mt-2 whitespace-pre-wrap font-sans text-sm leading-relaxed text-stone-700">
+              {req.note || req.message}
+            </p>
+          )}
+        </div>
+
+        {isAlreadySubmitted && (
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 font-sans text-sm text-emerald-700">
+            You submitted a response on {formatDate(req.response?.submitted_at)}. You can update it below if needed.
+          </div>
+        )}
+
+        {items.length > 0 && (
+          <div className="space-y-4">
+            {items.map((it, idx) => (
+              <div key={(it.key || "") + idx} className="rounded-xl border border-stone-200 bg-white p-4">
+                <label className="block font-sans text-sm font-semibold text-stone-900">
+                  {it.label || it.key || `Item ${idx + 1}`}
+                </label>
+                <textarea
+                  value={it.response_text || ""}
+                  onChange={(e) => updateItem(idx, e.target.value)}
+                  placeholder="Your response…"
+                  rows={3}
+                  className="mt-2 w-full rounded-lg border border-stone-300 px-3 py-2 font-sans text-sm text-stone-900 placeholder-stone-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200"
+                />
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="rounded-xl border border-stone-200 bg-white p-4">
+          <label className="block font-sans text-sm font-semibold text-stone-900">
+            Additional message to the editor
+          </label>
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Add any further context for the editor…"
+            rows={4}
+            className="mt-2 w-full rounded-lg border border-stone-300 px-3 py-2 font-sans text-sm text-stone-900 placeholder-stone-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200"
+          />
+        </div>
+
+        <div className="rounded-xl border border-stone-200 bg-white p-4">
+          <div className="flex items-center justify-between">
+            <p className="font-sans text-sm font-semibold text-stone-900">Supporting documents</p>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={busy === "upload"}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-stone-300 bg-white px-3 py-1.5 font-sans text-xs font-semibold text-stone-700 transition-colors hover:bg-stone-50 disabled:opacity-60"
+            >
+              <Upload className="h-3.5 w-3.5" />
+              {busy === "upload" ? "Uploading…" : "Upload file"}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              onChange={onPickFile}
+            />
+          </div>
+          {files.length === 0 ? (
+            <p className="mt-3 font-sans text-xs text-stone-500">No files uploaded yet.</p>
+          ) : (
+            <ul className="mt-3 space-y-2">
+              {files.map((f, i) => (
+                <li key={(f.url || f.filename || "") + i} className="flex items-center gap-2 rounded-lg border border-stone-200 bg-stone-50 px-3 py-2">
+                  <Paperclip className="h-4 w-4 text-stone-500" />
+                  <a
+                    href={f.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="truncate font-sans text-sm font-medium text-stone-900 hover:underline"
+                  >
+                    {f.filename || f.url || "File"}
+                  </a>
+                  {f.size_bytes ? (
+                    <span className="ml-auto font-sans text-xs text-stone-500">{formatBytes(f.size_bytes)}</span>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {error && (
+          <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 font-sans text-sm text-rose-700">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 font-sans text-sm text-emerald-700">
+            {success}
+          </div>
+        )}
+
+        <div className="flex flex-wrap items-center justify-end gap-3">
+          <button
+            type="button"
+            onClick={doSave}
+            disabled={busy !== ""}
+            className="inline-flex items-center gap-2 rounded-xl border border-stone-300 bg-white px-4 py-2 font-sans text-sm font-semibold text-stone-700 transition-colors hover:bg-stone-50 disabled:opacity-60"
+          >
+            <Save className="h-4 w-4" />
+            {busy === "save" ? "Saving…" : "Save draft"}
+          </button>
+          <button
+            type="button"
+            onClick={doSubmit}
+            disabled={busy !== ""}
+            className="inline-flex items-center gap-2 rounded-xl bg-amber-600 px-4 py-2 font-sans text-sm font-semibold text-white shadow-sm transition-colors hover:bg-amber-700 disabled:opacity-60"
+          >
+            <Send className="h-4 w-4" />
+            {busy === "submit" ? "Submitting…" : "Submit response"}
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
