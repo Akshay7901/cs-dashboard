@@ -290,6 +290,10 @@ function AuthorProposalDetails() {
             internalStatus: body.internal_status as string | undefined,
             timeline: (body.timeline as TimelineStage[]) || [],
             cd,
+            infoRequests:
+              (body.info_requests as InfoRequest[]) ||
+              (body.request_info as InfoRequest[]) ||
+              [],
           });
           setLoading(false);
         }
