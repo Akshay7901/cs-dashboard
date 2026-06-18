@@ -27,12 +27,26 @@ type PillKey =
   | "attention"
   | "in_review"
   | "revisions"
+  | "awaiting_info"
   | "contract"
   | "major_revisions"
   | "signed"
   | "declined";
 
 const ATTENTION: StatusKey[] = ["revisions", "contract", "major_revisions", "question"];
+
+function isAwaitingInfoRaw(raw?: string, display?: string) {
+  const r = (raw || "").trim().toLowerCase().replace(/\s+/g, "_");
+  const d = (display || "").trim().toLowerCase();
+  return (
+    r === "awaiting_more_info" ||
+    r === "additional_info_required" ||
+    d === "awaiting more info" ||
+    d === "additional info required"
+  );
+}
+
+type LocalProposal = Proposal & { rawStatus?: string; rawDisplayStatus?: string };
 
 // API → local status mapping (mirrors dashboard.decision_reviewer.tsx).
 const STATUS_MAP: Record<string, StatusKey> = {
@@ -116,7 +130,7 @@ type ApiProposalItem = {
   current_data?: Record<string, string | undefined>;
 };
 
-function toProposal(p: ApiProposalItem): Proposal {
+function toProposal(p: ApiProposalItem): LocalProposal {
   const cd = p.current_data || {};
   const title = p.title || cd.main_title || p.ticket_number;
   const kind = cd.book_type || cd.proposal_type || "Proposal";
@@ -126,6 +140,8 @@ function toProposal(p: ApiProposalItem): Proposal {
     title,
     kind,
     status: normalizeStatus(p.status, p.display_status),
+    rawStatus: p.status,
+    rawDisplayStatus: p.display_status,
     authorName: p.corresponding_author || cd.author_name || "",
     authorEmail: p.email || "",
     authorAffiliation: cd.affiliation || cd.institution || "",
@@ -154,20 +170,26 @@ function toProposal(p: ApiProposalItem): Proposal {
   };
 }
 
-const PILLS: { key: PillKey; label: string; dot: string; match: (p: Proposal) => boolean }[] = [
+const PILLS: { key: PillKey; label: string; dot: string; match: (p: LocalProposal) => boolean }[] = [
   { key: "all", label: "All proposals", dot: "", match: () => true },
   {
     key: "attention",
     label: "Needs attention",
     dot: "bg-orange-500",
-    match: (p) => ATTENTION.includes(p.status),
+    match: (p) => ATTENTION.includes(p.status) || isAwaitingInfoRaw(p.rawStatus, p.rawDisplayStatus),
   },
   { key: "in_review", label: "Under review", dot: "bg-sky-500", match: (p) => p.status === "in_review" },
+  {
+    key: "awaiting_info",
+    label: "Awaiting more info",
+    dot: "bg-amber-500",
+    match: (p) => isAwaitingInfoRaw(p.rawStatus, p.rawDisplayStatus),
+  },
   {
     key: "revisions",
     label: "Revisions required",
     dot: "bg-violet-500",
-    match: (p) => p.status === "revisions",
+    match: (p) => p.status === "revisions" && !isAwaitingInfoRaw(p.rawStatus, p.rawDisplayStatus),
   },
   {
     key: "contract",
@@ -206,7 +228,27 @@ interface CardConfig {
   footnote?: string;
 }
 
-function configFor(p: Proposal): CardConfig {
+function configFor(p: LocalProposal): CardConfig {
+  if (isAwaitingInfoRaw(p.rawStatus, p.rawDisplayStatus)) {
+    return {
+      bannerLabel: "Awaiting More Info",
+      bannerDot: "bg-amber-500",
+      bannerTint: "bg-amber-50",
+      bannerText: "text-amber-700",
+      tag: "ACTION REQUIRED",
+      iconBg: "bg-amber-100",
+      iconColor: "text-amber-700",
+      Icon: HelpCircle,
+      eyebrow: "Editor needs more information",
+      eyebrowColor: "text-amber-700",
+      body: "Our editor has requested some additional information before your proposal can move forward. Please open the submission to read the request and respond.",
+      cta: {
+        label: "Respond to information request",
+        className: "bg-amber-500 hover:bg-amber-600 text-white",
+      },
+      footnote: "You can save a draft of your response and come back to it later.",
+    };
+  }
   switch (p.status) {
     case "revisions":
       return {
@@ -358,7 +400,7 @@ function AuthorDashboard() {
   const [activePill, setActivePill] = useState<PillKey>("all");
   const [authorEmail, setAuthorEmail] = useState<string>("");
   const [authorName, setAuthorName] = useState<string>("");
-  const [myProposals, setMyProposals] = useState<Proposal[]>([]);
+  const [myProposals, setMyProposals] = useState<LocalProposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -443,6 +485,7 @@ function AuthorDashboard() {
       attention: 0,
       in_review: 0,
       revisions: 0,
+      awaiting_info: 0,
       contract: 0,
       major_revisions: 0,
       signed: 0,
@@ -459,7 +502,9 @@ function AuthorDashboard() {
     return myProposals.filter(pill.match);
   }, [activePill, myProposals]);
 
-  const attentionList = visible.filter((p) => ATTENTION.includes(p.status));
+  const attentionList = visible.filter(
+    (p) => ATTENTION.includes(p.status) || isAwaitingInfoRaw(p.rawStatus, p.rawDisplayStatus),
+  );
   const progressList = visible.filter((p) =>
     ["in_review", "review_returned", "submitted"].includes(p.status),
   );
@@ -631,7 +676,7 @@ function Section({
   );
 }
 
-function ProposalCard({ p }: { p: Proposal }) {
+function ProposalCard({ p }: { p: LocalProposal }) {
   const cfg = configFor(p);
   const Icon = cfg.Icon;
   return (
