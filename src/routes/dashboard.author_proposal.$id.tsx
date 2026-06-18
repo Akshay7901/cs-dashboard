@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronLeft, FileText, Check, X, Calendar } from "lucide-react";
+import { ChevronLeft, FileText, Check, X, Calendar, Upload, Send, Save, Paperclip, AlertCircle } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
 import { initialsFromName, type StatusKey } from "@/lib/proposals";
 import { portalLogout, getPortalSession, getPortalToken } from "@/lib/auth";
@@ -123,6 +123,41 @@ type ManuscriptFiles = {
   additionalFiles?: ManuscriptFile[];
 };
 
+type InfoRequestItem = {
+  key?: string;
+  label?: string;
+  response_text?: string;
+};
+
+type InfoRequestFile = {
+  url?: string;
+  filename?: string;
+  size_bytes?: number;
+};
+
+type InfoRequest = {
+  id?: string | number;
+  status?: string;
+  note?: string;
+  message?: string;
+  resubmission_deadline?: string;
+  deadline?: string;
+  created_at?: string;
+  items?: InfoRequestItem[];
+  response?: {
+    note?: string;
+    items?: InfoRequestItem[];
+    files?: InfoRequestFile[];
+    submitted_at?: string;
+    is_draft?: boolean;
+  } | null;
+  draft?: {
+    note?: string;
+    items?: InfoRequestItem[];
+    files?: InfoRequestFile[];
+  } | null;
+};
+
 type CurrentData = Record<string, unknown> & {
   main_title?: string;
   sub_title?: string;
@@ -196,6 +231,7 @@ type ProposalState = {
   websiteRef?: string;
   timeline?: TimelineStage[];
   cd: CurrentData;
+  infoRequests?: InfoRequest[];
 };
 
 function AuthorProposalDetails() {
