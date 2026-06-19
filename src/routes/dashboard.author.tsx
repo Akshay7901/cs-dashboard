@@ -33,7 +33,9 @@ type PillKey =
   | "signed"
   | "declined";
 
-const ATTENTION: StatusKey[] = ["revisions", "contract", "major_revisions", "question"];
+// Statuses where the author needs to take action.
+// "question" means we are preparing a response for the author → in progress, not attention.
+const ATTENTION: StatusKey[] = ["revisions", "contract", "major_revisions"];
 
 function isAwaitingInfoRaw(raw?: string, display?: string) {
   const r = (raw || "").trim().toLowerCase().replace(/\s+/g, "_");
@@ -505,8 +507,10 @@ function AuthorDashboard() {
   const attentionList = visible.filter(
     (p) => ATTENTION.includes(p.status) || isAwaitingInfoRaw(p.rawStatus, p.rawDisplayStatus),
   );
-  const progressList = visible.filter((p) =>
-    ["in_review", "review_returned", "submitted"].includes(p.status),
+  const progressList = visible.filter(
+    (p) =>
+      ["in_review", "review_returned", "submitted", "question"].includes(p.status) &&
+      !isAwaitingInfoRaw(p.rawStatus, p.rawDisplayStatus),
   );
   const doneList = visible.filter((p) => ["signed", "declined"].includes(p.status));
 
