@@ -225,10 +225,9 @@ function ProposalDetailPage() {
         title: cd.main_title || title,
         expiry_days: contractExpiryDays,
         language: contractFields.language,
-        author_copies: Number(contractFields.author_copies) || 0,
-        if_two_author_copies: Number(contractFields.if_two_author_copies) || 0,
-        if_three_or_four_author_copies:
-          Number(contractFields.if_three_or_four_author_copies) || 0,
+        author_copies: contractFields.author_copies,
+        if_two_author_copies: contractFields.if_two_author_copies,
+        if_three_or_four_author_copies: contractFields.if_three_or_four_author_copies,
         copies_sold_revenue: Number(contractFields.copies_sold_revenue) || 0,
         secondary_rights_revenue: Number(contractFields.secondary_rights_revenue) || 0,
         publishing_agreement: contractFields.publishing_agreement,
