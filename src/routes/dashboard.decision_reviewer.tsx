@@ -173,9 +173,10 @@ function deriveProposalStatus(p: ApiProposal): StatusKey {
 }
 
 function deriveDisplayStatus(p: ApiProposal): string | undefined {
-  if (p.display_status) return p.display_status;
   const k = deriveProposalStatus(p);
-  return k === "submitted" ? undefined : undefined; // fallback to STATUS_META label
+  if (k === "revisions") return "Revision Request";
+  if (p.display_status) return p.display_status;
+  return undefined; // fallback to STATUS_META label
 }
 
 export const Route = createFileRoute("/dashboard/decision_reviewer")({
