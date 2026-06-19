@@ -43,8 +43,10 @@ function isAwaitingInfoRaw(raw?: string, display?: string) {
   return (
     r === "awaiting_more_info" ||
     r === "additional_info_required" ||
+    r === "additional_information_required" ||
     d === "awaiting more info" ||
-    d === "additional info required"
+    d === "additional info required" ||
+    d === "additional information required"
   );
 }
 
@@ -68,6 +70,8 @@ const STATUS_MAP: Record<string, StatusKey> = {
   declined: "declined",
   awaiting_more_info: "revisions",
   revisions_requested: "revisions",
+  additional_info_required: "revisions",
+  additional_information_required: "revisions",
   major_revisions: "major_revisions",
 };
 
@@ -85,6 +89,7 @@ const DISPLAY_STATUS_MAP: Record<string, StatusKey> = {
   "contract signed": "signed",
   "awaiting more info": "revisions",
   "additional info required": "revisions",
+  "additional information required": "revisions",
   "revisions requested": "revisions",
   "major revisions required": "major_revisions",
   "major revisions": "major_revisions",
