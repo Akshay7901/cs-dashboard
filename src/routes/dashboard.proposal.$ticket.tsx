@@ -1318,31 +1318,31 @@ function ProposalDetailPage() {
                         </button>
                       </>
                     )}
+                    {!assignedReviewer && !isReviewReturned && (
+                      <button
+                        type="button"
+                        onClick={openReviewers}
+                        className="flex w-full items-start gap-3 rounded-xl bg-[#0E3D2F] px-4 py-3 text-left text-white transition-colors hover:bg-[#0a2f24]"
+                      >
+                        <Check className="mt-0.5 h-4 w-4 text-white" />
+                        <div>
+                          <p className="font-sans text-sm font-semibold">Move to Review</p>
+                          <p className="font-sans text-xs text-white/80">Assign a peer reviewer</p>
+                        </div>
+                      </button>
+                    )}
                     {!assignedReviewer && !isReviewReturned && !isAwaitingMoreInfo && (
-                      <>
-                        <button
-                          type="button"
-                          onClick={openReviewers}
-                          className="flex w-full items-start gap-3 rounded-xl bg-[#0E3D2F] px-4 py-3 text-left text-white transition-colors hover:bg-[#0a2f24]"
-                        >
-                          <Check className="mt-0.5 h-4 w-4 text-white" />
-                          <div>
-                            <p className="font-sans text-sm font-semibold">Move to Review</p>
-                            <p className="font-sans text-xs text-white/80">Assign a peer reviewer</p>
-                          </div>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={openRequestRevisions}
-                          className="flex w-full items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/60 px-4 py-3 text-left transition-colors hover:bg-amber-50"
-                        >
-                          <SquarePen className="mt-0.5 h-4 w-4 text-amber-700" />
-                          <div>
-                            <p className="font-sans text-sm font-semibold text-amber-900">Request Revisions</p>
-                            <p className="font-sans text-xs text-amber-700/80">Needs more info before review</p>
-                          </div>
-                        </button>
-                      </>
+                      <button
+                        type="button"
+                        onClick={openRequestRevisions}
+                        className="flex w-full items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/60 px-4 py-3 text-left transition-colors hover:bg-amber-50"
+                      >
+                        <SquarePen className="mt-0.5 h-4 w-4 text-amber-700" />
+                        <div>
+                          <p className="font-sans text-sm font-semibold text-amber-900">Request Revisions</p>
+                          <p className="font-sans text-xs text-amber-700/80">Needs more info before review</p>
+                        </div>
+                      </button>
                     )}
                     <button
                       type="button"
