@@ -625,6 +625,11 @@ function ProposalDetailPage() {
     return s === "declined";
   }, [data?.status]);
 
+  const isAwaitingMoreInfo = useMemo(() => {
+    const s = (data?.status || "").toLowerCase().replace(/\s+/g, "_");
+    return s === "awaiting_more_info";
+  }, [data?.status]);
+
   const primaryReview = reviews[0];
   const recommendationKey = (primaryReview?.review_data?.recommendation as string) || "";
   const recommendationLabel = RECOMMENDATION_LABELS[recommendationKey] || recommendationKey;
@@ -1311,7 +1316,7 @@ function ProposalDetailPage() {
                         </button>
                       </>
                     )}
-                    {!assignedReviewer && !isReviewReturned && (
+                    {!assignedReviewer && !isReviewReturned && !isAwaitingMoreInfo && (
                       <>
                         <button
                           type="button"
