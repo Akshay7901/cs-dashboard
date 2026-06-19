@@ -231,22 +231,22 @@ interface CardConfig {
 function configFor(p: LocalProposal): CardConfig {
   if (isAwaitingInfoRaw(p.rawStatus, p.rawDisplayStatus)) {
     return {
-      bannerLabel: "Awaiting More Info",
-      bannerDot: "bg-amber-500",
-      bannerTint: "bg-amber-50",
-      bannerText: "text-amber-700",
+      bannerLabel: "Revisions Requested",
+      bannerDot: "bg-orange-500",
+      bannerTint: "bg-orange-50",
+      bannerText: "text-orange-700",
       tag: "ACTION REQUIRED",
-      iconBg: "bg-amber-100",
-      iconColor: "text-amber-700",
-      Icon: HelpCircle,
-      eyebrow: "Editor needs more information",
-      eyebrowColor: "text-amber-700",
-      body: "Our editor has requested some additional information before your proposal can move forward. Please open the submission to read the request and respond.",
+      iconBg: "bg-orange-100",
+      iconColor: "text-orange-600",
+      Icon: Pencil,
+      eyebrow: "Your input is needed",
+      eyebrowColor: "text-orange-700",
+      body: "Our editorial team has reviewed your proposal and would like you to address a few points before we can continue.",
       cta: {
-        label: "Respond to information request",
-        className: "bg-amber-500 hover:bg-amber-600 text-white",
+        label: "Read feedback and edit your submission",
+        className: "bg-orange-500 hover:bg-orange-600 text-white",
       },
-      footnote: "You can save a draft of your response and come back to it later.",
+      footnote: "Please open the submission, read the editor's feedback, and update your proposal accordingly.",
     };
   }
   switch (p.status) {
