@@ -173,8 +173,11 @@ function deriveProposalStatus(p: ApiProposal): StatusKey {
 }
 
 function deriveDisplayStatus(p: ApiProposal): string | undefined {
-  const k = deriveProposalStatus(p);
-  if (k === "revisions") return "Revision Request";
+  const raw = (p.status || "").trim().toLowerCase();
+  const display = (p.display_status || "").trim().toLowerCase();
+  if (raw === "awaiting_more_info" || display === "awaiting more info") {
+    return "Revision Request";
+  }
   if (p.display_status) return p.display_status;
   return undefined; // fallback to STATUS_META label
 }
