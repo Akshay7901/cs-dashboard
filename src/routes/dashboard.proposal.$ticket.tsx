@@ -1225,7 +1225,9 @@ function ProposalDetailPage() {
                       Editorial Decision
                     </h2>
                     <p className="mt-1 font-sans text-sm text-stone-500">
-                      {isDeclined
+                      {isAwaitingMoreInfo
+                        ? "Revisions requested — awaiting author"
+                        : isDeclined
                         ? "Declined"
                         : isReviewReturned
                         ? "Review returned — add notes and send to author"
