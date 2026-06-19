@@ -1316,7 +1316,7 @@ function ProposalDetailPage() {
                         </button>
                       </>
                     )}
-                    {!assignedReviewer && !isReviewReturned && (
+                    {!assignedReviewer && !isReviewReturned && !isAwaitingMoreInfo && (
                       <>
                         <button
                           type="button"
