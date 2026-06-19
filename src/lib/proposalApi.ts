@@ -1,6 +1,8 @@
 const EXTERNAL_API_BASE = "https://api.cambridgescholars.com/api/proposals";
 
-export function proposalApiFetch(path: string, init?: RequestInit) {
+let isRedirectingForAuth = false;
+
+export async function proposalApiFetch(path: string, init?: RequestInit) {
   let suffix = path ?? "";
   let query = "";
   const qIdx = suffix.indexOf("?");
@@ -10,5 +12,21 @@ export function proposalApiFetch(path: string, init?: RequestInit) {
   }
   if (suffix.startsWith("/")) suffix = suffix.slice(1);
   const url = suffix ? `${EXTERNAL_API_BASE}/${suffix}${query}` : `${EXTERNAL_API_BASE}${query}`;
-  return fetch(url, init);
+  const res = await fetch(url, init);
+  if (res.status === 401 && typeof window !== "undefined") {
+    const isAuthCall = suffix.startsWith("auth/");
+    if (!isAuthCall && !isRedirectingForAuth) {
+      isRedirectingForAuth = true;
+      try {
+        const { clearPortalSession } = await import("./auth");
+        clearPortalSession();
+      } catch {
+        // ignore
+      }
+      if (!window.location.pathname.startsWith("/login")) {
+        window.location.replace("/login?reason=expired");
+      }
+    }
+  }
+  return res;
 }
