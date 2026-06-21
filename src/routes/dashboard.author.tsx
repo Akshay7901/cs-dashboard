@@ -758,9 +758,14 @@ function Section({
   );
 }
 
-function ProposalCard({ p }: { p: LocalProposal }) {
+function ProposalCard({ p }: { p: LocalProposalWithInfo }) {
   const cfg = configFor(p);
   const Icon = cfg.Icon;
+  const info = p.openInfoRequest;
+  const showInfo =
+    isAwaitingInfoRaw(p.rawStatus, p.rawDisplayStatus) &&
+    info &&
+    ((info.items && info.items.length > 0) || (info.note && info.note.trim()));
   return (
     <article
       className={
@@ -798,6 +803,32 @@ function ProposalCard({ p }: { p: LocalProposal }) {
         </div>
 
         <p className="mt-4 font-sans text-sm leading-relaxed text-text">{cfg.body}</p>
+
+        {showInfo && info && (
+          <div className="mt-4 rounded-xl border border-orange-200 bg-orange-50/60 p-4">
+            <p className="font-sans text-xs font-semibold uppercase tracking-wider text-orange-700">
+              Additional information requested
+            </p>
+            {info.items && info.items.length > 0 && (
+              <ul className="mt-2 list-disc space-y-1 pl-5 font-sans text-sm text-text">
+                {info.items.map((it, i) => (
+                  <li key={(it.key || "") + i}>{it.label || it.key}</li>
+                ))}
+              </ul>
+            )}
+            {info.note && info.note.trim() && (
+              <p className="mt-2 whitespace-pre-wrap font-sans text-sm leading-relaxed text-text">
+                <span className="font-semibold">Note from editor: </span>
+                {info.note}
+              </p>
+            )}
+            {info.deadline && (
+              <p className="mt-2 font-sans text-xs text-text-muted">
+                Please respond by {formatDate(info.deadline)}.
+              </p>
+            )}
+          </div>
+        )}
 
         {cfg.cta && (
           <Link
