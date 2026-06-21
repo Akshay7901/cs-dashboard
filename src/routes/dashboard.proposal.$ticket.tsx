@@ -733,6 +733,17 @@ function ProposalDetailPage() {
     return s === "awaiting_more_info";
   }, [data?.status]);
 
+  const latestContract = contracts[0];
+  const isContractIssued = useMemo(() => {
+    if (!latestContract) return false;
+    const cs = (latestContract.status || "").toLowerCase();
+    return cs === "sent" || cs === "signed" || cs === "declined" || cs === "draft";
+  }, [latestContract]);
+  const isAwaitingSignature = useMemo(() => {
+    const cs = (latestContract?.status || "").toLowerCase();
+    return cs === "sent" || cs === "draft";
+  }, [latestContract]);
+
   const primaryReview = reviews[0];
   const recommendationKey = (primaryReview?.review_data?.recommendation as string) || "";
   const recommendationLabel = RECOMMENDATION_LABELS[recommendationKey] || recommendationKey;
