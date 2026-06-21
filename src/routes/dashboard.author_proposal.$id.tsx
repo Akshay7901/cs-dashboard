@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, FileText, Check, X, Calendar, Upload, Send, Save, Paperclip, AlertCircle } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ChevronLeft, FileText, Check, X, Calendar, Send, Save, AlertCircle } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
 import { initialsFromName, type StatusKey } from "@/lib/proposals";
 import { portalLogout, getPortalSession, getPortalToken } from "@/lib/auth";
@@ -1050,7 +1050,7 @@ function InfoRequestPanel({
   const [busy, setBusy] = useState<"" | "save" | "submit" | "upload">("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  
 
   useEffect(() => {
     setItems(initialItems);
