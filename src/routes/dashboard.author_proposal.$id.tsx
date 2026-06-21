@@ -1118,8 +1118,7 @@ function ContractIssuedView({
       </div>
 
       {/* Step 1 — Feedback */}
-      {(editorialFeedback || editorNote) && (
-        <div className="border-b border-violet-100 px-6 py-6 md:px-8">
+      <div className="border-b border-violet-100 px-6 py-6 md:px-8">
           <div className="flex items-center gap-3">
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-600 font-sans text-sm font-bold text-white">
               1
@@ -1139,8 +1138,9 @@ function ContractIssuedView({
               </p>
             </div>
           )}
-        </div>
-      )}
+
+        <ReviewerCommentsList ticket={ticket} />
+      </div>
 
       {/* Step 2 — Sign */}
       <div className="px-6 py-6 md:px-8">
