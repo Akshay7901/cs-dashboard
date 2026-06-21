@@ -1234,7 +1234,7 @@ function ContractIssuedView({
             <h2 className="mt-2 font-serif text-2xl font-bold leading-snug text-[#2C1A0E] md:text-[1.75rem]">
               Thank you — your contract is confirmed
             </h2>
-            <p className="mt-1.5 font-sans text-sm text-[#C76A2E]">
+            <p className="mt-1.5 font-sans text-sm text-violet-700">
               Issued {formatDate(issuedAt)}
             </p>
           </div>
