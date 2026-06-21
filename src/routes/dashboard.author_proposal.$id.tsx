@@ -1048,17 +1048,29 @@ function ContractIssuedView({
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      setLoading(true);
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const load = async (showLoading: boolean) => {
+      if (showLoading) setLoading(true);
       try {
         const list = await getContract(ticket);
-        if (!cancelled) setContract(list[0] || null);
+        if (cancelled) return;
+        const latest = list[0] || null;
+        setContract(latest);
+        // Poll while the contract is still awaiting signature so the author
+        // dashboard flips to "Contract Signed" automatically.
+        const st = (latest?.status || "").toLowerCase();
+        const pending = st === "sent" || st === "draft";
+        if (pending) {
+          timer = setTimeout(() => load(false), 20000);
+        }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled && showLoading) setLoading(false);
       }
-    })();
+    };
+    load(true);
     return () => {
       cancelled = true;
+      if (timer) clearTimeout(timer);
     };
   }, [ticket, reloadKey]);
 
