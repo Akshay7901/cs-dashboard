@@ -601,6 +601,41 @@ function ProposalDetailPage() {
 
   const displayName = userName || displayNameFromEmail(userEmail);
 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setContractsLoading(true);
+      try {
+        const token = getPortalToken();
+        const res = await proposalApiFetch(`/${encodeURIComponent(ticket)}/contract`, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        if (cancelled) return;
+        if (!res.ok) {
+          setContracts([]);
+          return;
+        }
+        const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+        const list = Array.isArray(body.contracts)
+          ? (body.contracts as ContractDetail[])
+          : body.contract
+            ? [body.contract as ContractDetail]
+            : [];
+        setContracts(list);
+      } catch {
+        if (!cancelled) setContracts([]);
+      } finally {
+        if (!cancelled) setContractsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [ticket, data?.status, data?.updated_at]);
+
   const onLogout = async () => {
     await portalLogout();
     navigate({ to: "/login" });
