@@ -1473,7 +1473,13 @@ function ProposalDetailPage() {
                       Editorial Decision
                     </h2>
                     <p className="mt-1 font-sans text-sm text-stone-500">
-                      {isAwaitingMoreInfo
+                      {isContractIssued
+                        ? isAwaitingSignature
+                          ? "Contract sent — awaiting signature"
+                          : (latestContract?.status || "").toLowerCase() === "signed"
+                            ? "Contract signed"
+                            : "Contract declined"
+                        : isAwaitingMoreInfo
                         ? "Revisions requested — awaiting author"
                         : isDeclined
                         ? "Declined"
@@ -1484,7 +1490,7 @@ function ProposalDetailPage() {
                           : "Awaiting initial assessment"}
                     </p>
                   </div>
-                  {assignedReviewer && !isReviewReturned && !isDeclined && (
+                  {assignedReviewer && !isReviewReturned && !isDeclined && !isContractIssued && (
                     <div className="mx-5 mb-4 rounded-xl bg-indigo-50/70 px-5 py-4 ring-1 ring-indigo-100">
                       <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.12em] text-indigo-700">
                         Assigned Reviewer
@@ -1532,6 +1538,21 @@ function ProposalDetailPage() {
                       <p className="py-6 text-center font-sans text-sm text-stone-500">
                         No actions available
                       </p>
+                    ) : isContractIssued ? (
+                      <button
+                        type="button"
+                        onClick={handleDecline}
+                        disabled={declineLoading}
+                        className="flex w-full items-start gap-3 rounded-xl border border-stone-200 px-4 py-3 text-left transition-colors hover:border-red-300 hover:bg-red-50/50 disabled:opacity-50"
+                      >
+                        <XIcon className="mt-0.5 h-4 w-4 text-stone-500" />
+                        <div>
+                          <p className="font-sans text-sm font-semibold text-stone-900">
+                            {declineLoading ? "Declining…" : "Decline"}
+                          </p>
+                          <p className="font-sans text-xs text-stone-500">Not moving forward</p>
+                        </div>
+                      </button>
                     ) : (
                       <>
                     {isReviewReturned && (
