@@ -151,6 +151,12 @@ function ProposalDetailPage() {
   const [reviewsError, setReviewsError] = useState<string | null>(null);
   const [contracts, setContracts] = useState<ContractDetail[]>([]);
   const [contractsLoading, setContractsLoading] = useState(false);
+  const [pdfOpen, setPdfOpen] = useState(false);
+  const [voidOpen, setVoidOpen] = useState(false);
+  const [voidReason, setVoidReason] = useState("");
+  const [voidLoading, setVoidLoading] = useState(false);
+  const [voidError, setVoidError] = useState<string | null>(null);
+  const [contractsReloadKey, setContractsReloadKey] = useState(0);
   const [comments, setComments] = useState<ReviewComment[]>([]);
   const [commentsSeeded, setCommentsSeeded] = useState(false);
   const [editorialSummary, setEditorialSummary] = useState("");
@@ -588,25 +594,8 @@ function ProposalDetailPage() {
     (async () => {
       setContractsLoading(true);
       try {
-        const token = getPortalToken();
-        const res = await proposalApiFetch(`/${encodeURIComponent(ticket)}/contract`, {
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-        });
-        if (cancelled) return;
-        if (!res.ok) {
-          setContracts([]);
-          return;
-        }
-        const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-        const list = Array.isArray(body.contracts)
-          ? (body.contracts as ContractDetail[])
-          : body.contract
-            ? [body.contract as ContractDetail]
-            : [];
-        setContracts(list);
+        const list = await getContract(ticket);
+        if (!cancelled) setContracts(list);
       } catch {
         if (!cancelled) setContracts([]);
       } finally {
@@ -616,7 +605,39 @@ function ProposalDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [ticket, data?.status, data?.updated_at]);
+  }, [ticket, data?.status, data?.updated_at, contractsReloadKey]);
+
+  const submitVoid = async () => {
+    if (!voidReason.trim()) {
+      setVoidError("Please provide a reason.");
+      return;
+    }
+    setVoidLoading(true);
+    setVoidError(null);
+    try {
+      await voidContract(ticket, voidReason.trim());
+      setVoidOpen(false);
+      setVoidReason("");
+      setContractsReloadKey((k) => k + 1);
+      // refresh proposal status too
+      try {
+        const token = getPortalToken();
+        const r = await proposalApiFetch(`/${encodeURIComponent(ticket)}`, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        if (r.ok) setData((await r.json()) as ProposalDetail);
+      } catch {
+        // ignore
+      }
+    } catch (e) {
+      setVoidError((e as Error).message);
+    } finally {
+      setVoidLoading(false);
+    }
+  };
 
   const onLogout = async () => {
     await portalLogout();
