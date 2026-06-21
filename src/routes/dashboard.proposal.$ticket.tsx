@@ -818,6 +818,47 @@ function ProposalDetailPage() {
     return s === "awaiting_more_info";
   }, [data?.status]);
 
+  // Latest unanswered author query (used for prominent DR action panel)
+  const openQuery = useMemo<ContractQueryEntry | null>(() => {
+    const answered = new Set(
+      queryThread
+        .filter((t) => t.type === "response" && t.parent_query_id)
+        .map((t) => t.parent_query_id as number),
+    );
+    const unanswered = queryThread
+      .filter((t) => t.type === "query" && !answered.has(t.id))
+      .sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      );
+    return unanswered[0] || null;
+  }, [queryThread]);
+
+  const hasOpenQuery =
+    !!openQuery ||
+    queryProposalStatus === "queries_raised" ||
+    queryProposalStatus === "question_raised";
+
+  const submitQueryResponse = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!openQuery || !queryResponseText.trim()) return;
+    setQueryResponseSubmitting(true);
+    setQueryResponseError(null);
+    setQueryResponseSuccess(null);
+    try {
+      await respondQuery(ticket, openQuery.id, queryResponseText.trim());
+      setQueryResponseText("");
+      setQueryResponseSuccess("Response sent to the author.");
+      setContractsReloadKey((k) => k + 1);
+    } catch (err) {
+      setQueryResponseError(
+        (err as Error).message || "Failed to send response.",
+      );
+    } finally {
+      setQueryResponseSubmitting(false);
+    }
+  };
+
   const latestContract = contracts[0];
   const isContractIssued = useMemo(() => {
     if (!latestContract) return false;
