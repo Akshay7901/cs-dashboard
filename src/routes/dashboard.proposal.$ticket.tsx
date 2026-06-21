@@ -5,10 +5,14 @@ import {
   ArrowLeft,
   Check,
   ChevronDown,
+  Clock,
   FileText,
   LogOut,
+  MessageSquare,
+  Pencil,
   Plus,
   SquarePen,
+  Trash2,
   X as XIcon,
 } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
@@ -18,6 +22,7 @@ import { proposalApiFetch } from "@/lib/proposalApi";
 import { getContract, voidContract, type ContractDetail } from "@/lib/contractsApi";
 import { ContractPdfModal } from "@/components/contract-pdf-modal";
 import { ContractQueries } from "@/components/contract-queries";
+import { DrInfoRequests } from "@/components/dr-info-requests";
 
 type Assignment = {
   reviewer_email: string;
@@ -63,6 +68,43 @@ type SubmittedReview = {
   is_submitted?: boolean;
   submitted_at?: string;
   review_data?: Record<string, unknown>;
+};
+
+type InfoRequestItem = {
+  key?: string;
+  label?: string;
+  response_text?: string;
+};
+
+type InfoRequestFile = {
+  url?: string;
+  filename?: string;
+  size_bytes?: number;
+  field_key?: string;
+};
+
+type InfoRequest = {
+  id: string | number;
+  status?: string;
+  note?: string;
+  message?: string;
+  resubmission_deadline?: string;
+  deadline?: string;
+  created_at?: string;
+  requested_at?: string;
+  items?: InfoRequestItem[];
+  response?: {
+    note?: string;
+    items?: InfoRequestItem[];
+    files?: InfoRequestFile[];
+    submitted_at?: string;
+    is_draft?: boolean;
+  } | null;
+  draft?: {
+    note?: string;
+    items?: InfoRequestItem[];
+    files?: InfoRequestFile[];
+  } | null;
 };
 
 const RECOMMENDATION_LABELS: Record<string, string> = {
@@ -1428,6 +1470,25 @@ function ProposalDetailPage() {
                     )}
                   </div>
                 </Card>
+
+                <DrInfoRequests
+                  ticket={ticket}
+                  onChanged={() => {
+                    // Refresh proposal data so status/timeline update after creating/editing/deleting requests
+                    const token = getPortalToken();
+                    proposalApiFetch(`/${encodeURIComponent(ticket)}`, {
+                      headers: {
+                        "Content-Type": "application/json",
+                        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                      },
+                    })
+                      .then((r) => r.json().catch(() => ({})))
+                      .then((body) => {
+                        if (!body.error) setData(body as unknown as ProposalDetail);
+                      })
+                      .catch(() => {});
+                  }}
+                />
 
                 {contracts.length > 0 && (
                   <Card>
