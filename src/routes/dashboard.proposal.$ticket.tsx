@@ -2686,7 +2686,7 @@ function ProposalDetailPage() {
           if (!open) setContractResendPrompt("skip");
         }}
       >
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md bg-white">
           <DialogHeader>
             <DialogTitle>Send Contract Again?</DialogTitle>
             <DialogDescription>
