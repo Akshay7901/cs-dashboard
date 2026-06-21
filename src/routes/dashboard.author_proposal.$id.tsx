@@ -1816,6 +1816,7 @@ function ContractIssuedView({
         onClose={() => setPdfOpen(false)}
       />
     </section>
+    )
   );
 }
 
