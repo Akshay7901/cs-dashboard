@@ -1314,24 +1314,24 @@ function ContractIssuedView({
         </div>
 
         {/* Download link below card */}
-        <div className="px-6 py-5 text-center">
+        <div className="bg-stone-50/40 px-6 pb-6 text-center">
           <button
             type="button"
             onClick={() => setPdfOpen(true)}
-            className="font-sans text-sm font-medium text-[#C76A2E] hover:underline"
+            className="font-sans text-xs text-slate-400 hover:text-slate-600 hover:underline"
           >
             Download full contract for complete terms and conditions
           </button>
         </div>
 
         {/* Welcome Footer (inside card) */}
-        <div className="flex items-start gap-3 border-t border-emerald-100 bg-emerald-50/60 px-6 py-5">
-          <Check className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" strokeWidth={2.5} />
+        <div className="flex items-start gap-2.5 border-t border-emerald-900/20 bg-emerald-900/5 px-6 py-4">
+          <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-[#00422F]" strokeWidth={2} />
           <div className="min-w-0">
-            <h4 className="font-serif text-base font-bold text-emerald-900">
+            <p className="font-sans text-sm font-semibold text-[#00422F]">
               Contract signed — welcome to the CSP family!
-            </h4>
-            <p className="mt-0.5 font-sans text-sm leading-relaxed text-emerald-800/80">
+            </p>
+            <p className="mt-0.5 font-sans text-xs text-[#7A6A5A]">
               Our production team will be in touch shortly with the next steps for bringing your book to publication.
             </p>
           </div>
