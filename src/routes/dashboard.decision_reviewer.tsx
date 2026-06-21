@@ -88,9 +88,9 @@ const API_STATUSES_BY_KEY: Record<StatusKey, string[]> = {
   in_review: ["in_review"],
   review_returned: ["review_returned"],
   major_revisions: [],
-  contract: ["contract_issued", "awaiting_author_approval", "contract_received"],
+  contract: ["contract_issued", "awaiting_author_approval"],
   question: ["queries_raised"],
-  signed: ["author_approved", "locked", "contract_signed"],
+  signed: ["author_approved", "locked", "contract_signed", "contract_received"],
   declined: ["declined"],
 };
 const ALL_API_STATUSES = Array.from(
@@ -107,7 +107,7 @@ const DISPLAY_STATUS_MAP: Record<string, StatusKey> = {
   "under review": "in_review",
   "review returned": "review_returned",
   "contract issued": "contract",
-  "contract received": "contract",
+  "contract received": "signed",
   "awaiting author approval": "contract",
   "queries raised": "question",
   "question raised": "question",
@@ -490,7 +490,7 @@ function DecisionReviewerDashboard() {
       major_revisions: 0,
       contract: sum("contract_issued", "awaiting_author_approval", "contract_received"),
       question: sum("queries_raised"),
-      signed: sum("author_approved", "locked"),
+      signed: sum("author_approved", "locked", "contract_received"),
       declined: sum("declined"),
     } as Record<string, number>;
   }, [statusSummary, mergedProposals.length]);
