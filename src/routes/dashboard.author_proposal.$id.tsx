@@ -5,6 +5,13 @@ import cspLogo from "@/assets/csp-logo.png";
 import { initialsFromName, type StatusKey } from "@/lib/proposals";
 import { portalLogout, getPortalSession, getPortalToken } from "@/lib/auth";
 import { proposalApiFetch } from "@/lib/proposalApi";
+import {
+  getContract,
+  getSigningUrl,
+  type ContractDetail,
+} from "@/lib/contractsApi";
+import { ContractPdfModal } from "@/components/contract-pdf-modal";
+import { ContractQueries } from "@/components/contract-queries";
 
 export const Route = createFileRoute("/dashboard/author_proposal/$id")({
   head: () => ({ meta: [{ title: "Proposal Details — Author Portal" }] }),
@@ -495,6 +502,8 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
         ticket={proposal.ticket}
         infoRequests={proposal.infoRequests}
       />
+
+      <ContractPanel ticket={proposal.ticket} />
 
       {/* Tabs */}
       <div className="mt-6 inline-flex gap-1 rounded-xl border border-stone-200 bg-white p-1 shadow-sm">
