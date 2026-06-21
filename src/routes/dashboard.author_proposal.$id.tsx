@@ -10,6 +10,7 @@ import {
   getSigningUrl,
   type ContractDetail,
 } from "@/lib/contractsApi";
+import { getQueries, raiseQuery } from "@/lib/contractsApi";
 import { ContractPdfModal } from "@/components/contract-pdf-modal";
 import { ContractQueries } from "@/components/contract-queries";
 
@@ -1020,6 +1021,13 @@ function ContractIssuedView({
   const [downloading, setDownloading] = useState(false);
   const [showQueries, setShowQueries] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const [queryOpen, setQueryOpen] = useState(false);
+  const [queryText, setQueryText] = useState("");
+  const [queryCategory, setQueryCategory] = useState("contract");
+  const [querySubmitting, setQuerySubmitting] = useState(false);
+  const [queryError, setQueryError] = useState<string | null>(null);
+  const [querySuccess, setQuerySuccess] = useState(false);
+  const [proposalStatus, setProposalStatus] = useState<string>("");
 
   useEffect(() => {
     let cancelled = false;
@@ -1037,12 +1045,51 @@ function ContractIssuedView({
     };
   }, [ticket, reloadKey]);
 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const body = await getQueries(ticket);
+        if (!cancelled) setProposalStatus(body.proposal_status || "");
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [ticket, reloadKey]);
+
   if (loading || !contract) return null;
 
   const cstatus = (contract.status || "").toLowerCase();
   const isSigned = cstatus === "signed" || cstatus === "completed";
   const isDeclined = cstatus === "declined" || cstatus === "voided";
   const canSign = cstatus === "sent" && !isSigned && !isDeclined;
+  const hasOpenQuery =
+    proposalStatus === "queries_raised" || proposalStatus === "question_raised";
+  const signDisabled = !canSign || hasOpenQuery;
+
+  const submitQuery = async () => {
+    if (!queryText.trim()) return;
+    setQuerySubmitting(true);
+    setQueryError(null);
+    try {
+      await raiseQuery(ticket, queryText.trim(), queryCategory || "contract");
+      setQuerySuccess(true);
+      setQueryText("");
+      setReloadKey((k) => k + 1);
+      setTimeout(() => {
+        setQueryOpen(false);
+        setQuerySuccess(false);
+        setShowQueries(true);
+      }, 900);
+    } catch (e) {
+      setQueryError((e as Error).message || "Failed to submit query.");
+    } finally {
+      setQuerySubmitting(false);
+    }
+  };
 
   const pillCls = isSigned
     ? "bg-emerald-50 text-emerald-700"
@@ -1255,7 +1302,8 @@ function ContractIssuedView({
                 <button
                   type="button"
                   onClick={handleSign}
-                  disabled={signLoading}
+                  disabled={signLoading || signDisabled}
+                  title={hasOpenQuery ? "Resolve your open query before signing" : undefined}
                   className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-violet-600 px-6 py-3 font-sans text-sm font-bold text-white shadow-sm transition hover:bg-violet-700 disabled:opacity-60 sm:flex-none sm:min-w-[220px]"
                 >
                   <CheckCircle2 className="h-4 w-4" />
@@ -1270,7 +1318,11 @@ function ContractIssuedView({
               )}
               <button
                 type="button"
-                onClick={() => setShowQueries((v) => !v)}
+                onClick={() => {
+                  setQueryOpen(true);
+                  setQueryError(null);
+                  setQuerySuccess(false);
+                }}
                 className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-emerald-300 bg-white px-5 py-3 font-sans text-sm font-bold text-emerald-700 transition hover:bg-emerald-50 sm:flex-none"
               >
                 <HelpCircle className="h-4 w-4" />
@@ -1309,7 +1361,118 @@ function ContractIssuedView({
             />
           </div>
         )}
+
+        {hasOpenQuery && !showQueries && (
+          <p className="mt-4 rounded-lg bg-amber-50 px-3 py-2 font-sans text-xs text-amber-800 ring-1 ring-amber-200">
+            You have an open query. Signing is disabled until the editor responds.{" "}
+            <button
+              type="button"
+              onClick={() => setShowQueries(true)}
+              className="font-semibold underline"
+            >
+              View thread
+            </button>
+          </p>
+        )}
       </div>
+
+      {queryOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/50 px-4"
+          onClick={() => !querySubmitting && setQueryOpen(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-lg rounded-2xl bg-white shadow-xl"
+          >
+            <div className="flex items-center justify-between border-b border-stone-200 px-5 py-4">
+              <div className="flex items-center gap-2">
+                <HelpCircle className="h-5 w-5 text-emerald-700" />
+                <h3 className="font-serif text-base font-bold text-stone-900">
+                  Raise a contract query
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setQueryOpen(false)}
+                disabled={querySubmitting}
+                className="rounded-md p-1 text-stone-500 hover:bg-stone-100 disabled:opacity-50"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="space-y-4 px-5 py-4">
+              <p className="font-sans text-sm text-stone-600">
+                Your question will be sent to the editor. Signing will be paused until they
+                respond.
+              </p>
+              <div className="space-y-1.5">
+                <label className="block font-sans text-xs font-semibold uppercase tracking-[0.1em] text-stone-500">
+                  Category
+                </label>
+                <select
+                  value={queryCategory}
+                  onChange={(e) => setQueryCategory(e.target.value)}
+                  disabled={querySubmitting}
+                  className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 font-sans text-sm focus:border-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-100"
+                >
+                  <option value="contract">Contract terms</option>
+                  <option value="royalties">Royalties</option>
+                  <option value="rights">Rights & permissions</option>
+                  <option value="schedule">Schedule</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="block font-sans text-xs font-semibold uppercase tracking-[0.1em] text-stone-500">
+                  Your question <span className="text-rose-600">*</span>
+                </label>
+                <textarea
+                  value={queryText}
+                  onChange={(e) => setQueryText(e.target.value)}
+                  rows={5}
+                  maxLength={2000}
+                  disabled={querySubmitting}
+                  placeholder="e.g. I have a concern about clause 3 regarding intellectual property rights."
+                  className="w-full resize-none rounded-lg border border-stone-300 bg-white px-3 py-2 font-sans text-sm focus:border-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-100"
+                />
+                <p className="text-right font-sans text-[11px] text-stone-400">
+                  {queryText.length}/2000
+                </p>
+              </div>
+              {queryError && (
+                <p className="rounded-lg bg-rose-50 px-3 py-2 font-sans text-xs text-rose-700 ring-1 ring-rose-200">
+                  {queryError}
+                </p>
+              )}
+              {querySuccess && (
+                <p className="rounded-lg bg-emerald-50 px-3 py-2 font-sans text-xs text-emerald-700 ring-1 ring-emerald-200">
+                  Query submitted. The editor has been notified.
+                </p>
+              )}
+            </div>
+            <div className="flex items-center justify-end gap-2 border-t border-stone-200 px-5 py-3">
+              <button
+                type="button"
+                onClick={() => setQueryOpen(false)}
+                disabled={querySubmitting}
+                className="rounded-lg border border-stone-300 bg-white px-4 py-2 font-sans text-sm font-semibold text-stone-700 hover:bg-stone-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={submitQuery}
+                disabled={querySubmitting || !queryText.trim()}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-[#5B2EBA] px-4 py-2 font-sans text-sm font-semibold text-white hover:bg-[#4a2599] disabled:opacity-50"
+              >
+                <Send className="h-3.5 w-3.5" />
+                {querySubmitting ? "Submitting…" : "Submit query"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <ContractPdfModal
         ticket={ticket}
