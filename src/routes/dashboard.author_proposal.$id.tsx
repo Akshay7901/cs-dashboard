@@ -1176,8 +1176,22 @@ function InfoRequestPanel({
           </div>
         )}
 
+        {req.items && req.items.length > 0 && (
+          <div className="rounded-xl border border-amber-200 bg-white p-4">
+            <p className="font-sans text-sm font-semibold text-amber-800">
+              Information requested by the editor
+            </p>
+            <ul className="mt-2 list-disc space-y-1 pl-5 font-sans text-sm text-stone-700">
+              {req.items.map((it, i) => (
+                <li key={i}>{it.label || it.key || `Item ${i + 1}`}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {items.length > 0 && (
           <div className="space-y-4">
+            <p className="font-sans text-sm font-semibold text-stone-900">Your response</p>
             {items.map((it, idx) => (
               <div key={(it.key || "") + idx} className="rounded-xl border border-stone-200 bg-white p-4">
                 <label className="block font-sans text-sm font-semibold text-stone-900">
