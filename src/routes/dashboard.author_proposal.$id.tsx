@@ -1356,7 +1356,7 @@ function ContractIssuedView({
                 <PreviewRow label="Issued" value={formatDate(issuedAt)} />
                 <PreviewRow
                   label="Signed"
-                  value={formatDate(contract.docusign_completed_at)}
+                  value={formatDate(contract.docusign_completed_at ?? undefined)}
                 />
               </>
             )}
@@ -1398,7 +1398,7 @@ function ContractIssuedView({
                   </p>
                   <p className="mt-0.5 inline-flex items-center justify-end gap-1 font-sans text-xs font-semibold text-emerald-700">
                     <Check className="h-3.5 w-3.5" />
-                    Signed {formatDate(contract.docusign_completed_at)}
+                    Signed {formatDate(contract.docusign_completed_at ?? undefined)}
                   </p>
                 </>
               ) : (
