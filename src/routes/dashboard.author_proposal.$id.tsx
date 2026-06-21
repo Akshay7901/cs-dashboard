@@ -2288,50 +2288,6 @@ function InfoRequestPanel({
           </div>
         )}
 
-        {/* Saved draft preview */}
-        {(items.some((it) => (it.response_text || "").trim()) || Object.keys(uploads).length > 0) && (
-          <div className="rounded-xl border border-stone-200 bg-white p-4">
-            <p className="font-sans text-sm font-semibold text-stone-900">Saved draft preview</p>
-            <dl className="mt-2 space-y-2">
-              {items.map((it, idx) => {
-                const text = (it.response_text || "").trim();
-                const upload = it.key ? uploads[it.key] : null;
-                if (!text && !upload) return null;
-                const preview = text.length > 120 ? text.slice(0, 120) + "…" : text;
-                return (
-                  <div key={(it.key || "") + idx} className="flex flex-col gap-0.5">
-                    <dt className="font-sans text-xs font-medium text-stone-500">{it.label || it.key || `Item ${idx + 1}`}</dt>
-                    <dd className="font-sans text-sm text-stone-800">
-                      {upload ? (
-                        <span className="inline-flex items-center gap-1.5 text-emerald-700">
-                          <Paperclip className="h-3.5 w-3.5" />
-                          <a href={upload.url} target="_blank" rel="noreferrer" className="underline-offset-2 hover:underline">
-                            {upload.filename}
-                          </a>
-                        </span>
-                      ) : (
-                        preview
-                      )}
-                    </dd>
-                  </div>
-                );
-              })}
-            </dl>
-          </div>
-        )}
-
-        <div className="rounded-xl border border-stone-200 bg-white p-4">
-          <label className="block font-sans text-sm font-semibold text-stone-900">
-            Message to the editor (optional)
-          </label>
-          <textarea
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="Add an overall note to your response…"
-            rows={3}
-            className="mt-2 w-full rounded-lg border border-stone-300 px-3 py-2 font-sans text-sm text-stone-900 placeholder-stone-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200"
-          />
-        </div>
 
 
         {error && (
