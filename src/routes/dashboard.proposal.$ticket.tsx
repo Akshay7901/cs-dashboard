@@ -1523,15 +1523,28 @@ function ProposalDetailPage() {
                               </p>
                             )}
                             <div className="mt-3 flex flex-wrap gap-2">
-                              <a
-                                href={`https://api.cambridgescholars.com/api/proposals/${encodeURIComponent(ticket)}/contract/document`}
-                                target="_blank"
-                                rel="noreferrer"
+                              <button
+                                type="button"
+                                onClick={() => setPdfOpen(true)}
                                 className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 py-1.5 font-sans text-xs font-semibold text-stone-700 hover:bg-stone-50"
                               >
                                 <FileText className="h-3.5 w-3.5" />
                                 View PDF
-                              </a>
+                              </button>
+                              {(c.status === "sent" || c.status === "draft") && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setVoidReason("");
+                                    setVoidError(null);
+                                    setVoidOpen(true);
+                                  }}
+                                  className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 py-1.5 font-sans text-xs font-semibold text-rose-700 hover:bg-rose-50"
+                                >
+                                  <XIcon className="h-3.5 w-3.5" />
+                                  Void Contract
+                                </button>
+                              )}
                               {c.docusign_view_url && (
                                 <a
                                   href={c.docusign_view_url}
@@ -1548,6 +1561,14 @@ function ProposalDetailPage() {
                       })}
                     </div>
                   </Card>
+                )}
+
+                {contracts.length > 0 && (
+                  <ContractQueries
+                    ticket={ticket}
+                    viewer="dr"
+                    onChanged={() => setContractsReloadKey((k) => k + 1)}
+                  />
                 )}
 
                 {/* Internal Notes */}
