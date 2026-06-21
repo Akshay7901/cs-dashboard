@@ -1451,7 +1451,7 @@ function ProposalDetailPage() {
                 )}
 
                 {/* Supporting Documents (placeholder — API does not return files) */}
-                {!isReviewReturned && (
+                {!isReviewReturned && !isContractIssued && (
                   <Card>
                     <CardHeader
                       title="Supporting Documents"
