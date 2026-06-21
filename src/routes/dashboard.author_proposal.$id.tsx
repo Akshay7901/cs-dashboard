@@ -595,7 +595,8 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
         if (cancelled) return;
         const latest = list[0];
         const s = (latest?.status || "").toLowerCase();
-        if (s === "signed" || s === "completed") {
+        const completed = !!latest?.docusign_completed_at;
+        if (s === "signed" || s === "completed" || completed) {
           setContractSigned(true);
           return; // stop polling
         }
@@ -1089,7 +1090,8 @@ function ContractIssuedView({
         // Poll while the contract is still awaiting signature so the author
         // dashboard flips to "Contract Signed" automatically.
         const st = (latest?.status || "").toLowerCase();
-        const pending = st === "sent" || st === "draft";
+        const completed = !!latest?.docusign_completed_at;
+        const pending = (st === "sent" || st === "draft") && !completed;
         if (pending) {
           timer = setTimeout(() => load(false), 20000);
         }
@@ -1122,7 +1124,10 @@ function ContractIssuedView({
   if (loading || !contract) return null;
 
   const cstatus = (contract.status || "").toLowerCase();
-  const isSigned = cstatus === "signed" || cstatus === "completed";
+  const isSigned =
+    cstatus === "signed" ||
+    cstatus === "completed" ||
+    !!contract.docusign_completed_at;
   const isDeclined = cstatus === "declined" || cstatus === "voided";
   const canSign = cstatus === "sent" && !isSigned && !isDeclined;
   const hasOpenQuery =
