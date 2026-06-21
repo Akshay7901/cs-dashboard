@@ -36,7 +36,7 @@ import {
 } from "@/lib/contractsApi";
 import { ContractPdfModal } from "@/components/contract-pdf-modal";
 import { ContractQueries } from "@/components/contract-queries";
-import { DrInfoRequests } from "@/components/dr-info-requests";
+
 
 type Assignment = {
   reviewer_email: string;
@@ -1891,24 +1891,6 @@ function ProposalDetailPage() {
                   </div>
                 </Card>
 
-                <DrInfoRequests
-                  ticket={ticket}
-                  onChanged={() => {
-                    // Refresh proposal data so status/timeline update after creating/editing/deleting requests
-                    const token = getPortalToken();
-                    proposalApiFetch(`/${encodeURIComponent(ticket)}`, {
-                      headers: {
-                        "Content-Type": "application/json",
-                        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-                      },
-                    })
-                      .then((r) => r.json().catch(() => ({})))
-                      .then((body) => {
-                        if (!body.error) setData(body as unknown as ProposalDetail);
-                      })
-                      .catch(() => {});
-                  }}
-                />
 
 
                 {/* Contract — shown again once the query is resolved */}
