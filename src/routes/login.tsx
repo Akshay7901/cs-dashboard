@@ -1,20 +1,5 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState, type FormEvent } from "react";
-import { UserRound, FileText, ClipboardCheck, ArrowRight, ArrowLeft, type LucideIcon } from "lucide-react";
-import libraryBg from "@/assets/library-reference.jpg";
-import cspLogo from "@/assets/csp-logo.png";
-import { getPortalSession, persistPortalSession } from "@/lib/auth";
-import { proposalApiFetch } from "@/lib/proposalApi";
-
-type ApiRole = "admin" | "editor" | "reviewer" | "decision_reviewer" | "author" | string;
-
-function roleToPortal(apiRole: ApiRole): Role {
-  const r = (apiRole || "").toLowerCase();
-  if (r === "decision_reviewer") return "decision_reviewer";
-  if (r === "editor" || r === "admin") return "editor";
-  if (r === "reviewer" || r === "peer_reviewer" || r.includes("reviewer")) return "reviewer";
-  return "author";
-}
+import { createFileRoute } from "@tanstack/react-router";
+import { LoginPage } from "@/components/portal-login-page";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -30,57 +15,8 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
-type Role = "author" | "editor" | "reviewer" | "decision_reviewer";
-
-interface PortalConfig {
-  id: Role;
-  title: string;
-  cardDescription: string;
-  formSubtitle: string;
-  Icon: LucideIcon;
-  toneClass: string;
-  badgeClass: string;
-  demoEmail: string;
-  demoCode: string;
-}
-
-const portals: PortalConfig[] = [
-  {
-    id: "author",
-    title: "Author Portal",
-    cardDescription: "Track your submission through every stage of the publishing journey.",
-    formSubtitle: "Submit and track your book proposals",
-    Icon: UserRound,
-    toneClass: "bg-portal-author",
-    badgeClass: "bg-portal-author text-white",
-    demoEmail: "author@university.edu",
-    demoCode: "1234",
-  },
-  {
-    id: "editor",
-    title: "Editor Portal",
-    cardDescription: "Manage the full proposal pipeline from intake to decision.",
-    formSubtitle: "Review and manage incoming proposals",
-    Icon: FileText,
-    toneClass: "bg-portal-editor",
-    badgeClass: "bg-portal-editor text-white",
-    demoEmail: "editor@csp.com",
-    demoCode: "5678",
-  },
-  {
-    id: "reviewer",
-    title: "Reviewer Portal",
-    cardDescription: "Review assigned proposals and submit your recommendations.",
-    formSubtitle: "Complete your assigned peer reviews",
-    Icon: ClipboardCheck,
-    toneClass: "bg-portal-reviewer",
-    badgeClass: "bg-portal-reviewer text-white",
-    demoEmail: "reviewer@cambridge.ac.uk",
-    demoCode: "9012",
-  },
-];
-
-export function LoginPage() {
+/*
+function LoginPage() {
   const [selected, setSelected] = useState<Role | null>(null);
   const portal = portals.find((p) => p.id === selected) ?? null;
   const navigate = useNavigate();

@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { UserRound, FileText, ClipboardCheck, ArrowRight, ArrowLeft, type LucideIcon } from "lucide-react";
 import libraryBg from "@/assets/library-reference.jpg";
@@ -15,20 +15,6 @@ function roleToPortal(apiRole: ApiRole): Role {
   if (r === "reviewer" || r === "peer_reviewer" || r.includes("reviewer")) return "reviewer";
   return "author";
 }
-
-export const Route = createFileRoute("/login")({
-  head: () => ({
-    meta: [
-      { title: "CSP Proposal Portal — Cambridge Scholars Publishing" },
-      {
-        name: "description",
-        content:
-          "Sign in to the Cambridge Scholars Publishing Proposal Management Portal as an Author, Editor, or Reviewer.",
-      },
-    ],
-  }),
-  component: LoginPage,
-});
 
 type Role = "author" | "editor" | "reviewer" | "decision_reviewer";
 
