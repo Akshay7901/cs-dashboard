@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { getPortalSession } from "@/lib/auth";
-import { LoginPage } from "./login";
+import { LoginPage } from "@/components/portal-login-page";
 
 export const Route = createFileRoute("/")({
   component: IndexRedirect,
