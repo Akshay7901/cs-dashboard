@@ -52,6 +52,47 @@ function isAwaitingInfoRaw(raw?: string, display?: string) {
 
 type LocalProposal = Proposal & { rawStatus?: string; rawDisplayStatus?: string };
 
+type InfoRequestItem = { key?: string; label?: string; response_text?: string };
+type InfoRequest = {
+  id?: string | number;
+  status?: string;
+  note?: string;
+  message?: string;
+  resubmission_deadline?: string;
+  deadline?: string;
+  created_at?: string;
+  items?: InfoRequestItem[];
+  response?: { submitted_at?: string; is_draft?: boolean } | null;
+};
+
+type OpenInfoRequest = {
+  items: { key?: string; label?: string }[];
+  note?: string;
+  deadline?: string;
+  createdAt?: string;
+};
+
+type LocalProposalWithInfo = LocalProposal & {
+  openInfoRequest?: OpenInfoRequest | null;
+};
+
+function pickOpenInfoRequest(reqs?: InfoRequest[]): OpenInfoRequest | null {
+  if (!Array.isArray(reqs) || reqs.length === 0) return null;
+  const open = reqs.find((r) => {
+    const s = (r.status || "").toLowerCase();
+    const responded = !!r.response?.submitted_at && !r.response?.is_draft;
+    return !responded && s !== "completed" && s !== "closed" && s !== "resolved";
+  });
+  const chosen = open || reqs[reqs.length - 1];
+  if (!chosen) return null;
+  return {
+    items: (chosen.items || []).map((i) => ({ key: i.key, label: i.label })),
+    note: chosen.note || chosen.message,
+    deadline: chosen.resubmission_deadline || chosen.deadline,
+    createdAt: chosen.created_at,
+  };
+}
+
 // API → local status mapping (mirrors dashboard.decision_reviewer.tsx).
 const STATUS_MAP: Record<string, StatusKey> = {
   new: "submitted",
@@ -407,7 +448,7 @@ function AuthorDashboard() {
   const [activePill, setActivePill] = useState<PillKey>("all");
   const [authorEmail, setAuthorEmail] = useState<string>("");
   const [authorName, setAuthorName] = useState<string>("");
-  const [myProposals, setMyProposals] = useState<LocalProposal[]>([]);
+  const [myProposals, setMyProposals] = useState<LocalProposalWithInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -452,7 +493,39 @@ function AuthorDashboard() {
         const e = (p.email || p.current_data?.email || "").toLowerCase();
         return !e || e === lowerEmail;
       });
-      setMyProposals(mine.map(toProposal));
+      const mapped: LocalProposalWithInfo[] = mine.map(toProposal);
+      setMyProposals(mapped);
+      // Fetch detail for proposals awaiting more info so the card can show
+      // the items + note that the DR requested via /request-info.
+      const needDetail = mapped.filter((p) =>
+        isAwaitingInfoRaw(p.rawStatus, p.rawDisplayStatus),
+      );
+      if (needDetail.length > 0) {
+        const details = await Promise.all(
+          needDetail.map(async (p) => {
+            try {
+              const r = await proposalApiFetch(`/${encodeURIComponent(p.id)}`, {
+                headers,
+              });
+              const b = (await r.json().catch(() => ({}))) as Record<string, unknown>;
+              if (!r.ok) return { id: p.id, info: null as OpenInfoRequest | null };
+              const reqs =
+                (b.info_requests as InfoRequest[]) ||
+                (b.request_info as InfoRequest[]) ||
+                [];
+              return { id: p.id, info: pickOpenInfoRequest(reqs) };
+            } catch {
+              return { id: p.id, info: null as OpenInfoRequest | null };
+            }
+          }),
+        );
+        const byId = new Map(details.map((d) => [d.id, d.info]));
+        setMyProposals((prev) =>
+          prev.map((p) =>
+            byId.has(p.id) ? { ...p, openInfoRequest: byId.get(p.id) || null } : p,
+          ),
+        );
+      }
     } catch {
       if (!silent) setLoadError("Network error. Please try again.");
     } finally {
@@ -685,9 +758,14 @@ function Section({
   );
 }
 
-function ProposalCard({ p }: { p: LocalProposal }) {
+function ProposalCard({ p }: { p: LocalProposalWithInfo }) {
   const cfg = configFor(p);
   const Icon = cfg.Icon;
+  const info = p.openInfoRequest;
+  const showInfo =
+    isAwaitingInfoRaw(p.rawStatus, p.rawDisplayStatus) &&
+    info &&
+    ((info.items && info.items.length > 0) || (info.note && info.note.trim()));
   return (
     <article
       className={
@@ -725,6 +803,32 @@ function ProposalCard({ p }: { p: LocalProposal }) {
         </div>
 
         <p className="mt-4 font-sans text-sm leading-relaxed text-text">{cfg.body}</p>
+
+        {showInfo && info && (
+          <div className="mt-4 rounded-xl border border-orange-200 bg-orange-50/60 p-4">
+            <p className="font-sans text-xs font-semibold uppercase tracking-wider text-orange-700">
+              Additional information requested
+            </p>
+            {info.items && info.items.length > 0 && (
+              <ul className="mt-2 list-disc space-y-1 pl-5 font-sans text-sm text-text">
+                {info.items.map((it, i) => (
+                  <li key={(it.key || "") + i}>{it.label || it.key}</li>
+                ))}
+              </ul>
+            )}
+            {info.note && info.note.trim() && (
+              <p className="mt-2 whitespace-pre-wrap font-sans text-sm leading-relaxed text-text">
+                <span className="font-semibold">Note from editor: </span>
+                {info.note}
+              </p>
+            )}
+            {info.deadline && (
+              <p className="mt-2 font-sans text-xs text-text-muted">
+                Please respond by {formatDate(info.deadline)}.
+              </p>
+            )}
+          </div>
+        )}
 
         {cfg.cta && (
           <Link
