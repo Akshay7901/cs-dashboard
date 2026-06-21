@@ -2186,6 +2186,51 @@ function ProposalDetailPage() {
           </div>
         </div>
       )}
+      <ContractPdfModal ticket={ticket} open={pdfOpen} onClose={() => setPdfOpen(false)} />
+      {voidOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <h2 className="font-serif text-lg font-bold text-stone-900">
+              Void Contract
+            </h2>
+            <p className="mt-1 font-sans text-sm text-stone-600">
+              The author will no longer be able to sign. You can issue a new contract afterwards.
+            </p>
+            <label className="mt-4 block font-sans text-xs font-semibold uppercase tracking-[0.1em] text-stone-500">
+              Reason
+            </label>
+            <textarea
+              value={voidReason}
+              onChange={(e) => setVoidReason(e.target.value)}
+              rows={3}
+              placeholder="Why is this contract being voided?"
+              className="mt-1 w-full resize-none rounded-lg border border-stone-300 bg-white px-3 py-2 font-sans text-sm focus:border-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-100"
+            />
+            {voidError && (
+              <p className="mt-2 rounded-lg bg-rose-50 px-3 py-2 font-sans text-xs text-rose-700 ring-1 ring-rose-200">
+                {voidError}
+              </p>
+            )}
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setVoidOpen(false)}
+                className="rounded-lg border border-stone-300 bg-white px-4 py-2 font-sans text-sm font-semibold text-stone-700 hover:bg-stone-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={submitVoid}
+                disabled={voidLoading}
+                className="rounded-lg bg-rose-600 px-4 py-2 font-sans text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-50"
+              >
+                {voidLoading ? "Voiding…" : "Void Contract"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
