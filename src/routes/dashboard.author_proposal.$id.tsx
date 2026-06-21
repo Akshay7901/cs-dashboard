@@ -226,6 +226,23 @@ function normalizeStatus(raw?: string, display?: string): StatusKey {
   return "submitted";
 }
 
+function statusFromTimeline(timeline?: TimelineStage[]): StatusKey | undefined {
+  if (!timeline || timeline.length === 0) return undefined;
+  const current = timeline.find((t) => t.is_current);
+  if (!current) return undefined;
+  const name = `${current.stage_name || ""} ${current.display_name || ""}`.toLowerCase();
+  if (name.includes("contract") || name.includes("sign") || name.includes("approval") || name.includes("awaiting author")) return "contract";
+  if (name.includes("peer review") || name.includes("under review") || name.includes("in review")) return "in_review";
+  if (name.includes("review returned") || name.includes("feedback")) return "review_returned";
+  if (name.includes("declin") || name.includes("reject")) return "declined";
+  if (name.includes("major revision")) return "major_revisions";
+  if (name.includes("revision") || name.includes("more info") || name.includes("additional info")) return "revisions";
+  if (name.includes("query") || name.includes("question")) return "question";
+  if (name.includes("confirm") || name.includes("final") || name.includes("publish")) return "signed";
+  if (name.includes("submit") || name.includes("new")) return "submitted";
+  return undefined;
+}
+
 const STATUS_LABEL: Record<StatusKey, string> = {
   submitted: "Submitted",
   revisions: "Revisions Requested",
@@ -568,7 +585,7 @@ function AuthorProposalDetails() {
 
 function ProposalBody({ proposal }: { proposal: ProposalState }) {
   const { cd } = proposal;
-  const status = normalizeStatus(proposal.status, proposal.displayStatus);
+  const status = statusFromTimeline(proposal.timeline) || normalizeStatus(proposal.status, proposal.displayStatus);
   const tint = STATUS_TINT[status];
   const isContractView = status === "contract" || status === "signed";
   const [showOriginal, setShowOriginal] = useState(false);
