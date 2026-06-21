@@ -1471,6 +1471,25 @@ function ProposalDetailPage() {
                   </div>
                 </Card>
 
+                <DrInfoRequests
+                  ticket={ticket}
+                  onChanged={() => {
+                    // Refresh proposal data so status/timeline update after creating/editing/deleting requests
+                    const token = getPortalToken();
+                    proposalApiFetch(`/${encodeURIComponent(ticket)}`, {
+                      headers: {
+                        "Content-Type": "application/json",
+                        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                      },
+                    })
+                      .then((r) => r.json().catch(() => ({})))
+                      .then((body) => {
+                        if (!body.error) setData(body as unknown as ProposalDetail);
+                      })
+                      .catch(() => {});
+                  }}
+                />
+
                 {contracts.length > 0 && (
                   <Card>
                     <div className="border-b border-stone-200 px-5 py-3.5">
