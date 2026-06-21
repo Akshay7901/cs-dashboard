@@ -835,12 +835,22 @@ function Card({
   );
 }
 
-function ContractPanel({ ticket }: { ticket: string }) {
+function ContractIssuedView({
+  ticket,
+  proposal,
+  authorFullName,
+}: {
+  ticket: string;
+  proposal: ProposalState;
+  authorFullName: string;
+}) {
   const [contract, setContract] = useState<ContractDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [pdfOpen, setPdfOpen] = useState(false);
   const [signError, setSignError] = useState<string | null>(null);
   const [signLoading, setSignLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [showQueries, setShowQueries] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
@@ -861,16 +871,43 @@ function ContractPanel({ ticket }: { ticket: string }) {
 
   if (loading || !contract) return null;
 
-  const status = (contract.status || "").toLowerCase();
-  const canSign = status === "sent";
-  const statusClass =
-    status === "signed"
-      ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
-      : status === "declined" || status === "voided"
-        ? "bg-rose-50 text-rose-700 ring-rose-200"
-        : status === "expired"
-          ? "bg-stone-100 text-stone-600 ring-stone-200"
-          : "bg-violet-50 text-violet-700 ring-violet-200";
+  const cstatus = (contract.status || "").toLowerCase();
+  const isSigned = cstatus === "signed" || cstatus === "completed";
+  const isDeclined = cstatus === "declined" || cstatus === "voided";
+  const canSign = cstatus === "sent" && !isSigned && !isDeclined;
+
+  const pillCls = isSigned
+    ? "bg-emerald-50 text-emerald-700"
+    : isDeclined
+      ? "bg-rose-50 text-rose-700"
+      : "bg-violet-50 text-violet-700";
+  const pillDot = isSigned ? "bg-emerald-500" : isDeclined ? "bg-rose-500" : "bg-violet-500";
+  const pillLabel = isSigned
+    ? "Contract Signed"
+    : isDeclined
+      ? "Contract Declined"
+      : "Contract Issued";
+
+  const issuedAt = contract.docusign_sent_at || contract.created_at;
+  const contractTypeLabel =
+    contract.contract_type === "editor"
+      ? "Edited Collection Agreement"
+      : "Publishing Agreement";
+
+  const editorNote = contract.notes || "";
+  const editorialFeedback = contract.addendum || "";
+
+  const cd = proposal.cd;
+  const titleStr = cd.main_title || proposal.ticket;
+  const formatLabel =
+    contract.contract_type === "editor"
+      ? "Edited Collection"
+      : cd.book_type
+        ? cd.book_type.charAt(0).toUpperCase() + cd.book_type.slice(1)
+        : "—";
+  const expectedCompletion = formatMonthYear(
+    cd.estimated_completion_date || cd.expected_completion_date,
+  );
 
   const handleSign = async () => {
     setSignLoading(true);
@@ -886,63 +923,224 @@ function ContractPanel({ ticket }: { ticket: string }) {
     }
   };
 
+  const handleDownload = async () => {
+    setDownloading(true);
+    try {
+      const { fetchContractPdfBlob } = await import("@/lib/contractsApi");
+      const url = await fetchContractPdfBlob(ticket);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${ticket}-contract.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    } catch (e) {
+      setSignError((e as Error).message);
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
-    <section className="mt-5 rounded-2xl border border-violet-200 bg-white p-5 shadow-sm">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="font-serif text-lg font-bold text-stone-900">
-            Publishing Contract
+    <section className="mt-6 overflow-hidden rounded-2xl border border-violet-200 bg-gradient-to-b from-violet-50/70 to-white shadow-sm">
+      {/* Header */}
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-violet-100 px-6 py-5 md:px-8 md:py-6">
+        <div className="min-w-0">
+          <p className="font-sans text-xs font-bold uppercase tracking-[0.14em] text-violet-700">
+            {isSigned ? "Contract Signed" : isDeclined ? "Contract Declined" : "Proposal Accepted"}
+          </p>
+          <h2 className="mt-1.5 font-serif text-xl font-bold leading-snug text-[#2C1A0E] md:text-[1.6rem]">
+            {isSigned
+              ? "Thank you — your contract is signed"
+              : "Read the reviewer's feedback, then sign your contract"}
           </h2>
-          <p className="mt-1 font-sans text-sm text-stone-600">
-            Version {contract.contract_version ?? "—"}
-            {contract.contract_type ? ` · ${contract.contract_type}` : ""} · Sent to{" "}
-            {contract.recipient_email}
+          <p className="mt-1.5 font-sans text-sm text-stone-600">
+            Issued {formatDate(issuedAt)} · {contractTypeLabel}
           </p>
         </div>
         <span
-          className={`inline-flex items-center rounded-full px-3 py-1 font-sans text-xs font-semibold uppercase tracking-wide ring-1 ${statusClass}`}
+          className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 font-sans text-xs font-semibold ${pillCls}`}
         >
-          {contract.status || "sent"}
+          <span className={`h-1.5 w-1.5 rounded-full ${pillDot}`} />
+          {pillLabel}
         </span>
       </div>
-      <div className="mt-4 flex flex-wrap gap-2">
+
+      {/* Step 1 — Feedback */}
+      {(editorialFeedback || editorNote) && (
+        <div className="border-b border-violet-100 px-6 py-6 md:px-8">
+          <div className="flex items-center gap-3">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-600 font-sans text-sm font-bold text-white">
+              1
+            </span>
+            <h3 className="font-serif text-base font-bold text-[#2C1A0E]">
+              Read the reviewer's feedback
+            </h3>
+          </div>
+
+          {editorialFeedback && (
+            <div className="mt-5 rounded-xl border border-stone-200 bg-white p-5">
+              <p className="font-sans text-[11px] font-bold uppercase tracking-wider text-stone-500">
+                Overall assessment
+              </p>
+              <p className="mt-2 whitespace-pre-line font-serif text-[15px] italic leading-relaxed text-stone-700">
+                "{editorialFeedback}"
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Step 2 — Sign */}
+      <div className="px-6 py-6 md:px-8">
+        <div className="flex items-center gap-3">
+          <span
+            className={`flex h-8 w-8 items-center justify-center rounded-full font-sans text-sm font-bold text-white ${
+              isSigned ? "bg-emerald-600" : "bg-violet-600"
+            }`}
+          >
+            {isSigned ? <Check className="h-4 w-4" /> : "2"}
+          </span>
+          <h3 className="font-serif text-base font-bold text-[#2C1A0E]">
+            Review and sign your publishing contract
+          </h3>
+        </div>
+
+        {editorNote && (
+          <div className="mt-5">
+            <p className="font-sans text-[11px] font-bold uppercase tracking-wider text-stone-500">
+              Note from your editor
+            </p>
+            <p className="mt-2 whitespace-pre-line font-sans text-[15px] leading-relaxed text-stone-700">
+              {editorNote}
+            </p>
+          </div>
+        )}
+
+        {/* Contract preview */}
+        <div className="mt-6 rounded-2xl border border-stone-200 bg-white p-6 md:p-8">
+          <p className="text-center font-sans text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500">
+            Cambridge Scholars Publishing
+          </p>
+          <div className="mx-auto mt-4 max-w-xs space-y-1.5">
+            <div className="h-2 rounded-full bg-stone-200" />
+            <div className="mx-auto h-2 w-2/3 rounded-full bg-stone-200" />
+          </div>
+          <p className="mt-6 text-center font-sans text-[11px] font-semibold uppercase tracking-[0.18em] text-violet-700">
+            {contractTypeLabel}
+          </p>
+          <div className="mt-3 h-px bg-stone-200" />
+
+          <dl className="mt-4 divide-y divide-stone-100">
+            <PreviewRow label="Author" value={contract.recipient_name || authorFullName} />
+            <PreviewRow label="Title" value={truncate(titleStr, 36)} />
+            <PreviewRow label="Format" value={formatLabel} />
+            <PreviewRow label="Expected Completion" value={expectedCompletion} />
+          </dl>
+
+          <div className="mt-6 space-y-1.5">
+            <div className="h-2 rounded-full bg-stone-100" />
+            <div className="h-2 w-11/12 rounded-full bg-stone-100" />
+            <div className="h-2 w-10/12 rounded-full bg-stone-100" />
+            <div className="h-2 w-9/12 rounded-full bg-stone-100" />
+            <div className="h-2 w-11/12 rounded-full bg-stone-100" />
+          </div>
+
+          <div className="mt-8 flex items-end justify-between gap-6">
+            <div className="flex-1">
+              <div className="h-1.5 w-3/5 rounded bg-stone-200" />
+              <p className="mt-1.5 font-sans text-xs text-stone-500">Publisher</p>
+            </div>
+            <div className="flex-1 text-right">
+              {isSigned ? (
+                <p className="font-serif text-base italic text-emerald-700">
+                  {contract.recipient_name || authorFullName}
+                </p>
+              ) : (
+                <div className="ml-auto h-1.5 w-3/5 rounded bg-stone-200" />
+              )}
+              <p className="mt-1.5 font-sans text-xs text-stone-500">Your signature</p>
+            </div>
+          </div>
+        </div>
+
         <button
           type="button"
           onClick={() => setPdfOpen(true)}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-stone-300 bg-white px-3 py-2 font-sans text-sm font-semibold text-stone-700 hover:bg-stone-50"
+          className="mx-auto mt-4 block font-sans text-sm font-medium text-violet-700 hover:underline"
         >
-          <FileText className="h-4 w-4" />
-          View Contract
+          Download full contract for complete terms and conditions
         </button>
-        {canSign && (
-          <button
-            type="button"
-            onClick={handleSign}
-            disabled={signLoading}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 px-4 py-2 font-sans text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-50"
-          >
-            <Check className="h-4 w-4" />
-            {signLoading ? "Opening…" : "Sign Contract"}
-          </button>
-        )}
-      </div>
-      {signError && (
-        <p className="mt-3 rounded-lg bg-rose-50 px-3 py-2 font-sans text-xs text-rose-700 ring-1 ring-rose-200">
-          {signError}
-        </p>
-      )}
-      {contract.docusign_decline_reason && (
-        <p className="mt-3 rounded-lg bg-rose-50 px-3 py-2 font-sans text-sm text-rose-700 ring-1 ring-rose-200">
-          {contract.docusign_decline_reason}
-        </p>
-      )}
 
-      <div className="mt-5">
-        <ContractQueries
-          ticket={ticket}
-          viewer="author"
-          onChanged={() => setReloadKey((k) => k + 1)}
-        />
+        {/* CTA bar */}
+        {!isDeclined && (
+          <div className="mt-6 rounded-2xl border border-violet-200 bg-violet-50/50 p-5 md:p-6">
+            {!isSigned && (
+              <p className="text-center font-sans text-sm text-stone-700">
+                Once you have read the feedback above, please sign your contract to confirm
+                your agreement with Cambridge Scholars Publishing.
+              </p>
+            )}
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-stretch sm:justify-center">
+              {canSign && (
+                <button
+                  type="button"
+                  onClick={handleSign}
+                  disabled={signLoading}
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-violet-600 px-6 py-3 font-sans text-sm font-bold text-white shadow-sm transition hover:bg-violet-700 disabled:opacity-60 sm:flex-none sm:min-w-[220px]"
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  {signLoading ? "Opening…" : "Sign my contract"}
+                </button>
+              )}
+              {isSigned && (
+                <span className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-50 px-6 py-3 font-sans text-sm font-bold text-emerald-700 ring-1 ring-emerald-200 sm:flex-none sm:min-w-[220px]">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Signed{contract.docusign_completed_at ? ` · ${formatDate(contract.docusign_completed_at)}` : ""}
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => setShowQueries((v) => !v)}
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-emerald-300 bg-white px-5 py-3 font-sans text-sm font-bold text-emerald-700 transition hover:bg-emerald-50 sm:flex-none"
+              >
+                <HelpCircle className="h-4 w-4" />
+                I have a question
+              </button>
+              <button
+                type="button"
+                onClick={handleDownload}
+                disabled={downloading}
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-stone-300 bg-white px-5 py-3 font-sans text-sm font-bold text-stone-700 transition hover:bg-stone-50 disabled:opacity-60 sm:flex-none"
+              >
+                <Download className="h-4 w-4" />
+                {downloading ? "Preparing…" : "Download contract"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {signError && (
+          <p className="mt-3 rounded-lg bg-rose-50 px-3 py-2 font-sans text-xs text-rose-700 ring-1 ring-rose-200">
+            {signError}
+          </p>
+        )}
+        {contract.docusign_decline_reason && (
+          <p className="mt-3 rounded-lg bg-rose-50 px-3 py-2 font-sans text-sm text-rose-700 ring-1 ring-rose-200">
+            {contract.docusign_decline_reason}
+          </p>
+        )}
+
+        {showQueries && (
+          <div className="mt-5 rounded-2xl border border-stone-200 bg-white p-5">
+            <ContractQueries
+              ticket={ticket}
+              viewer="author"
+              onChanged={() => setReloadKey((k) => k + 1)}
+            />
+          </div>
+        )}
       </div>
 
       <ContractPdfModal
@@ -952,6 +1150,19 @@ function ContractPanel({ ticket }: { ticket: string }) {
       />
     </section>
   );
+}
+
+function PreviewRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between py-3">
+      <dt className="font-sans text-sm text-stone-500">{label}</dt>
+      <dd className="font-sans text-sm font-semibold text-[#2C1A0E]">{value}</dd>
+    </div>
+  );
+}
+
+function truncate(s: string, n: number): string {
+  return s.length > n ? s.slice(0, n - 1) + "…" : s;
 }
 
 function SubCard({ label, children }: { label: string; children: React.ReactNode }) {
