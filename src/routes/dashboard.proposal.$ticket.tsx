@@ -713,6 +713,27 @@ function ProposalDetailPage() {
     };
   }, [ticket, data?.status, data?.updated_at, contractsReloadKey]);
 
+  // Load contract queries (author <-> DR thread) and proposal status flag
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const body = await getQueries(ticket);
+        if (cancelled) return;
+        setQueryThread(body.queries || []);
+        setQueryProposalStatus(body.proposal_status || "");
+      } catch {
+        if (!cancelled) {
+          setQueryThread([]);
+          setQueryProposalStatus("");
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [ticket, data?.status, data?.updated_at, contractsReloadKey]);
+
   const submitVoid = async () => {
     if (!voidReason.trim()) {
       setVoidError("Please provide a reason.");
