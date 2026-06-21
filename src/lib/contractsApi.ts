@@ -20,6 +20,10 @@ export type ContractDetail = {
   created_by?: string;
   created_at?: string;
   updated_at?: string;
+  addendum?: string;
+  notes?: string;
+  title?: string;
+  subtitle?: string;
 };
 
 export type ContractQueryEntry = {
