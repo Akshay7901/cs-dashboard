@@ -273,6 +273,57 @@ function ProposalDetailPage() {
     setContractSuccess(null);
     try {
       const token = getPortalToken();
+      // Step A: Submit the DR's (possibly edited) review comments so the
+      // author can see them via GET /review. Required before the contract is
+      // sent, otherwise the author endpoint returns 404 "Review not found".
+      try {
+        const sectionByLabel: Record<string, string> = {};
+        REVIEW_SECTIONS.forEach(({ label }) => (sectionByLabel[label] = ""));
+        const otherBuckets: string[] = [];
+        comments.forEach((c) => {
+          const b = (c.body || "").trim();
+          if (!b) return;
+          const label = (c.chapter || "").trim();
+          if (label && Object.prototype.hasOwnProperty.call(sectionByLabel, label)) {
+            sectionByLabel[label] = sectionByLabel[label]
+              ? `${sectionByLabel[label]}\n\n${b}`
+              : b;
+          } else {
+            otherBuckets.push(label ? `${label}: ${b}` : b);
+          }
+        });
+        const reviewPayload: Record<string, unknown> = {
+          recommendation: reviewRecommendation || "proceed",
+        };
+        REVIEW_SECTIONS.forEach(({ key, label }) => {
+          const v = sectionByLabel[label];
+          if (key === "other_comments") {
+            const merged = [v, ...otherBuckets].filter(Boolean).join("\n\n");
+            if (merged) reviewPayload[key] = merged;
+          } else if (v) {
+            reviewPayload[key] = v;
+          }
+        });
+        if (editorialSummary.trim()) reviewPayload.dr_note = editorialSummary.trim();
+        // Only push a review if there's actually content beyond the recommendation
+        if (Object.keys(reviewPayload).length > 1) {
+          await proposalApiFetch(
+            `/${encodeURIComponent(ticket)}/review/submit`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              },
+              body: JSON.stringify(reviewPayload),
+            },
+          );
+        }
+      } catch {
+        // Non-blocking: if review/submit fails we still try to send the
+        // contract. The author panel will fall back to its empty state.
+      }
+
       const payload: Record<string, unknown> = {
         contract_type: contractType,
         title: cd.main_title || title,
