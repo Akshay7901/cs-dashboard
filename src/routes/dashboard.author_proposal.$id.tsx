@@ -678,7 +678,7 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
   return (
     <>
       {/* Hero card: title + status pill + stepper */}
-      <section id="section-hero" className="mt-6 rounded-2xl border border-stone-200 bg-white p-6 shadow-sm md:p-8 scroll-mt-24">
+      <section id="section-hero" className="mt-6 rounded-2xl border border-stone-200 bg-white p-6 shadow-sm scroll-mt-24">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
             <h1 className="font-serif text-2xl font-bold leading-tight md:text-3xl" style={{ color: "#2C1A0E" }}>
