@@ -2408,9 +2408,6 @@ function InfoRequestPanel({
           {busy === "save" ? "Saving…" : "Save draft"}
         </button>
         <div className="flex items-center gap-3">
-          <p className="hidden font-sans text-xs italic text-stone-400 sm:block">
-            All changes are autosaved locally
-          </p>
           <button
             type="button"
             onClick={doSubmit}
