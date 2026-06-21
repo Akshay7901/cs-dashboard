@@ -1149,7 +1149,7 @@ function pickOpenInfoRequest(reqs?: InfoRequest[]): InfoRequest | null {
     return v === "closed" || v === "completed" || v === "submitted" || v === "responded";
   };
   const open = reqs.find((r) => !isClosed(r.status) && !r.response?.submitted_at);
-  return open || reqs[reqs.length - 1];
+  return open || null;
 }
 
 function InfoRequestPanel({
