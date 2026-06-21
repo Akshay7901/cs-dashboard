@@ -509,10 +509,40 @@ function AuthorDashboard() {
               });
               const b = (await r.json().catch(() => ({}))) as Record<string, unknown>;
               if (!r.ok) return { id: p.id, info: null as OpenInfoRequest | null };
-              const reqs =
-                (b.info_requests as InfoRequest[]) ||
-                (b.request_info as InfoRequest[]) ||
-                [];
+              // Primary source: dedicated /request-info endpoint.
+              let reqs: InfoRequest[] = [];
+              try {
+                const r2 = await proposalApiFetch(
+                  `/${encodeURIComponent(p.id)}/request-info`,
+                  { headers },
+                );
+                const b2 = (await r2.json().catch(() => ({}))) as Record<string, unknown>;
+                if (r2.ok) {
+                  const raw = (b2.requests as Array<Record<string, unknown>>) || [];
+                  reqs = raw.map((rr) => ({
+                    id: rr.id as string | number | undefined,
+                    status: rr.status as string | undefined,
+                    note: (rr.note as string | undefined) ?? (rr.message as string | undefined),
+                    resubmission_deadline: rr.resubmission_deadline as string | undefined,
+                    deadline: rr.deadline as string | undefined,
+                    created_at:
+                      (rr.requested_at as string | undefined) ??
+                      (rr.created_at as string | undefined),
+                    items: (rr.items as InfoRequestItem[]) || [],
+                    response: rr.responded_at
+                      ? { submitted_at: rr.responded_at as string }
+                      : null,
+                  }));
+                }
+              } catch {
+                // fall back to detail-embedded fields below
+              }
+              if (reqs.length === 0) {
+                reqs =
+                  (b.info_requests as InfoRequest[]) ||
+                  (b.request_info as InfoRequest[]) ||
+                  [];
+              }
               return { id: p.id, info: pickOpenInfoRequest(reqs) };
             } catch {
               return { id: p.id, info: null as OpenInfoRequest | null };
