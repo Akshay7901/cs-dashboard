@@ -80,7 +80,7 @@ const portals: PortalConfig[] = [
   },
 ];
 
-function LoginPage() {
+export function LoginPage() {
   const [selected, setSelected] = useState<Role | null>(null);
   const portal = portals.find((p) => p.id === selected) ?? null;
   const navigate = useNavigate();
