@@ -789,6 +789,8 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
 
         </div>
       </div>
+      </div>
+      )}
     </>
   );
 }
