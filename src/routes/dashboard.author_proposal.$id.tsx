@@ -1174,16 +1174,22 @@ function InfoRequestPanel({
 
   const [items, setItems] = useState<InfoRequestItem[]>(initialItems);
   const [note, setNote] = useState<string>(initialDraft?.note || "");
-  const [files, setFiles] = useState<InfoRequestFile[]>(initialDraft?.files || []);
-  const [busy, setBusy] = useState<"" | "save" | "submit" | "upload">("");
+  const [uploads, setUploads] = useState<Record<string, { url: string; filename: string }>>(() => {
+    const m: Record<string, { url: string; filename: string }> = {};
+    for (const f of initialDraft?.files || []) {
+      const key = (f as InfoRequestFile & { field_key?: string }).field_key;
+      if (key && f.url) m[key] = { url: f.url, filename: f.filename || "file" };
+    }
+    return m;
+  });
+  const [busy, setBusy] = useState<"" | "save" | "submit">("");
+  const [uploadingKey, setUploadingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  
 
   useEffect(() => {
     setItems(initialItems);
     setNote(initialDraft?.note || "");
-    setFiles(initialDraft?.files || []);
   }, [initialItems, initialDraft]);
 
   if (!req) return null;
@@ -1200,25 +1206,72 @@ function InfoRequestPanel({
     return h;
   };
 
-  const buildPayload = () => ({
-    request_info_id: req.id,
-    note: note.trim(),
-    items: items.map((it) => ({
-      key: it.key,
-      label: it.label,
-      response_text: it.response_text || "",
-    })),
-    files,
-  });
+  const buildUpdatedFields = (): Record<string, string> => {
+    const fields: Record<string, string> = {};
+    for (const it of items) {
+      if (!it.key) continue;
+      const upload = uploads[it.key];
+      const text = (it.response_text || "").trim();
+      // File upload takes precedence (its s3_url is already stored server-side,
+      // but we resend it so /respond writes it deterministically into proposal_data).
+      if (upload?.url) fields[it.key] = upload.url;
+      else if (text) fields[it.key] = text;
+    }
+    return fields;
+  };
+
+  const uploadFile = async (fieldKey: string, file: File) => {
+    setError(null);
+    setSuccess(null);
+    setUploadingKey(fieldKey);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("field_key", fieldKey);
+      fd.append("request_id", String(req.id ?? ""));
+      const res = await proposalApiFetch(
+        `/${encodeURIComponent(ticket)}/request-info/upload`,
+        { method: "POST", headers: authHeaders(false), body: fd },
+      );
+      const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!res.ok) {
+        setError((body.error as string) || (body.message as string) || `Upload failed (${res.status}).`);
+        return;
+      }
+      const url = (body.s3_url as string) || "";
+      const filename = (body.filename as string) || file.name;
+      if (url) {
+        setUploads((prev) => ({ ...prev, [fieldKey]: { url, filename } }));
+        setSuccess(`Uploaded "${filename}".`);
+      }
+    } catch {
+      setError("Network error during upload. Please try again.");
+    } finally {
+      setUploadingKey(null);
+    }
+  };
+
+  const removeUpload = (fieldKey: string) => {
+    setUploads((prev) => {
+      const next = { ...prev };
+      delete next[fieldKey];
+      return next;
+    });
+  };
 
   const doSave = async () => {
     setBusy("save");
     setError(null);
     setSuccess(null);
     try {
+      const updated_fields = buildUpdatedFields();
       const res = await proposalApiFetch(
         `/${encodeURIComponent(ticket)}/request-info/save`,
-        { method: "POST", headers: authHeaders(), body: JSON.stringify(buildPayload()) },
+        {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({ request_id: req.id, updated_fields }),
+        },
       );
       const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
       if (!res.ok) {
@@ -1234,7 +1287,8 @@ function InfoRequestPanel({
   };
 
   const doSubmit = async () => {
-    if (!note.trim() && items.every((it) => !(it.response_text || "").trim()) && files.length === 0) {
+    const updated_fields = buildUpdatedFields();
+    if (!note.trim() && Object.keys(updated_fields).length === 0) {
       setError("Please add a response, fill in at least one item, or upload a file before submitting.");
       return;
     }
@@ -1244,7 +1298,15 @@ function InfoRequestPanel({
     try {
       const res = await proposalApiFetch(
         `/${encodeURIComponent(ticket)}/request-info/respond`,
-        { method: "POST", headers: authHeaders(), body: JSON.stringify(buildPayload()) },
+        {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({
+            request_id: req.id,
+            response_note: note.trim(),
+            updated_fields,
+          }),
+        },
       );
       const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
       if (!res.ok) {
@@ -1252,6 +1314,10 @@ function InfoRequestPanel({
         return;
       }
       setSuccess((body.message as string) || "Response submitted to the editor.");
+      // Refresh to reflect status change.
+      setTimeout(() => {
+        if (typeof window !== "undefined") window.location.reload();
+      }, 800);
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -1326,10 +1392,62 @@ function InfoRequestPanel({
                   rows={3}
                   className="mt-2 w-full rounded-lg border border-stone-300 px-3 py-2 font-sans text-sm text-stone-900 placeholder-stone-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200"
                 />
+                {it.key && (
+                  <div className="mt-2 flex flex-wrap items-center gap-3">
+                    <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-stone-300 bg-white px-3 py-1.5 font-sans text-xs font-semibold text-stone-700 hover:bg-stone-50">
+                      <Upload className="h-3.5 w-3.5" />
+                      {uploadingKey === it.key ? "Uploading…" : "Upload file"}
+                      <input
+                        type="file"
+                        className="hidden"
+                        disabled={uploadingKey !== null}
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f && it.key) uploadFile(it.key, f);
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+                    {uploads[it.key] && (
+                      <span className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-2 py-1 font-sans text-xs text-emerald-700">
+                        <Paperclip className="h-3.5 w-3.5" />
+                        <a
+                          href={uploads[it.key].url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="underline-offset-2 hover:underline"
+                        >
+                          {uploads[it.key].filename}
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => removeUpload(it.key!)}
+                          className="text-emerald-700/70 hover:text-rose-600"
+                          aria-label="Remove uploaded file"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>
         )}
+
+        <div className="rounded-xl border border-stone-200 bg-white p-4">
+          <label className="block font-sans text-sm font-semibold text-stone-900">
+            Message to the editor (optional)
+          </label>
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Add an overall note to your response…"
+            rows={3}
+            className="mt-2 w-full rounded-lg border border-stone-300 px-3 py-2 font-sans text-sm text-stone-900 placeholder-stone-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200"
+          />
+        </div>
 
 
         {error && (
