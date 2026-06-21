@@ -1,4 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
   AlertTriangle,
@@ -1868,43 +1875,6 @@ function ProposalDetailPage() {
                   }}
                 />
 
-                {/* Resend contract prompt after query resolved */}
-                {!hasOpenQuery && contractResendPrompt === "prompt" && (
-                  <Card>
-                    <div className="border-b border-stone-200 px-5 py-3.5">
-                      <h2 className="font-serif text-base font-bold text-stone-900">
-                        Contract
-                      </h2>
-                      <p className="mt-1 font-sans text-sm text-stone-500">
-                        Author query resolved
-                      </p>
-                    </div>
-                    <div className="px-5 py-4">
-                      <p className="font-sans text-sm text-stone-700">
-                        The author&apos;s question has been answered. Do you want to send the contract again?
-                      </p>
-                      <div className="mt-4 flex gap-3">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setContractResendPrompt("send");
-                            openIssueContract();
-                          }}
-                          className="inline-flex items-center rounded-lg bg-[#5B2EBA] px-4 py-2 font-sans text-sm font-semibold text-white hover:bg-[#4a2599]"
-                        >
-                          Send Contract
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setContractResendPrompt("skip")}
-                          className="inline-flex items-center rounded-lg border border-stone-200 bg-white px-4 py-2 font-sans text-sm font-semibold text-stone-700 hover:bg-stone-50"
-                        >
-                          Not Now
-                        </button>
-                      </div>
-                    </div>
-                  </Card>
-                )}
 
                 {/* Contract — shown again once the query is resolved */}
                 {contracts.length > 0 && !hasOpenQuery && contractResendPrompt !== "prompt" && contractResendPrompt !== "skip" && (
@@ -2709,6 +2679,41 @@ function ProposalDetailPage() {
           </div>
         </div>
       )}
+      {/* Popup: send contract again after query resolved */}
+      <Dialog
+        open={contractResendPrompt === "prompt"}
+        onOpenChange={(open) => {
+          if (!open) setContractResendPrompt("skip");
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Send Contract Again?</DialogTitle>
+            <DialogDescription>
+              The author&apos;s question has been answered. Do you want to send the contract again?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4 flex gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                setContractResendPrompt("send");
+                openIssueContract();
+              }}
+              className="inline-flex items-center rounded-lg bg-[#5B2EBA] px-4 py-2 font-sans text-sm font-semibold text-white hover:bg-[#4a2599]"
+            >
+              Send Contract
+            </button>
+            <button
+              type="button"
+              onClick={() => setContractResendPrompt("skip")}
+              className="inline-flex items-center rounded-lg border border-stone-200 bg-white px-4 py-2 font-sans text-sm font-semibold text-stone-700 hover:bg-stone-50"
+            >
+              Not Now
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
