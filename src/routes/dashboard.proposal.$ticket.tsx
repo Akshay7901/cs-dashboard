@@ -892,6 +892,10 @@ function ProposalDetailPage() {
     const cs = (latestContract?.status || "").toLowerCase();
     return cs === "sent" || cs === "draft";
   }, [latestContract]);
+  const isContractSigned = useMemo(() => {
+    const cs = (latestContract?.status || "").toLowerCase();
+    return cs === "signed";
+  }, [latestContract]);
 
   const primaryReview = reviews[0];
   const recommendationKey = (primaryReview?.review_data?.recommendation as string) || "";
@@ -1110,12 +1114,19 @@ function ProposalDetailPage() {
                     </p>
                   )}
                 </div>
-                <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1.5 font-sans text-xs font-medium text-indigo-700 ring-1 ring-indigo-200">
-                  <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
-                  {data.status?.toLowerCase().replace(/\s+/g, "_") === "awaiting_more_info"
-                    ? "Request Revision"
-                    : data.status}
-                </span>
+                {isContractSigned ? (
+                  <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-600 px-3 py-1.5 font-sans text-xs font-semibold text-white shadow-sm">
+                    <Check className="h-3.5 w-3.5" />
+                    Contract Signed
+                  </span>
+                ) : (
+                  <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1.5 font-sans text-xs font-medium text-indigo-700 ring-1 ring-indigo-200">
+                    <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                    {data.status?.toLowerCase().replace(/\s+/g, "_") === "awaiting_more_info"
+                      ? "Request Revision"
+                      : data.status}
+                  </span>
+                )}
               </div>
               <div className="mt-5 flex flex-wrap items-center gap-x-7 gap-y-2 font-sans text-sm text-stone-600">
                 {cd.corresponding_author_name && (
@@ -1769,6 +1780,18 @@ function ProposalDetailPage() {
                       <p className="py-6 text-center font-sans text-sm text-stone-500">
                         No actions available
                       </p>
+                    ) : isContractSigned ? (
+                      <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 px-5 py-6 text-center">
+                        <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 text-white shadow-sm">
+                          <Check className="h-5 w-5" strokeWidth={2.5} />
+                        </div>
+                        <p className="mt-3 font-serif text-lg font-bold text-emerald-900">
+                          Contract Signed
+                        </p>
+                        <p className="mt-1 font-sans text-xs leading-relaxed text-emerald-800/80">
+                          Author has signed — no further action required
+                        </p>
+                      </div>
                     ) : isContractIssued ? (
                       <button
                         type="button"
