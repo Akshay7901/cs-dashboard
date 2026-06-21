@@ -503,8 +503,37 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
         infoRequests={proposal.infoRequests}
       />
 
-      <ContractPanel ticket={proposal.ticket} />
+      <ContractIssuedView ticket={proposal.ticket} proposal={proposal} authorFullName={authorFullName} />
 
+      {(status === "contract" || status === "signed") ? (
+        <details className="mt-6 group overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-6 py-4 font-serif text-base font-bold text-[#2C1A0E] [&::-webkit-details-marker]:hidden">
+            View original proposal details
+            <ChevronDown className="h-5 w-5 text-stone-500 transition-transform group-open:rotate-180" />
+          </summary>
+          <div className="border-t border-stone-200 p-6">
+            <ProposalSections
+              proposal={proposal}
+              authorFullName={authorFullName}
+              allFiles={allFiles}
+              kind={kind}
+              wordCount={wordCount}
+              illustrationsValue={illustrationsValue}
+              completionDate={completionDate}
+              overviewText={overviewText}
+              keyFeaturesText={keyFeaturesText}
+              audienceText={audienceText}
+              whyNeededText={whyNeededText}
+              reviewersRaw={reviewersRaw}
+              keywordTags={keywordTags}
+              coAuthorsList={coAuthorsList}
+              hasNotes={hasNotes}
+              fmtBool={fmtBool}
+            />
+          </div>
+        </details>
+      ) : (
+        <>
       {/* Tabs */}
       <div className="mt-6 inline-flex gap-1 rounded-xl border border-stone-200 bg-white p-1 shadow-sm">
         <button
