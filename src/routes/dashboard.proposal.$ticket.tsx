@@ -212,6 +212,9 @@ function ProposalDetailPage() {
   const [queryResponseSubmitting, setQueryResponseSubmitting] = useState(false);
   const [queryResponseError, setQueryResponseError] = useState<string | null>(null);
   const [queryResponseSuccess, setQueryResponseSuccess] = useState<string | null>(null);
+  const [contractResendPrompt, setContractResendPrompt] = useState<
+    "prompt" | "send" | "skip" | null
+  >(null);
   const [comments, setComments] = useState<ReviewComment[]>([]);
   const [commentsSeeded, setCommentsSeeded] = useState(false);
   const [editorialSummary, setEditorialSummary] = useState("");
