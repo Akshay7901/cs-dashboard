@@ -2679,8 +2679,6 @@ function ProposalDetailPage() {
           </div>
         </div>
       )}
-    </div>
-
       {/* Popup: send contract again after query resolved */}
       <Dialog
         open={contractResendPrompt === "prompt"}
@@ -2716,6 +2714,7 @@ function ProposalDetailPage() {
           </div>
         </DialogContent>
       </Dialog>
+    </div>
   );
 }
 
