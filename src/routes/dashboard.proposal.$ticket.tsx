@@ -981,7 +981,141 @@ function ProposalDetailPage() {
             <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
               {/* Main column */}
               <div className="space-y-6">
-                {isReviewReturned && (
+                {isContractIssued && (
+                  <>
+                    {/* Contract & Feedback preview */}
+                    <Card>
+                      <div className="flex flex-wrap items-center justify-between gap-3 rounded-t-2xl border-b border-violet-200 bg-violet-50/70 px-6 py-4">
+                        <div className="min-w-0">
+                          <h2 className="font-serif text-base font-bold text-stone-900">
+                            Contract &amp; Feedback
+                          </h2>
+                          <p className="mt-0.5 font-sans text-sm text-stone-500">
+                            {latestContract?.docusign_sent_at
+                              ? `Issued ${formatDate(latestContract.docusign_sent_at)}`
+                              : "Contract issued"}
+                          </p>
+                        </div>
+                        <span
+                          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-sans text-xs font-semibold ring-1 ${
+                            (latestContract?.status || "").toLowerCase() === "signed"
+                              ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
+                              : (latestContract?.status || "").toLowerCase() === "declined"
+                                ? "bg-rose-50 text-rose-700 ring-rose-200"
+                                : "bg-violet-50 text-violet-700 ring-violet-200"
+                          }`}
+                        >
+                          {(latestContract?.status || "").toLowerCase() === "signed"
+                            ? "Signed"
+                            : (latestContract?.status || "").toLowerCase() === "declined"
+                              ? "Declined"
+                              : "Awaiting Signature"}
+                        </span>
+                      </div>
+                      <div className="px-6 py-6">
+                        <div className="mx-auto max-w-xl rounded-xl border border-stone-200 bg-white px-10 py-10 shadow-[0_2px_12px_-6px_rgba(0,0,0,0.08)]">
+                          <p className="text-center font-sans text-[11px] font-semibold uppercase tracking-[0.3em] text-stone-500">
+                            Cambridge Scholars Publishing
+                          </p>
+                          <div className="mt-3 flex items-center justify-center gap-2">
+                            <span className="h-px w-10 bg-stone-300" />
+                            <span className="h-1.5 w-1.5 rounded-full bg-stone-400" />
+                            <span className="h-px w-10 bg-stone-300" />
+                          </div>
+                          <p className="mt-4 text-center font-sans text-xs font-semibold uppercase tracking-[0.28em] text-stone-700">
+                            Publishing Agreement
+                          </p>
+                          <dl className="mt-8 space-y-3 font-sans text-sm">
+                            <div className="flex items-baseline justify-between gap-4 border-b border-dotted border-stone-200 pb-2">
+                              <dt className="text-stone-500">Author</dt>
+                              <dd className="text-right font-medium text-stone-800">
+                                {latestContract?.recipient_name ||
+                                  cd.corresponding_author_name ||
+                                  "—"}
+                              </dd>
+                            </div>
+                            <div className="flex items-baseline justify-between gap-4 border-b border-dotted border-stone-200 pb-2">
+                              <dt className="text-stone-500">Title</dt>
+                              <dd className="truncate text-right font-medium text-stone-800">
+                                {latestContract?.title || cd.main_title || title}
+                              </dd>
+                            </div>
+                            {cd.book_type && (
+                              <div className="flex items-baseline justify-between gap-4 border-b border-dotted border-stone-200 pb-2">
+                                <dt className="text-stone-500">Format</dt>
+                                <dd className="text-right font-medium text-stone-800">
+                                  {cd.book_type}
+                                </dd>
+                              </div>
+                            )}
+                            {cd.expected_completion_date && (
+                              <div className="flex items-baseline justify-between gap-4 border-b border-dotted border-stone-200 pb-2">
+                                <dt className="text-stone-500">Expected Completion</dt>
+                                <dd className="text-right font-medium text-stone-800">
+                                  {cd.expected_completion_date}
+                                </dd>
+                              </div>
+                            )}
+                          </dl>
+                          <div className="mt-8 space-y-2">
+                            <div className="h-2 w-full rounded-full bg-stone-100" />
+                            <div className="h-2 w-11/12 rounded-full bg-stone-100" />
+                            <div className="h-2 w-10/12 rounded-full bg-stone-100" />
+                            <div className="h-2 w-9/12 rounded-full bg-stone-100" />
+                          </div>
+                          <div className="mt-10 grid grid-cols-2 gap-8 pt-4 font-sans text-xs text-stone-500">
+                            <div className="border-t border-stone-300 pt-2">Publisher</div>
+                            <div className="border-t border-stone-300 pt-2 text-right">
+                              Author
+                            </div>
+                          </div>
+                        </div>
+                        <p className="mt-4 text-center font-sans text-xs text-stone-500">
+                          Preview — full contract sent to author by email
+                        </p>
+                      </div>
+                    </Card>
+
+                    {/* Editorial Feedback Sent */}
+                    {(latestContract?.addendum || latestContract?.notes || notes) && (
+                      <Card>
+                        <div className="border-b border-stone-200 px-6 py-4">
+                          <h2 className="font-serif text-base font-bold text-stone-900">
+                            Editorial Feedback Sent
+                          </h2>
+                          <p className="mt-0.5 font-sans text-sm text-stone-500">
+                            This feedback was included with the contract
+                          </p>
+                        </div>
+                        <div className="px-6 py-5">
+                          <p className="whitespace-pre-line font-sans text-sm leading-relaxed text-stone-700">
+                            {latestContract?.addendum ||
+                              latestContract?.notes ||
+                              notes}
+                          </p>
+                        </div>
+                      </Card>
+                    )}
+
+                    {/* Collapsible toggle for original proposal */}
+                    <button
+                      type="button"
+                      onClick={() => setOriginalOpen((v) => !v)}
+                      className="flex w-full items-center justify-between rounded-2xl border border-stone-200 bg-white px-6 py-4 font-sans text-sm font-semibold text-stone-800 hover:border-stone-300"
+                      aria-expanded={originalOpen}
+                    >
+                      <span className="inline-flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-stone-500" />
+                        View original proposal details
+                      </span>
+                      <ChevronDown
+                        className={`h-4 w-4 text-stone-500 transition-transform ${originalOpen ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                  </>
+                )}
+
+                {isReviewReturned && !isContractIssued && (
                   <>
                     {/* Review Returned hero */}
                     <Card>
@@ -1110,7 +1244,7 @@ function ProposalDetailPage() {
                   </>
                 )}
 
-                {(!isReviewReturned || originalOpen) && (
+                {((!isReviewReturned && !isContractIssued) || originalOpen) && (
                   <>
                 {/* Primary Author */}
                 <Card>
