@@ -1244,7 +1244,7 @@ function ContractIssuedView({
           </span>
         </div>
 
-        <div className="mb-6 border-t border-stone-200" />
+        <div className="mb-6 -mx-6 border-t border-stone-200 md:-mx-8" />
 
         {/* Document Card */}
         <div className="rounded-sm border border-stone-200 bg-stone-50/40 p-6 sm:p-10 md:p-14">
@@ -1326,7 +1326,7 @@ function ContractIssuedView({
           </button>
         </div>
 
-        <div className="mt-6 border-t border-stone-200" />
+        <div className="mt-6 -mx-6 border-t border-stone-200 md:-mx-8" />
 
         {/* Welcome Footer (inside card) */}
         <div className="mt-6 flex items-start gap-3 rounded-md border border-emerald-100 bg-emerald-50/60 px-5 py-4">
