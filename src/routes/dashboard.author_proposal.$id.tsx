@@ -1278,7 +1278,14 @@ function InfoRequestPanel({
         setError((body.error as string) || (body.message as string) || `Failed to save (${res.status}).`);
         return;
       }
-      setSuccess((body.message as string) || "Draft saved.");
+      const saved = Array.isArray(body.saved_fields) ? (body.saved_fields as string[]) : [];
+      const labelFor = (k: string) =>
+        items.find((it) => it.key === k)?.label || k;
+      if (saved.length > 0) {
+        setSuccess(`Draft saved — ${saved.length} field${saved.length === 1 ? "" : "s"}: ${saved.map(labelFor).join(", ")}.`);
+      } else {
+        setSuccess((body.message as string) || "Draft saved.");
+      }
     } catch {
       setError("Network error. Please try again.");
     } finally {
