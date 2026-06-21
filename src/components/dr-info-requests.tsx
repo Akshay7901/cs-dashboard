@@ -421,7 +421,7 @@ export function DrInfoRequests({ ticket, onChanged }: Props) {
                         </div>
                       )}
                       <p className="font-sans text-[11px] text-stone-400">
-                        Created {formatDate(req.created_at || req.requested_at)}
+                        Created {formatDate(req.created_at || req.requested_at || "")}
                       </p>
                     </div>
                   )}
