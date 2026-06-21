@@ -448,7 +448,7 @@ function AuthorDashboard() {
   const [activePill, setActivePill] = useState<PillKey>("all");
   const [authorEmail, setAuthorEmail] = useState<string>("");
   const [authorName, setAuthorName] = useState<string>("");
-  const [myProposals, setMyProposals] = useState<LocalProposal[]>([]);
+  const [myProposals, setMyProposals] = useState<LocalProposalWithInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -493,7 +493,39 @@ function AuthorDashboard() {
         const e = (p.email || p.current_data?.email || "").toLowerCase();
         return !e || e === lowerEmail;
       });
-      setMyProposals(mine.map(toProposal));
+      const mapped: LocalProposalWithInfo[] = mine.map(toProposal);
+      setMyProposals(mapped);
+      // Fetch detail for proposals awaiting more info so the card can show
+      // the items + note that the DR requested via /request-info.
+      const needDetail = mapped.filter((p) =>
+        isAwaitingInfoRaw(p.rawStatus, p.rawDisplayStatus),
+      );
+      if (needDetail.length > 0) {
+        const details = await Promise.all(
+          needDetail.map(async (p) => {
+            try {
+              const r = await proposalApiFetch(`/${encodeURIComponent(p.id)}`, {
+                headers,
+              });
+              const b = (await r.json().catch(() => ({}))) as Record<string, unknown>;
+              if (!r.ok) return { id: p.id, info: null as OpenInfoRequest | null };
+              const reqs =
+                (b.info_requests as InfoRequest[]) ||
+                (b.request_info as InfoRequest[]) ||
+                [];
+              return { id: p.id, info: pickOpenInfoRequest(reqs) };
+            } catch {
+              return { id: p.id, info: null as OpenInfoRequest | null };
+            }
+          }),
+        );
+        const byId = new Map(details.map((d) => [d.id, d.info]));
+        setMyProposals((prev) =>
+          prev.map((p) =>
+            byId.has(p.id) ? { ...p, openInfoRequest: byId.get(p.id) || null } : p,
+          ),
+        );
+      }
     } catch {
       if (!silent) setLoadError("Network error. Please try again.");
     } finally {
