@@ -588,20 +588,30 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
   const [contractSigned, setContractSigned] = useState(false);
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const load = async () => {
       try {
         const list = await getContract(proposal.ticket);
+        if (cancelled) return;
         const latest = list[0];
         const s = (latest?.status || "").toLowerCase();
-        if (!cancelled && (s === "signed" || s === "completed")) {
+        if (s === "signed" || s === "completed") {
           setContractSigned(true);
+          return; // stop polling
+        }
+        // Keep polling while contract is awaiting signature so the hero
+        // flips to "Contract Signed" automatically once DocuSign completes.
+        if (s === "sent" || s === "draft") {
+          timer = setTimeout(load, 20000);
         }
       } catch {
         // ignore
       }
-    })();
+    };
+    load();
     return () => {
       cancelled = true;
+      if (timer) clearTimeout(timer);
     };
   }, [proposal.ticket]);
   const baseStatus = statusFromTimeline(proposal.timeline) || normalizeStatus(proposal.status, proposal.displayStatus);
