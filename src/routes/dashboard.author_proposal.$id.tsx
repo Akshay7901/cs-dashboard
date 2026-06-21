@@ -93,6 +93,7 @@ type AuthorReview = {
 function ReviewerCommentsList({ ticket }: { ticket: string }) {
   const [reviews, setReviews] = useState<AuthorReview[]>([]);
   const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -107,15 +108,21 @@ function ReviewerCommentsList({ ticket }: { ticket: string }) {
           },
         });
         const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-        if (cancelled || !res.ok) return;
+        if (cancelled) return;
+        if (!res.ok) {
+          setNotFound(true);
+          return;
+        }
         const list = Array.isArray(body.reviews)
           ? (body.reviews as AuthorReview[])
           : body.review
             ? [body.review as AuthorReview]
             : [];
-        setReviews(list.filter((r) => r.is_submitted));
+        const submitted = list.filter((r) => r.is_submitted);
+        setReviews(submitted);
+        if (submitted.length === 0) setNotFound(true);
       } catch {
-        // ignore
+        if (!cancelled) setNotFound(true);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -128,8 +135,7 @@ function ReviewerCommentsList({ ticket }: { ticket: string }) {
   if (loading) return null;
 
   const primary = reviews[0];
-  if (!primary) return null;
-  const rd = (primary.review_data || {}) as Record<string, unknown>;
+  const rd = (primary?.review_data || {}) as Record<string, unknown>;
 
   const items = REVIEW_SECTIONS.map(({ key, label }) => {
     const v = rd[key];
@@ -144,7 +150,19 @@ function ReviewerCommentsList({ ticket }: { ticket: string }) {
     };
   }).filter(Boolean) as { key: string; label: string; text: string; severity: string; page: string }[];
 
-  if (items.length === 0) return null;
+  if (items.length === 0) {
+    if (notFound || !primary) {
+      return (
+        <div className="mt-4 rounded-xl border border-dashed border-stone-300 bg-white/60 p-5 text-center">
+          <p className="font-sans text-sm text-stone-600">
+            No detailed peer reviewer comments were attached to your proposal.
+            Refer to the overall assessment above and your editor's note below.
+          </p>
+        </div>
+      );
+    }
+    return null;
+  }
 
   return (
     <div className="mt-4 space-y-3">
