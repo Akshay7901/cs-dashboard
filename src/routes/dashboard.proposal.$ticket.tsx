@@ -853,6 +853,7 @@ function ProposalDetailPage() {
       setQueryResponseText("");
       setQueryResponseSuccess("Response sent to the author.");
       setContractsReloadKey((k) => k + 1);
+      setContractResendPrompt("prompt");
     } catch (err) {
       setQueryResponseError(
         (err as Error).message || "Failed to send response.",
@@ -1868,7 +1869,7 @@ function ProposalDetailPage() {
                 />
 
                 {/* Contract — shown again once the query is resolved */}
-                {contracts.length > 0 && !hasOpenQuery && (
+                {contracts.length > 0 && !hasOpenQuery && contractResendPrompt !== "prompt" && contractResendPrompt !== "skip" && (
                   <Card>
                     <div className="border-b border-stone-200 px-5 py-3.5">
                       <h2 className="font-serif text-base font-bold text-stone-900">
@@ -2002,7 +2003,7 @@ function ProposalDetailPage() {
                   </Card>
                 )}
 
-                {contracts.length > 0 && !hasOpenQuery && (
+                {contracts.length > 0 && !hasOpenQuery && contractResendPrompt !== "prompt" && contractResendPrompt !== "skip" && (
                   <ContractQueries
                     ticket={ticket}
                     viewer="dr"
