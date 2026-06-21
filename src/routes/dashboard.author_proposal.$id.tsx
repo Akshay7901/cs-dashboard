@@ -585,7 +585,27 @@ function AuthorProposalDetails() {
 
 function ProposalBody({ proposal }: { proposal: ProposalState }) {
   const { cd } = proposal;
-  const status = statusFromTimeline(proposal.timeline) || normalizeStatus(proposal.status, proposal.displayStatus);
+  const [contractSigned, setContractSigned] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const list = await getContract(proposal.ticket);
+        const latest = list[0];
+        const s = (latest?.status || "").toLowerCase();
+        if (!cancelled && (s === "signed" || s === "completed")) {
+          setContractSigned(true);
+        }
+      } catch {
+        // ignore
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [proposal.ticket]);
+  const baseStatus = statusFromTimeline(proposal.timeline) || normalizeStatus(proposal.status, proposal.displayStatus);
+  const status: StatusKey = contractSigned ? "signed" : baseStatus;
   const tint = STATUS_TINT[status];
   const isContractView = status === "contract" || status === "signed";
   const [showOriginal, setShowOriginal] = useState(false);
