@@ -707,19 +707,31 @@ function ProposalDetailPage() {
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      setContractsLoading(true);
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const load = async (showLoading: boolean) => {
+      if (showLoading) setContractsLoading(true);
       try {
         const list = await getContract(ticket);
-        if (!cancelled) setContracts(list);
+        if (cancelled) return;
+        setContracts(list);
+        // If the latest contract is still pending signature, poll so the
+        // dashboard updates automatically once DocuSign reports signed/declined.
+        const latest = list[0];
+        const st = (latest?.status || "").toLowerCase();
+        const pending = st === "sent" || st === "draft";
+        if (pending) {
+          timer = setTimeout(() => load(false), 20000);
+        }
       } catch {
         if (!cancelled) setContracts([]);
       } finally {
-        if (!cancelled) setContractsLoading(false);
+        if (!cancelled && showLoading) setContractsLoading(false);
       }
-    })();
+    };
+    load(true);
     return () => {
       cancelled = true;
+      if (timer) clearTimeout(timer);
     };
   }, [ticket, data?.status, data?.updated_at, contractsReloadKey]);
 
