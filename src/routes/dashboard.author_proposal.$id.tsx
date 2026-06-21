@@ -1246,6 +1246,7 @@ function ContractIssuedView({
 
         {/* Document Card */}
         <div className="bg-stone-50/40 p-6 sm:p-10 md:p-14">
+          <div className="mx-auto w-full max-w-lg rounded-xl bg-white p-8 shadow-sm">
           {/* Contract Heading */}
           <div className="mb-8 text-center">
             <p className="mb-5 font-sans text-[11px] font-semibold uppercase tracking-[0.3em] text-teal-700/70">
@@ -1311,6 +1312,7 @@ function ContractIssuedView({
               </p>
             </div>
           </div>
+        </div>
         </div>
 
         {/* Download link below card */}
