@@ -1302,7 +1302,8 @@ function ContractIssuedView({
                 <button
                   type="button"
                   onClick={handleSign}
-                  disabled={signLoading}
+                  disabled={signLoading || signDisabled}
+                  title={hasOpenQuery ? "Resolve your open query before signing" : undefined}
                   className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-violet-600 px-6 py-3 font-sans text-sm font-bold text-white shadow-sm transition hover:bg-violet-700 disabled:opacity-60 sm:flex-none sm:min-w-[220px]"
                 >
                   <CheckCircle2 className="h-4 w-4" />
@@ -1317,7 +1318,11 @@ function ContractIssuedView({
               )}
               <button
                 type="button"
-                onClick={() => setShowQueries((v) => !v)}
+                onClick={() => {
+                  setQueryOpen(true);
+                  setQueryError(null);
+                  setQuerySuccess(false);
+                }}
                 className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-emerald-300 bg-white px-5 py-3 font-sans text-sm font-bold text-emerald-700 transition hover:bg-emerald-50 sm:flex-none"
               >
                 <HelpCircle className="h-4 w-4" />
