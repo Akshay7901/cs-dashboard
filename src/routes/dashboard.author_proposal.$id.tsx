@@ -38,6 +38,142 @@ const STATUS_MAP: Record<string, StatusKey> = {
   major_revisions: "major_revisions",
 };
 
+// Reviewer comment display config (mirrors DR dashboard)
+const REVIEW_SECTIONS: { key: string; label: string }[] = [
+  { key: "scope", label: "Scope" },
+  { key: "purpose_value", label: "Purpose & Value" },
+  { key: "title", label: "Title" },
+  { key: "originality", label: "Originality" },
+  { key: "credibility", label: "Credibility" },
+  { key: "structure", label: "Structure" },
+  { key: "clarity_quality", label: "Clarity & Quality" },
+  { key: "other_comments", label: "Other Comments" },
+  { key: "red_flags", label: "Red Flags" },
+];
+
+const SECTION_SEVERITY: Record<string, string> = {
+  scope: "General",
+  purpose_value: "General",
+  title: "Suggestion",
+  originality: "General",
+  credibility: "Minor Concern",
+  structure: "Suggestion",
+  clarity_quality: "Minor Concern",
+  other_comments: "General",
+  red_flags: "Major Concern",
+};
+
+const SECTION_PAGES: Record<string, string> = {
+  scope: "pp. 1–8",
+  purpose_value: "pp. 9–16",
+  title: "Cover",
+  originality: "pp. 17–24",
+  credibility: "pp. 25–32",
+  structure: "pp. 33–48",
+  clarity_quality: "pp. 49–64",
+  other_comments: "—",
+  red_flags: "—",
+};
+
+const SEVERITY_TOKENS: Record<string, string> = {
+  General: "bg-stone-100 text-stone-700",
+  "Minor Concern": "bg-amber-50 text-amber-800",
+  "Major Concern": "bg-rose-50 text-rose-800",
+  Suggestion: "bg-sky-50 text-sky-800",
+  Question: "bg-violet-50 text-violet-800",
+};
+
+type AuthorReview = {
+  reviewer_name?: string;
+  reviewer_email?: string;
+  is_submitted?: boolean;
+  review_data?: Record<string, unknown>;
+};
+
+function ReviewerCommentsList({ ticket }: { ticket: string }) {
+  const [reviews, setReviews] = useState<AuthorReview[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        const token = getPortalToken();
+        const res = await proposalApiFetch(`/${encodeURIComponent(ticket)}/review`, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+        if (cancelled || !res.ok) return;
+        const list = Array.isArray(body.reviews)
+          ? (body.reviews as AuthorReview[])
+          : body.review
+            ? [body.review as AuthorReview]
+            : [];
+        setReviews(list.filter((r) => r.is_submitted));
+      } catch {
+        // ignore
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [ticket]);
+
+  if (loading) return null;
+
+  const primary = reviews[0];
+  if (!primary) return null;
+  const rd = (primary.review_data || {}) as Record<string, unknown>;
+
+  const items = REVIEW_SECTIONS.map(({ key, label }) => {
+    const v = rd[key];
+    const text = typeof v === "string" ? v.trim() : "";
+    if (!text) return null;
+    return {
+      key,
+      label,
+      text,
+      severity: SECTION_SEVERITY[key] || "General",
+      page: SECTION_PAGES[key] || "",
+    };
+  }).filter(Boolean) as { key: string; label: string; text: string; severity: string; page: string }[];
+
+  if (items.length === 0) return null;
+
+  return (
+    <div className="mt-4 space-y-3">
+      {items.map((it) => (
+        <div key={it.key} className="rounded-xl border border-stone-200 bg-white p-5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5">
+              <span
+                className={`inline-flex items-center rounded-md px-2 py-0.5 font-sans text-[11px] font-semibold ${SEVERITY_TOKENS[it.severity] || SEVERITY_TOKENS.General}`}
+              >
+                {it.severity}
+              </span>
+              <span className="font-serif text-[15px] font-bold text-[#2C1A0E]">
+                {it.label}
+              </span>
+            </div>
+            {it.page && (
+              <span className="font-sans text-xs text-stone-500">{it.page}</span>
+            )}
+          </div>
+          <p className="mt-2 whitespace-pre-line font-sans text-[14px] leading-relaxed text-stone-700">
+            {it.text}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 const DISPLAY_STATUS_MAP: Record<string, StatusKey> = {
   "in review": "in_review",
   "under review": "in_review",
@@ -982,8 +1118,7 @@ function ContractIssuedView({
       </div>
 
       {/* Step 1 — Feedback */}
-      {(editorialFeedback || editorNote) && (
-        <div className="border-b border-violet-100 px-6 py-6 md:px-8">
+      <div className="border-b border-violet-100 px-6 py-6 md:px-8">
           <div className="flex items-center gap-3">
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-600 font-sans text-sm font-bold text-white">
               1
@@ -1003,8 +1138,9 @@ function ContractIssuedView({
               </p>
             </div>
           )}
-        </div>
-      )}
+
+        <ReviewerCommentsList ticket={ticket} />
+      </div>
 
       {/* Step 2 — Sign */}
       <div className="px-6 py-6 md:px-8">
