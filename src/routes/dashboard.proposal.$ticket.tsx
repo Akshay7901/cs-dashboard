@@ -167,6 +167,8 @@ function ProposalDetailPage() {
   const [reviews, setReviews] = useState<SubmittedReview[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [reviewsError, setReviewsError] = useState<string | null>(null);
+  const [contracts, setContracts] = useState<ContractDetail[]>([]);
+  const [contractsLoading, setContractsLoading] = useState(false);
   const [comments, setComments] = useState<ReviewComment[]>([]);
   const [commentsSeeded, setCommentsSeeded] = useState(false);
   const [editorialSummary, setEditorialSummary] = useState("");
