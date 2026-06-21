@@ -173,12 +173,10 @@ function deriveProposalStatus(p: ApiProposal): StatusKey {
 }
 
 function deriveDisplayStatus(p: ApiProposal): string | undefined {
-  const raw = (p.status || "").trim().toLowerCase();
-  const display = (p.display_status || "").trim().toLowerCase();
-  if (raw === "awaiting_more_info" || display === "awaiting more info") {
-    return "Revision Request";
-  }
-  if (p.display_status) return p.display_status;
+  // Prefer the API's own status text so the badge mirrors the backend
+  // verbatim (e.g. "Contract Received", "Awaiting More Info", "In Review").
+  if (p.display_status && p.display_status.trim()) return p.display_status;
+  if (p.status && p.status.trim()) return p.status;
   return undefined; // fallback to STATUS_META label
 }
 
