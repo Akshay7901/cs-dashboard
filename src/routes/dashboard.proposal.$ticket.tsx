@@ -1886,7 +1886,10 @@ function ProposalDetailPage() {
                       <div className="mt-4 flex gap-3">
                         <button
                           type="button"
-                          onClick={() => setContractResendPrompt("send")}
+                          onClick={() => {
+                            setContractResendPrompt("send");
+                            openIssueContract();
+                          }}
                           className="inline-flex items-center rounded-lg bg-[#5B2EBA] px-4 py-2 font-sans text-sm font-semibold text-white hover:bg-[#4a2599]"
                         >
                           Send Contract
