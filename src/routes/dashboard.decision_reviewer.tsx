@@ -488,7 +488,7 @@ function DecisionReviewerDashboard() {
       in_review: sum("in_review"),
       review_returned: sum("review_returned"),
       major_revisions: 0,
-      contract: sum("contract_issued", "awaiting_author_approval", "contract_received"),
+      contract: sum("contract_issued", "awaiting_author_approval"),
       question: sum("queries_raised"),
       signed: sum("author_approved", "locked", "contract_received"),
       declined: sum("declined"),
