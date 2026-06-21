@@ -692,12 +692,19 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
               Submitted {formatDate(proposal.submittedAt)}
             </p>
           </div>
-          <span
-            className={`inline-flex items-center gap-1.5 rounded-md border border-stone-200 px-2.5 py-1 font-sans text-xs font-semibold ${tint.bg} ${tint.text}`}
-          >
-            <span className={`h-1.5 w-1.5 rounded-full ${tint.dot}`} />
-            {STATUS_LABEL[status]}
-          </span>
+          {status === "signed" ? (
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-600 px-2.5 py-1 font-sans text-xs font-semibold text-white">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-200" />
+              {STATUS_LABEL[status]}
+            </span>
+          ) : (
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-md border border-stone-200 px-2.5 py-1 font-sans text-xs font-semibold ${tint.bg} ${tint.text}`}
+            >
+              <span className={`h-1.5 w-1.5 rounded-full ${tint.dot}`} />
+              {STATUS_LABEL[status]}
+            </span>
+          )}
         </div>
 
         <ProgressStepper timeline={proposal.timeline} status={status} />
@@ -711,15 +718,17 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
       <ContractIssuedView ticket={proposal.ticket} proposal={proposal} authorFullName={authorFullName} />
 
       {isContractView && (
-        <button
-          type="button"
-          onClick={() => setShowOriginal((v) => !v)}
-          className="mt-6 flex w-full items-center justify-between gap-3 rounded-2xl border border-stone-200 bg-white px-6 py-4 font-serif text-base font-bold text-[#2C1A0E] shadow-sm hover:bg-stone-50"
-          aria-expanded={showOriginal}
-        >
-          View original proposal details
-          <ChevronDown className={`h-5 w-5 text-stone-500 transition-transform ${showOriginal ? "rotate-180" : ""}`} />
-        </button>
+        <div className="mt-6 overflow-hidden rounded-xl border border-stone-200">
+          <button
+            type="button"
+            onClick={() => setShowOriginal((v) => !v)}
+            className="flex w-full items-center justify-between gap-3 bg-white px-5 py-3.5 font-sans text-sm font-semibold text-[#7A6A5A] transition-colors hover:bg-stone-50 cursor-pointer"
+            aria-expanded={showOriginal}
+          >
+            View original proposal details
+            <ChevronDown className={`h-4 w-4 text-[#7A6A5A] transition-transform ${showOriginal ? "rotate-180" : ""}`} />
+          </button>
+        </div>
       )}
 
       {(!isContractView || showOriginal) && (
