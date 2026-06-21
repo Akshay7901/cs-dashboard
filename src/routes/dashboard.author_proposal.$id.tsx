@@ -585,7 +585,7 @@ function AuthorProposalDetails() {
 
 function ProposalBody({ proposal }: { proposal: ProposalState }) {
   const { cd } = proposal;
-  const status = normalizeStatus(proposal.status, proposal.displayStatus);
+  const status = statusFromTimeline(proposal.timeline) || normalizeStatus(proposal.status, proposal.displayStatus);
   const tint = STATUS_TINT[status];
   const isContractView = status === "contract" || status === "signed";
   const [showOriginal, setShowOriginal] = useState(false);
