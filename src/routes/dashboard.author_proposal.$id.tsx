@@ -10,6 +10,7 @@ import {
   getSigningUrl,
   type ContractDetail,
 } from "@/lib/contractsApi";
+import { getQueries, raiseQuery } from "@/lib/contractsApi";
 import { ContractPdfModal } from "@/components/contract-pdf-modal";
 import { ContractQueries } from "@/components/contract-queries";
 
@@ -1020,6 +1021,13 @@ function ContractIssuedView({
   const [downloading, setDownloading] = useState(false);
   const [showQueries, setShowQueries] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const [queryOpen, setQueryOpen] = useState(false);
+  const [queryText, setQueryText] = useState("");
+  const [queryCategory, setQueryCategory] = useState("contract");
+  const [querySubmitting, setQuerySubmitting] = useState(false);
+  const [queryError, setQueryError] = useState<string | null>(null);
+  const [querySuccess, setQuerySuccess] = useState(false);
+  const [proposalStatus, setProposalStatus] = useState<string>("");
 
   useEffect(() => {
     let cancelled = false;
@@ -1037,12 +1045,51 @@ function ContractIssuedView({
     };
   }, [ticket, reloadKey]);
 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const body = await getQueries(ticket);
+        if (!cancelled) setProposalStatus(body.proposal_status || "");
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [ticket, reloadKey]);
+
   if (loading || !contract) return null;
 
   const cstatus = (contract.status || "").toLowerCase();
   const isSigned = cstatus === "signed" || cstatus === "completed";
   const isDeclined = cstatus === "declined" || cstatus === "voided";
   const canSign = cstatus === "sent" && !isSigned && !isDeclined;
+  const hasOpenQuery =
+    proposalStatus === "queries_raised" || proposalStatus === "question_raised";
+  const signDisabled = !canSign || hasOpenQuery;
+
+  const submitQuery = async () => {
+    if (!queryText.trim()) return;
+    setQuerySubmitting(true);
+    setQueryError(null);
+    try {
+      await raiseQuery(ticket, queryText.trim(), queryCategory || "contract");
+      setQuerySuccess(true);
+      setQueryText("");
+      setReloadKey((k) => k + 1);
+      setTimeout(() => {
+        setQueryOpen(false);
+        setQuerySuccess(false);
+        setShowQueries(true);
+      }, 900);
+    } catch (e) {
+      setQueryError((e as Error).message || "Failed to submit query.");
+    } finally {
+      setQuerySubmitting(false);
+    }
+  };
 
   const pillCls = isSigned
     ? "bg-emerald-50 text-emerald-700"
