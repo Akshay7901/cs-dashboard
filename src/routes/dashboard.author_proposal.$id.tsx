@@ -557,7 +557,7 @@ function AuthorProposalDetails() {
         <div className="h-[3px] bg-orange-500/80" />
       </header>
 
-      <div className="mx-auto max-w-6xl px-6 py-8">
+      <div className="mx-auto w-full max-w-4xl px-6 py-8">
         <Link
           to="/dashboard/author"
           className="inline-flex items-center gap-1.5 font-sans text-sm text-[#7A6A5A] hover:text-stone-900 transition-colors mb-6"
