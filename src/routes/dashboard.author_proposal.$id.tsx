@@ -1222,6 +1222,177 @@ function ContractIssuedView({
   };
 
   return (
+    isSigned ? (
+      <section className="mt-6">
+        {/* Header */}
+        <div className="mb-6">
+          <p className="inline-flex items-center gap-1.5 font-sans text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-700">
+            <Check className="h-3.5 w-3.5" />
+            Contract Signed
+          </p>
+          <h2 className="mt-2 font-serif text-2xl font-bold leading-snug text-[#2C1A0E] md:text-[1.75rem]">
+            Thank you — your contract is confirmed
+          </h2>
+          <p className="mt-1.5 font-sans text-sm italic text-stone-500">
+            Issued {formatDate(issuedAt)}
+          </p>
+        </div>
+
+        {/* Document Card */}
+        <div className="overflow-hidden rounded-sm border border-stone-200 bg-white shadow-xl shadow-stone-200/40">
+          <div className="h-1.5 w-full bg-emerald-600" />
+
+          <div className="p-8 sm:p-12 md:p-16">
+            {/* Contract Heading */}
+            <div className="mb-12 text-center">
+              <p className="mb-4 font-sans text-[10px] font-semibold uppercase tracking-[0.3em] text-stone-400">
+                Cambridge Scholars Publishing
+              </p>
+              <div className="mx-auto mb-6 h-px w-24 bg-stone-200" />
+              <h3 className="mb-2 font-serif text-xl font-bold uppercase tracking-[0.18em] text-stone-800">
+                {contractTypeLabel}
+              </h3>
+              <p className="font-sans text-xs font-medium text-stone-400">
+                Reference: {ticket} · v{contract.contract_version}
+              </p>
+            </div>
+
+            {/* Metadata Grid */}
+            <div className="mb-12 grid grid-cols-1 gap-y-6 gap-x-12 border-b border-stone-100 pb-12 md:grid-cols-2">
+              <div className="space-y-1">
+                <label className="font-sans text-[10px] font-bold uppercase tracking-wider text-stone-400">
+                  Author
+                </label>
+                <p className="font-sans text-sm font-medium text-stone-800">
+                  {contract.recipient_name || authorFullName}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <label className="font-sans text-[10px] font-bold uppercase tracking-wider text-stone-400">
+                  Contract Version
+                </label>
+                <p className="font-sans text-sm font-medium text-stone-800">
+                  v{contract.contract_version}
+                </p>
+              </div>
+              <div className="space-y-1 md:col-span-2">
+                <label className="font-sans text-[10px] font-bold uppercase tracking-wider text-stone-400">
+                  Title
+                </label>
+                <p className="font-serif text-base font-medium italic leading-snug text-stone-800">
+                  {titleStr}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <label className="font-sans text-[10px] font-bold uppercase tracking-wider text-stone-400">
+                  Format
+                </label>
+                <p className="font-sans text-sm font-medium text-stone-800">{formatLabel}</p>
+              </div>
+              <div className="space-y-1">
+                <label className="font-sans text-[10px] font-bold uppercase tracking-wider text-stone-400">
+                  Expected Completion
+                </label>
+                <p className="font-sans text-sm font-medium text-stone-800">
+                  {expectedCompletion}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <label className="font-sans text-[10px] font-bold uppercase tracking-wider text-stone-400">
+                  Issued
+                </label>
+                <p className="font-sans text-sm font-medium text-stone-800">
+                  {formatDate(issuedAt)}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <label className="font-sans text-[10px] font-bold uppercase tracking-wider text-stone-400">
+                  Signed
+                </label>
+                <p className="font-sans text-sm font-semibold text-emerald-700">
+                  {formatDate(contract.docusign_completed_at ?? undefined)}
+                </p>
+              </div>
+            </div>
+
+            {/* Signature Block */}
+            <div className="grid grid-cols-1 gap-12 sm:grid-cols-2">
+              <div>
+                <label className="mb-4 block font-sans text-[10px] font-bold uppercase tracking-wider text-stone-400">
+                  Publisher Signature
+                </label>
+                <div className="flex h-12 items-end">
+                  <span className="font-serif text-xl italic text-stone-700 opacity-70">
+                    Cambridge Scholars Publishing
+                  </span>
+                </div>
+                <div className="mt-2 border-t border-stone-200 pt-2">
+                  <p className="font-sans text-[11px] font-medium text-stone-500">
+                    On behalf of CSP
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-4 block font-sans text-[10px] font-bold uppercase tracking-wider text-stone-400">
+                  Author Signature
+                </label>
+                <div className="flex h-12 items-end">
+                  <span className="font-serif text-xl italic text-emerald-800">
+                    {contract.recipient_name || authorFullName}
+                  </span>
+                </div>
+                <div className="mt-2 flex items-start justify-between border-t border-emerald-100 pt-2">
+                  <p className="font-sans text-[11px] font-medium text-stone-500">
+                    {contract.recipient_name || authorFullName}
+                  </p>
+                  <span className="inline-flex items-center gap-1 font-sans text-[10px] font-bold uppercase text-emerald-600">
+                    <Check className="h-2.5 w-2.5" />
+                    Signed
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Download */}
+            <div className="mt-16 flex justify-center">
+              <button
+                type="button"
+                onClick={() => setPdfOpen(true)}
+                className="group inline-flex items-center gap-3 rounded border border-stone-200 px-6 py-3 transition-colors hover:border-[#C76A2E] hover:text-[#C76A2E]"
+              >
+                <Download className="h-4 w-4 text-stone-400 group-hover:text-[#C76A2E]" />
+                <span className="font-sans text-sm font-semibold text-stone-600 group-hover:text-[#C76A2E]">
+                  Download full contract PDF
+                </span>
+              </button>
+            </div>
+          </div>
+
+          {/* Welcome Footer */}
+          <div className="flex items-center gap-4 border-t border-emerald-100 bg-emerald-50/50 p-6">
+            <div className="rounded-full bg-emerald-100 p-2">
+              <Check className="h-5 w-5 text-emerald-600" strokeWidth={2.5} />
+            </div>
+            <div className="min-w-0">
+              <h4 className="font-serif text-sm font-bold text-emerald-900">
+                Contract signed — welcome to the CSP family!
+              </h4>
+              <p className="font-sans text-xs leading-relaxed text-emerald-800/80">
+                Our production team will be in touch shortly with the next steps for bringing
+                your book to publication.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <ContractPdfModal
+          open={pdfOpen}
+          ticket={ticket}
+          onClose={() => setPdfOpen(false)}
+        />
+      </section>
+    ) : (
     <section
       className={`mt-6 overflow-hidden rounded-2xl border shadow-sm ${
         isSigned
@@ -1645,6 +1816,7 @@ function ContractIssuedView({
         onClose={() => setPdfOpen(false)}
       />
     </section>
+    )
   );
 }
 
