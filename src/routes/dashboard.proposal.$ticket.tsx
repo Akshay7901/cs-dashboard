@@ -62,6 +62,27 @@ type SubmittedReview = {
   review_data?: Record<string, unknown>;
 };
 
+type ContractDetail = {
+  id: number;
+  contract_version?: number;
+  contract_type?: "author" | "editor";
+  status?: string;
+  docusign_envelope_id?: string;
+  docusign_status?: string;
+  docusign_signing_url?: string;
+  docusign_view_url?: string;
+  docusign_sent_at?: string;
+  docusign_completed_at?: string | null;
+  docusign_declined_at?: string | null;
+  docusign_decline_reason?: string | null;
+  docusign_expires_at?: string;
+  recipient_email?: string;
+  recipient_name?: string;
+  created_by?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
 const RECOMMENDATION_LABELS: Record<string, string> = {
   proceed: "Proceed without changes",
   minor: "Minor revisions needed",
@@ -146,6 +167,8 @@ function ProposalDetailPage() {
   const [reviews, setReviews] = useState<SubmittedReview[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [reviewsError, setReviewsError] = useState<string | null>(null);
+  const [contracts, setContracts] = useState<ContractDetail[]>([]);
+  const [contractsLoading, setContractsLoading] = useState(false);
   const [comments, setComments] = useState<ReviewComment[]>([]);
   const [commentsSeeded, setCommentsSeeded] = useState(false);
   const [editorialSummary, setEditorialSummary] = useState("");
@@ -577,6 +600,41 @@ function ProposalDetailPage() {
   }, [ticket]);
 
   const displayName = userName || displayNameFromEmail(userEmail);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setContractsLoading(true);
+      try {
+        const token = getPortalToken();
+        const res = await proposalApiFetch(`/${encodeURIComponent(ticket)}/contract`, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        if (cancelled) return;
+        if (!res.ok) {
+          setContracts([]);
+          return;
+        }
+        const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+        const list = Array.isArray(body.contracts)
+          ? (body.contracts as ContractDetail[])
+          : body.contract
+            ? [body.contract as ContractDetail]
+            : [];
+        setContracts(list);
+      } catch {
+        if (!cancelled) setContracts([]);
+      } finally {
+        if (!cancelled) setContractsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [ticket, data?.status, data?.updated_at]);
 
   const onLogout = async () => {
     await portalLogout();
@@ -1367,6 +1425,127 @@ function ProposalDetailPage() {
                     )}
                   </div>
                 </Card>
+
+                {contracts.length > 0 && (
+                  <Card>
+                    <div className="border-b border-stone-200 px-5 py-3.5">
+                      <h2 className="font-serif text-base font-bold text-stone-900">
+                        Contract
+                      </h2>
+                      <p className="mt-1 font-sans text-sm text-stone-500">
+                        {contracts.length === 1
+                          ? "Latest contract issued for this proposal"
+                          : `${contracts.length} contract versions issued`}
+                      </p>
+                    </div>
+                    <div className="space-y-4 px-5 py-4">
+                      {contracts.map((c) => {
+                        const statusKey = (c.status || "").toLowerCase();
+                        const statusClass =
+                          statusKey === "signed"
+                            ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
+                            : statusKey === "declined" || statusKey === "voided"
+                              ? "bg-rose-50 text-rose-700 ring-rose-200"
+                              : statusKey === "expired"
+                                ? "bg-stone-100 text-stone-600 ring-stone-200"
+                                : "bg-violet-50 text-violet-700 ring-violet-200";
+                        return (
+                          <div
+                            key={c.id}
+                            className="rounded-xl border border-stone-200 bg-white p-4"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="font-sans text-xs font-semibold uppercase tracking-[0.12em] text-stone-500">
+                                Version {c.contract_version ?? "—"}
+                                {c.contract_type ? ` · ${c.contract_type}` : ""}
+                              </p>
+                              <span
+                                className={`inline-flex items-center rounded-full px-2.5 py-1 font-sans text-[11px] font-semibold uppercase tracking-wide ring-1 ${statusClass}`}
+                              >
+                                {c.status || "sent"}
+                              </span>
+                            </div>
+                            <p className="mt-2 font-serif text-base font-semibold text-stone-900">
+                              {c.recipient_name ||
+                                displayNameFromEmail(c.recipient_email || "")}
+                            </p>
+                            {c.recipient_email && (
+                              <p className="font-sans text-xs text-stone-500">
+                                {c.recipient_email}
+                              </p>
+                            )}
+                            <dl className="mt-3 space-y-1.5 font-sans text-xs text-stone-600">
+                              {c.docusign_sent_at && (
+                                <div className="flex justify-between gap-3">
+                                  <dt className="text-stone-500">Sent</dt>
+                                  <dd>{formatDate(c.docusign_sent_at)}</dd>
+                                </div>
+                              )}
+                              {c.docusign_completed_at && (
+                                <div className="flex justify-between gap-3">
+                                  <dt className="text-stone-500">Signed</dt>
+                                  <dd>{formatDate(c.docusign_completed_at)}</dd>
+                                </div>
+                              )}
+                              {c.docusign_declined_at && (
+                                <div className="flex justify-between gap-3">
+                                  <dt className="text-stone-500">Declined</dt>
+                                  <dd>{formatDate(c.docusign_declined_at)}</dd>
+                                </div>
+                              )}
+                              {c.docusign_expires_at && !c.docusign_completed_at && (
+                                <div className="flex justify-between gap-3">
+                                  <dt className="text-stone-500">Expires</dt>
+                                  <dd>{formatDate(c.docusign_expires_at)}</dd>
+                                </div>
+                              )}
+                              {c.created_by && (
+                                <div className="flex justify-between gap-3">
+                                  <dt className="text-stone-500">Issued by</dt>
+                                  <dd className="truncate">{c.created_by}</dd>
+                                </div>
+                              )}
+                              {c.docusign_envelope_id && (
+                                <div className="flex justify-between gap-3">
+                                  <dt className="text-stone-500">Envelope</dt>
+                                  <dd className="truncate font-mono text-[11px]">
+                                    {c.docusign_envelope_id}
+                                  </dd>
+                                </div>
+                              )}
+                            </dl>
+                            {c.docusign_decline_reason && (
+                              <p className="mt-3 rounded-lg bg-rose-50 px-3 py-2 font-sans text-xs text-rose-700 ring-1 ring-rose-200">
+                                {c.docusign_decline_reason}
+                              </p>
+                            )}
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              <a
+                                href={`https://api.cambridgescholars.com/api/proposals/${encodeURIComponent(ticket)}/contract/document`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 py-1.5 font-sans text-xs font-semibold text-stone-700 hover:bg-stone-50"
+                              >
+                                <FileText className="h-3.5 w-3.5" />
+                                View PDF
+                              </a>
+                              {c.docusign_view_url && (
+                                <a
+                                  href={c.docusign_view_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 py-1.5 font-sans text-xs font-semibold text-stone-700 hover:bg-stone-50"
+                                >
+                                  Open in DocuSign
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </Card>
+                )}
 
                 {/* Internal Notes */}
                 <Card>
