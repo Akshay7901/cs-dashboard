@@ -22,6 +22,7 @@ import { proposalApiFetch } from "@/lib/proposalApi";
 import { getContract, voidContract, type ContractDetail } from "@/lib/contractsApi";
 import { ContractPdfModal } from "@/components/contract-pdf-modal";
 import { ContractQueries } from "@/components/contract-queries";
+import { DrInfoRequests } from "@/components/dr-info-requests";
 
 type Assignment = {
   reviewer_email: string;
