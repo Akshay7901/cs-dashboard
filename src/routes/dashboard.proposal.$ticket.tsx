@@ -15,6 +15,9 @@ import cspLogo from "@/assets/csp-logo.png";
 import { portalLogout, getPortalSession, getPortalToken } from "@/lib/auth";
 import { formatDate, initialsFromName, displayNameFromEmail } from "@/lib/proposals";
 import { proposalApiFetch } from "@/lib/proposalApi";
+import { getContract, voidContract, type ContractDetail } from "@/lib/contractsApi";
+import { ContractPdfModal } from "@/components/contract-pdf-modal";
+import { ContractQueries } from "@/components/contract-queries";
 
 type Assignment = {
   reviewer_email: string;
@@ -60,27 +63,6 @@ type SubmittedReview = {
   is_submitted?: boolean;
   submitted_at?: string;
   review_data?: Record<string, unknown>;
-};
-
-type ContractDetail = {
-  id: number;
-  contract_version?: number;
-  contract_type?: "author" | "editor";
-  status?: string;
-  docusign_envelope_id?: string;
-  docusign_status?: string;
-  docusign_signing_url?: string;
-  docusign_view_url?: string;
-  docusign_sent_at?: string;
-  docusign_completed_at?: string | null;
-  docusign_declined_at?: string | null;
-  docusign_decline_reason?: string | null;
-  docusign_expires_at?: string;
-  recipient_email?: string;
-  recipient_name?: string;
-  created_by?: string;
-  created_at?: string;
-  updated_at?: string;
 };
 
 const RECOMMENDATION_LABELS: Record<string, string> = {
