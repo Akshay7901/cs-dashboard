@@ -297,6 +297,36 @@ function AuthorProposalDetails() {
           });
           setLoading(false);
         }
+        // Fetch info-requests (revision requests) from the dedicated endpoint.
+        try {
+          const r2 = await proposalApiFetch(
+            `/${encodeURIComponent(id)}/request-info`,
+            { headers },
+          );
+          const b2 = (await r2.json().catch(() => ({}))) as Record<string, unknown>;
+          if (!cancelled && r2.ok) {
+            const raw = (b2.requests as Array<Record<string, unknown>>) || [];
+            const mapped: InfoRequest[] = raw.map((r) => ({
+              id: r.id as string | number | undefined,
+              status: r.status as string | undefined,
+              note: (r.note as string | undefined) ?? (r.message as string | undefined),
+              resubmission_deadline: r.resubmission_deadline as string | undefined,
+              deadline: r.deadline as string | undefined,
+              created_at: (r.requested_at as string | undefined) ?? (r.created_at as string | undefined),
+              items: (r.items as InfoRequestItem[]) || [],
+              response: r.responded_at
+                ? {
+                    note: r.response_note as string | undefined,
+                    submitted_at: r.responded_at as string | undefined,
+                  }
+                : null,
+              draft: (r.draft_data as InfoRequest["draft"]) || null,
+            }));
+            setProposal((prev) => (prev ? { ...prev, infoRequests: mapped } : prev));
+          }
+        } catch {
+          // ignore — panel just won't render
+        }
       } catch {
         if (!cancelled) {
           setLoadError("Network error. Please try again.");
