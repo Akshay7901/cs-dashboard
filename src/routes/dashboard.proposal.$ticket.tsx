@@ -5,10 +5,14 @@ import {
   ArrowLeft,
   Check,
   ChevronDown,
+  Clock,
   FileText,
   LogOut,
+  MessageSquare,
+  Pencil,
   Plus,
   SquarePen,
+  Trash2,
   X as XIcon,
 } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
