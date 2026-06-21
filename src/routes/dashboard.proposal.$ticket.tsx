@@ -69,6 +69,43 @@ type SubmittedReview = {
   review_data?: Record<string, unknown>;
 };
 
+type InfoRequestItem = {
+  key?: string;
+  label?: string;
+  response_text?: string;
+};
+
+type InfoRequestFile = {
+  url?: string;
+  filename?: string;
+  size_bytes?: number;
+  field_key?: string;
+};
+
+type InfoRequest = {
+  id: string | number;
+  status?: string;
+  note?: string;
+  message?: string;
+  resubmission_deadline?: string;
+  deadline?: string;
+  created_at?: string;
+  requested_at?: string;
+  items?: InfoRequestItem[];
+  response?: {
+    note?: string;
+    items?: InfoRequestItem[];
+    files?: InfoRequestFile[];
+    submitted_at?: string;
+    is_draft?: boolean;
+  } | null;
+  draft?: {
+    note?: string;
+    items?: InfoRequestItem[];
+    files?: InfoRequestFile[];
+  } | null;
+};
+
 const RECOMMENDATION_LABELS: Record<string, string> = {
   proceed: "Proceed without changes",
   minor: "Minor revisions needed",
