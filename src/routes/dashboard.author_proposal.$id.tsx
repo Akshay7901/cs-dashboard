@@ -1298,12 +1298,11 @@ function ContractIssuedView({
               </p>
             )}
             <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-stretch sm:justify-center">
-              {canSign && (
+              {canSign && !hasOpenQuery && (
                 <button
                   type="button"
                   onClick={handleSign}
-                  disabled={signLoading || signDisabled}
-                  title={hasOpenQuery ? "Resolve your open query before signing" : undefined}
+                  disabled={signLoading}
                   className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-violet-600 px-6 py-3 font-sans text-sm font-bold text-white shadow-sm transition hover:bg-violet-700 disabled:opacity-60 sm:flex-none sm:min-w-[220px]"
                 >
                   <CheckCircle2 className="h-4 w-4" />
