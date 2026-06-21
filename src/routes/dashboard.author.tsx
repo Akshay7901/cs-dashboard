@@ -641,7 +641,7 @@ function AuthorDashboard() {
     <main className="min-h-screen bg-[#FAF6EE] font-sans text-stone-900">
       {/* Header */}
       <header className="border-b border-stone-200 bg-white">
-        <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-4 py-4 sm:px-6">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-8 py-4">
           <div className="flex items-center gap-3">
             <img src={cspLogo} alt="CSP" className="h-10 w-10" />
             <div className="flex items-center gap-3">
