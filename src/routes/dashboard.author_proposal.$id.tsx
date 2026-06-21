@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, FileText, Check, X, Calendar, Upload, Send, Save, Paperclip, AlertCircle } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ChevronLeft, FileText, Check, X, Calendar, Send, Save, AlertCircle } from "lucide-react";
 import cspLogo from "@/assets/csp-logo.png";
 import { initialsFromName, type StatusKey } from "@/lib/proposals";
 import { portalLogout, getPortalSession, getPortalToken } from "@/lib/auth";
@@ -1050,7 +1050,7 @@ function InfoRequestPanel({
   const [busy, setBusy] = useState<"" | "save" | "submit" | "upload">("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  
 
   useEffect(() => {
     setItems(initialItems);
@@ -1131,42 +1131,6 @@ function InfoRequestPanel({
     }
   };
 
-  const doUpload = async (file: File) => {
-    setBusy("upload");
-    setError(null);
-    setSuccess(null);
-    try {
-      const fd = new FormData();
-      fd.append("file", file);
-      if (req.id != null) fd.append("request_info_id", String(req.id));
-      const res = await proposalApiFetch(
-        `/${encodeURIComponent(ticket)}/request-info/upload`,
-        { method: "POST", headers: authHeaders(false), body: fd },
-      );
-      const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-      if (!res.ok) {
-        setError((body.error as string) || (body.message as string) || `Failed to upload (${res.status}).`);
-        return;
-      }
-      const uploaded: InfoRequestFile = {
-        url: (body.url as string) || (body.file_url as string) || ((body.file as Record<string, unknown> | undefined)?.url as string),
-        filename: (body.filename as string) || file.name,
-        size_bytes: (body.size_bytes as number) || file.size,
-      };
-      setFiles((prev) => [...prev, uploaded]);
-      setSuccess("File uploaded.");
-    } catch {
-      setError("Network error. Please try again.");
-    } finally {
-      setBusy("");
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }
-  };
-
-  const onPickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (f) void doUpload(f);
-  };
 
   const deadline = req.resubmission_deadline || req.deadline;
 
@@ -1239,61 +1203,6 @@ function InfoRequestPanel({
           </div>
         )}
 
-        <div className="rounded-xl border border-stone-200 bg-white p-4">
-          <label className="block font-sans text-sm font-semibold text-stone-900">
-            Additional message to the editor
-          </label>
-          <textarea
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="Add any further context for the editor…"
-            rows={4}
-            className="mt-2 w-full rounded-lg border border-stone-300 px-3 py-2 font-sans text-sm text-stone-900 placeholder-stone-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200"
-          />
-        </div>
-
-        <div className="rounded-xl border border-stone-200 bg-white p-4">
-          <div className="flex items-center justify-between">
-            <p className="font-sans text-sm font-semibold text-stone-900">Supporting documents</p>
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={busy === "upload"}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-stone-300 bg-white px-3 py-1.5 font-sans text-xs font-semibold text-stone-700 transition-colors hover:bg-stone-50 disabled:opacity-60"
-            >
-              <Upload className="h-3.5 w-3.5" />
-              {busy === "upload" ? "Uploading…" : "Upload file"}
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              className="hidden"
-              onChange={onPickFile}
-            />
-          </div>
-          {files.length === 0 ? (
-            <p className="mt-3 font-sans text-xs text-stone-500">No files uploaded yet.</p>
-          ) : (
-            <ul className="mt-3 space-y-2">
-              {files.map((f, i) => (
-                <li key={(f.url || f.filename || "") + i} className="flex items-center gap-2 rounded-lg border border-stone-200 bg-stone-50 px-3 py-2">
-                  <Paperclip className="h-4 w-4 text-stone-500" />
-                  <a
-                    href={f.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="truncate font-sans text-sm font-medium text-stone-900 hover:underline"
-                  >
-                    {f.filename || f.url || "File"}
-                  </a>
-                  {f.size_bytes ? (
-                    <span className="ml-auto font-sans text-xs text-stone-500">{formatBytes(f.size_bytes)}</span>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
 
         {error && (
           <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 font-sans text-sm text-rose-700">
