@@ -19,7 +19,14 @@ import cspLogo from "@/assets/csp-logo.png";
 import { portalLogout, getPortalSession, getPortalToken } from "@/lib/auth";
 import { formatDate, initialsFromName, displayNameFromEmail } from "@/lib/proposals";
 import { proposalApiFetch } from "@/lib/proposalApi";
-import { getContract, voidContract, type ContractDetail } from "@/lib/contractsApi";
+import {
+  getContract,
+  voidContract,
+  getQueries,
+  respondQuery,
+  type ContractDetail,
+  type ContractQueryEntry,
+} from "@/lib/contractsApi";
 import { ContractPdfModal } from "@/components/contract-pdf-modal";
 import { ContractQueries } from "@/components/contract-queries";
 import { DrInfoRequests } from "@/components/dr-info-requests";
@@ -199,6 +206,12 @@ function ProposalDetailPage() {
   const [voidLoading, setVoidLoading] = useState(false);
   const [voidError, setVoidError] = useState<string | null>(null);
   const [contractsReloadKey, setContractsReloadKey] = useState(0);
+  const [queryThread, setQueryThread] = useState<ContractQueryEntry[]>([]);
+  const [queryProposalStatus, setQueryProposalStatus] = useState<string>("");
+  const [queryResponseText, setQueryResponseText] = useState("");
+  const [queryResponseSubmitting, setQueryResponseSubmitting] = useState(false);
+  const [queryResponseError, setQueryResponseError] = useState<string | null>(null);
+  const [queryResponseSuccess, setQueryResponseSuccess] = useState<string | null>(null);
   const [comments, setComments] = useState<ReviewComment[]>([]);
   const [commentsSeeded, setCommentsSeeded] = useState(false);
   const [editorialSummary, setEditorialSummary] = useState("");
@@ -700,6 +713,27 @@ function ProposalDetailPage() {
     };
   }, [ticket, data?.status, data?.updated_at, contractsReloadKey]);
 
+  // Load contract queries (author <-> DR thread) and proposal status flag
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const body = await getQueries(ticket);
+        if (cancelled) return;
+        setQueryThread(body.queries || []);
+        setQueryProposalStatus(body.proposal_status || "");
+      } catch {
+        if (!cancelled) {
+          setQueryThread([]);
+          setQueryProposalStatus("");
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [ticket, data?.status, data?.updated_at, contractsReloadKey]);
+
   const submitVoid = async () => {
     if (!voidReason.trim()) {
       setVoidError("Please provide a reason.");
@@ -783,6 +817,47 @@ function ProposalDetailPage() {
     const s = (data?.status || "").toLowerCase().replace(/\s+/g, "_");
     return s === "awaiting_more_info";
   }, [data?.status]);
+
+  // Latest unanswered author query (used for prominent DR action panel)
+  const openQuery = useMemo<ContractQueryEntry | null>(() => {
+    const answered = new Set(
+      queryThread
+        .filter((t) => t.type === "response" && t.parent_query_id)
+        .map((t) => t.parent_query_id as number),
+    );
+    const unanswered = queryThread
+      .filter((t) => t.type === "query" && !answered.has(t.id))
+      .sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      );
+    return unanswered[0] || null;
+  }, [queryThread]);
+
+  const hasOpenQuery =
+    !!openQuery ||
+    queryProposalStatus === "queries_raised" ||
+    queryProposalStatus === "question_raised";
+
+  const submitQueryResponse = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!openQuery || !queryResponseText.trim()) return;
+    setQueryResponseSubmitting(true);
+    setQueryResponseError(null);
+    setQueryResponseSuccess(null);
+    try {
+      await respondQuery(ticket, openQuery.id, queryResponseText.trim());
+      setQueryResponseText("");
+      setQueryResponseSuccess("Response sent to the author.");
+      setContractsReloadKey((k) => k + 1);
+    } catch (err) {
+      setQueryResponseError(
+        (err as Error).message || "Failed to send response.",
+      );
+    } finally {
+      setQueryResponseSubmitting(false);
+    }
+  };
 
   const latestContract = contracts[0];
   const isContractIssued = useMemo(() => {
@@ -1144,6 +1219,75 @@ function ProposalDetailPage() {
                               latestContract?.notes ||
                               notes}
                           </p>
+                        </div>
+                      </Card>
+                    )}
+
+                    {/* Author Question — prominent DR response panel */}
+                    {hasOpenQuery && openQuery && (
+                      <Card>
+                        <div className="rounded-t-2xl border-b border-teal-200 bg-teal-50/70 px-6 py-4">
+                          <h2 className="flex items-center gap-2 font-serif text-base font-bold text-stone-900">
+                            <MessageSquare className="h-4 w-4 text-teal-700" />
+                            Author Question
+                          </h2>
+                          <p className="mt-0.5 font-sans text-sm text-teal-800/80">
+                            Awaiting your response before the author can sign
+                          </p>
+                        </div>
+                        <div className="space-y-4 px-6 py-5">
+                          <div className="rounded-xl border border-teal-200 bg-teal-50/40 px-4 py-3">
+                            <div className="flex items-center justify-between gap-3">
+                              <p className="font-sans text-xs font-semibold uppercase tracking-[0.12em] text-teal-800">
+                                Author's question
+                                {openQuery.raised_by_name
+                                  ? ` · ${openQuery.raised_by_name}`
+                                  : openQuery.raised_by
+                                    ? ` · ${displayNameFromEmail(openQuery.raised_by)}`
+                                    : ""}
+                              </p>
+                              <p className="font-sans text-xs text-stone-500">
+                                {formatDate(openQuery.created_at)}
+                              </p>
+                            </div>
+                            <p className="mt-2 whitespace-pre-line font-sans text-sm leading-relaxed text-stone-800">
+                              {openQuery.text}
+                            </p>
+                          </div>
+
+                          <form onSubmit={submitQueryResponse} className="space-y-3">
+                            <label className="block font-sans text-sm font-semibold text-stone-800">
+                              Your response
+                            </label>
+                            <textarea
+                              value={queryResponseText}
+                              onChange={(e) => setQueryResponseText(e.target.value)}
+                              rows={5}
+                              placeholder="Reply to the author's question…"
+                              className="w-full resize-none rounded-xl border border-stone-200 bg-white px-3.5 py-3 font-sans text-sm text-stone-800 placeholder:text-stone-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-100"
+                            />
+                            {queryResponseError && (
+                              <p className="rounded-lg bg-rose-50 px-3 py-2 font-sans text-xs text-rose-700 ring-1 ring-rose-200">
+                                {queryResponseError}
+                              </p>
+                            )}
+                            {queryResponseSuccess && (
+                              <p className="rounded-lg bg-emerald-50 px-3 py-2 font-sans text-xs text-emerald-700 ring-1 ring-emerald-200">
+                                {queryResponseSuccess}
+                              </p>
+                            )}
+                            <button
+                              type="submit"
+                              disabled={
+                                queryResponseSubmitting || !queryResponseText.trim()
+                              }
+                              className="inline-flex items-center gap-2 rounded-xl bg-teal-700 px-5 py-2.5 font-sans text-sm font-semibold text-white shadow-sm hover:bg-teal-800 disabled:opacity-50"
+                            >
+                              {queryResponseSubmitting
+                                ? "Sending…"
+                                : "Send Response"}
+                            </button>
+                          </form>
                         </div>
                       </Card>
                     )}
@@ -1524,7 +1668,9 @@ function ProposalDetailPage() {
                       Editorial Decision
                     </h2>
                     <p className="mt-1 font-sans text-sm text-stone-500">
-                      {isContractIssued
+                      {isContractIssued && hasOpenQuery
+                        ? "Author has raised a question"
+                        : isContractIssued
                         ? isAwaitingSignature
                           ? "Contract sent — awaiting signature"
                           : (latestContract?.status || "").toLowerCase() === "signed"
@@ -1541,6 +1687,17 @@ function ProposalDetailPage() {
                           : "Awaiting initial assessment"}
                     </p>
                   </div>
+                  {isContractIssued && hasOpenQuery && (
+                    <div className="mx-5 mb-4 rounded-xl bg-amber-50 px-4 py-3 ring-1 ring-amber-200">
+                      <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.12em] text-amber-800">
+                        Author Question
+                      </p>
+                      <p className="mt-1 font-sans text-xs leading-relaxed text-amber-900/90">
+                        The author has raised a question before signing. Review
+                        their message and respond to proceed.
+                      </p>
+                    </div>
+                  )}
                   {assignedReviewer && !isReviewReturned && !isDeclined && !isContractIssued && (
                     <div className="mx-5 mb-4 rounded-xl bg-indigo-50/70 px-5 py-4 ring-1 ring-indigo-100">
                       <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.12em] text-indigo-700">
