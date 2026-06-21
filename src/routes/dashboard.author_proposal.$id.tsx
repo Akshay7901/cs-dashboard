@@ -5,6 +5,13 @@ import cspLogo from "@/assets/csp-logo.png";
 import { initialsFromName, type StatusKey } from "@/lib/proposals";
 import { portalLogout, getPortalSession, getPortalToken } from "@/lib/auth";
 import { proposalApiFetch } from "@/lib/proposalApi";
+import {
+  getContract,
+  getSigningUrl,
+  type ContractDetail,
+} from "@/lib/contractsApi";
+import { ContractPdfModal } from "@/components/contract-pdf-modal";
+import { ContractQueries } from "@/components/contract-queries";
 
 export const Route = createFileRoute("/dashboard/author_proposal/$id")({
   head: () => ({ meta: [{ title: "Proposal Details — Author Portal" }] }),
@@ -496,6 +503,8 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
         infoRequests={proposal.infoRequests}
       />
 
+      <ContractPanel ticket={proposal.ticket} />
+
       {/* Tabs */}
       <div className="mt-6 inline-flex gap-1 rounded-xl border border-stone-200 bg-white p-1 shadow-sm">
         <button
@@ -818,6 +827,125 @@ function Card({
         {subtitle && <p className="mt-1 font-sans text-xs font-medium" style={{ color: "#7A6A5A" }}>{subtitle}</p>}
       </div>
       <div className="border-t border-stone-200 px-6 py-6 md:px-7">{children}</div>
+    </section>
+  );
+}
+
+function ContractPanel({ ticket }: { ticket: string }) {
+  const [contract, setContract] = useState<ContractDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [pdfOpen, setPdfOpen] = useState(false);
+  const [signError, setSignError] = useState<string | null>(null);
+  const [signLoading, setSignLoading] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        const list = await getContract(ticket);
+        if (!cancelled) setContract(list[0] || null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [ticket, reloadKey]);
+
+  if (loading || !contract) return null;
+
+  const status = (contract.status || "").toLowerCase();
+  const canSign = status === "sent";
+  const statusClass =
+    status === "signed"
+      ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
+      : status === "declined" || status === "voided"
+        ? "bg-rose-50 text-rose-700 ring-rose-200"
+        : status === "expired"
+          ? "bg-stone-100 text-stone-600 ring-stone-200"
+          : "bg-violet-50 text-violet-700 ring-violet-200";
+
+  const handleSign = async () => {
+    setSignLoading(true);
+    setSignError(null);
+    try {
+      const url = await getSigningUrl(ticket);
+      if (url) window.open(url, "_blank", "noopener,noreferrer");
+      else setSignError("No signing URL returned.");
+    } catch (e) {
+      setSignError((e as Error).message);
+    } finally {
+      setSignLoading(false);
+    }
+  };
+
+  return (
+    <section className="mt-5 rounded-2xl border border-violet-200 bg-white p-5 shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="font-serif text-lg font-bold text-stone-900">
+            Publishing Contract
+          </h2>
+          <p className="mt-1 font-sans text-sm text-stone-600">
+            Version {contract.contract_version ?? "—"}
+            {contract.contract_type ? ` · ${contract.contract_type}` : ""} · Sent to{" "}
+            {contract.recipient_email}
+          </p>
+        </div>
+        <span
+          className={`inline-flex items-center rounded-full px-3 py-1 font-sans text-xs font-semibold uppercase tracking-wide ring-1 ${statusClass}`}
+        >
+          {contract.status || "sent"}
+        </span>
+      </div>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => setPdfOpen(true)}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-stone-300 bg-white px-3 py-2 font-sans text-sm font-semibold text-stone-700 hover:bg-stone-50"
+        >
+          <FileText className="h-4 w-4" />
+          View Contract
+        </button>
+        {canSign && (
+          <button
+            type="button"
+            onClick={handleSign}
+            disabled={signLoading}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 px-4 py-2 font-sans text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-50"
+          >
+            <Check className="h-4 w-4" />
+            {signLoading ? "Opening…" : "Sign Contract"}
+          </button>
+        )}
+      </div>
+      {signError && (
+        <p className="mt-3 rounded-lg bg-rose-50 px-3 py-2 font-sans text-xs text-rose-700 ring-1 ring-rose-200">
+          {signError}
+        </p>
+      )}
+      {contract.docusign_decline_reason && (
+        <p className="mt-3 rounded-lg bg-rose-50 px-3 py-2 font-sans text-sm text-rose-700 ring-1 ring-rose-200">
+          {contract.docusign_decline_reason}
+        </p>
+      )}
+
+      <div className="mt-5">
+        <ContractQueries
+          ticket={ticket}
+          viewer="author"
+          onChanged={() => setReloadKey((k) => k + 1)}
+        />
+      </div>
+
+      <ContractPdfModal
+        ticket={ticket}
+        open={pdfOpen}
+        onClose={() => setPdfOpen(false)}
+      />
     </section>
   );
 }

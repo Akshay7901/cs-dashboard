@@ -15,6 +15,9 @@ import cspLogo from "@/assets/csp-logo.png";
 import { portalLogout, getPortalSession, getPortalToken } from "@/lib/auth";
 import { formatDate, initialsFromName, displayNameFromEmail } from "@/lib/proposals";
 import { proposalApiFetch } from "@/lib/proposalApi";
+import { getContract, voidContract, type ContractDetail } from "@/lib/contractsApi";
+import { ContractPdfModal } from "@/components/contract-pdf-modal";
+import { ContractQueries } from "@/components/contract-queries";
 
 type Assignment = {
   reviewer_email: string;
@@ -60,27 +63,6 @@ type SubmittedReview = {
   is_submitted?: boolean;
   submitted_at?: string;
   review_data?: Record<string, unknown>;
-};
-
-type ContractDetail = {
-  id: number;
-  contract_version?: number;
-  contract_type?: "author" | "editor";
-  status?: string;
-  docusign_envelope_id?: string;
-  docusign_status?: string;
-  docusign_signing_url?: string;
-  docusign_view_url?: string;
-  docusign_sent_at?: string;
-  docusign_completed_at?: string | null;
-  docusign_declined_at?: string | null;
-  docusign_decline_reason?: string | null;
-  docusign_expires_at?: string;
-  recipient_email?: string;
-  recipient_name?: string;
-  created_by?: string;
-  created_at?: string;
-  updated_at?: string;
 };
 
 const RECOMMENDATION_LABELS: Record<string, string> = {
@@ -169,6 +151,12 @@ function ProposalDetailPage() {
   const [reviewsError, setReviewsError] = useState<string | null>(null);
   const [contracts, setContracts] = useState<ContractDetail[]>([]);
   const [contractsLoading, setContractsLoading] = useState(false);
+  const [pdfOpen, setPdfOpen] = useState(false);
+  const [voidOpen, setVoidOpen] = useState(false);
+  const [voidReason, setVoidReason] = useState("");
+  const [voidLoading, setVoidLoading] = useState(false);
+  const [voidError, setVoidError] = useState<string | null>(null);
+  const [contractsReloadKey, setContractsReloadKey] = useState(0);
   const [comments, setComments] = useState<ReviewComment[]>([]);
   const [commentsSeeded, setCommentsSeeded] = useState(false);
   const [editorialSummary, setEditorialSummary] = useState("");
@@ -606,25 +594,8 @@ function ProposalDetailPage() {
     (async () => {
       setContractsLoading(true);
       try {
-        const token = getPortalToken();
-        const res = await proposalApiFetch(`/${encodeURIComponent(ticket)}/contract`, {
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-        });
-        if (cancelled) return;
-        if (!res.ok) {
-          setContracts([]);
-          return;
-        }
-        const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-        const list = Array.isArray(body.contracts)
-          ? (body.contracts as ContractDetail[])
-          : body.contract
-            ? [body.contract as ContractDetail]
-            : [];
-        setContracts(list);
+        const list = await getContract(ticket);
+        if (!cancelled) setContracts(list);
       } catch {
         if (!cancelled) setContracts([]);
       } finally {
@@ -634,7 +605,39 @@ function ProposalDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [ticket, data?.status, data?.updated_at]);
+  }, [ticket, data?.status, data?.updated_at, contractsReloadKey]);
+
+  const submitVoid = async () => {
+    if (!voidReason.trim()) {
+      setVoidError("Please provide a reason.");
+      return;
+    }
+    setVoidLoading(true);
+    setVoidError(null);
+    try {
+      await voidContract(ticket, voidReason.trim());
+      setVoidOpen(false);
+      setVoidReason("");
+      setContractsReloadKey((k) => k + 1);
+      // refresh proposal status too
+      try {
+        const token = getPortalToken();
+        const r = await proposalApiFetch(`/${encodeURIComponent(ticket)}`, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        if (r.ok) setData((await r.json()) as ProposalDetail);
+      } catch {
+        // ignore
+      }
+    } catch (e) {
+      setVoidError((e as Error).message);
+    } finally {
+      setVoidLoading(false);
+    }
+  };
 
   const onLogout = async () => {
     await portalLogout();
@@ -1520,15 +1523,28 @@ function ProposalDetailPage() {
                               </p>
                             )}
                             <div className="mt-3 flex flex-wrap gap-2">
-                              <a
-                                href={`https://api.cambridgescholars.com/api/proposals/${encodeURIComponent(ticket)}/contract/document`}
-                                target="_blank"
-                                rel="noreferrer"
+                              <button
+                                type="button"
+                                onClick={() => setPdfOpen(true)}
                                 className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 py-1.5 font-sans text-xs font-semibold text-stone-700 hover:bg-stone-50"
                               >
                                 <FileText className="h-3.5 w-3.5" />
                                 View PDF
-                              </a>
+                              </button>
+                              {(c.status === "sent" || c.status === "draft") && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setVoidReason("");
+                                    setVoidError(null);
+                                    setVoidOpen(true);
+                                  }}
+                                  className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 py-1.5 font-sans text-xs font-semibold text-rose-700 hover:bg-rose-50"
+                                >
+                                  <XIcon className="h-3.5 w-3.5" />
+                                  Void Contract
+                                </button>
+                              )}
                               {c.docusign_view_url && (
                                 <a
                                   href={c.docusign_view_url}
@@ -1545,6 +1561,14 @@ function ProposalDetailPage() {
                       })}
                     </div>
                   </Card>
+                )}
+
+                {contracts.length > 0 && (
+                  <ContractQueries
+                    ticket={ticket}
+                    viewer="dr"
+                    onChanged={() => setContractsReloadKey((k) => k + 1)}
+                  />
                 )}
 
                 {/* Internal Notes */}
@@ -2157,6 +2181,51 @@ function ProposalDetailPage() {
                   : contractStep === 1
                     ? "Submit"
                     : "Issue Contract"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      <ContractPdfModal ticket={ticket} open={pdfOpen} onClose={() => setPdfOpen(false)} />
+      {voidOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <h2 className="font-serif text-lg font-bold text-stone-900">
+              Void Contract
+            </h2>
+            <p className="mt-1 font-sans text-sm text-stone-600">
+              The author will no longer be able to sign. You can issue a new contract afterwards.
+            </p>
+            <label className="mt-4 block font-sans text-xs font-semibold uppercase tracking-[0.1em] text-stone-500">
+              Reason
+            </label>
+            <textarea
+              value={voidReason}
+              onChange={(e) => setVoidReason(e.target.value)}
+              rows={3}
+              placeholder="Why is this contract being voided?"
+              className="mt-1 w-full resize-none rounded-lg border border-stone-300 bg-white px-3 py-2 font-sans text-sm focus:border-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-100"
+            />
+            {voidError && (
+              <p className="mt-2 rounded-lg bg-rose-50 px-3 py-2 font-sans text-xs text-rose-700 ring-1 ring-rose-200">
+                {voidError}
+              </p>
+            )}
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setVoidOpen(false)}
+                className="rounded-lg border border-stone-300 bg-white px-4 py-2 font-sans text-sm font-semibold text-stone-700 hover:bg-stone-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={submitVoid}
+                disabled={voidLoading}
+                className="rounded-lg bg-rose-600 px-4 py-2 font-sans text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-50"
+              >
+                {voidLoading ? "Voiding…" : "Void Contract"}
               </button>
             </div>
           </div>
