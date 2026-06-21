@@ -52,6 +52,47 @@ function isAwaitingInfoRaw(raw?: string, display?: string) {
 
 type LocalProposal = Proposal & { rawStatus?: string; rawDisplayStatus?: string };
 
+type InfoRequestItem = { key?: string; label?: string; response_text?: string };
+type InfoRequest = {
+  id?: string | number;
+  status?: string;
+  note?: string;
+  message?: string;
+  resubmission_deadline?: string;
+  deadline?: string;
+  created_at?: string;
+  items?: InfoRequestItem[];
+  response?: { submitted_at?: string; is_draft?: boolean } | null;
+};
+
+type OpenInfoRequest = {
+  items: { key?: string; label?: string }[];
+  note?: string;
+  deadline?: string;
+  createdAt?: string;
+};
+
+type LocalProposalWithInfo = LocalProposal & {
+  openInfoRequest?: OpenInfoRequest | null;
+};
+
+function pickOpenInfoRequest(reqs?: InfoRequest[]): OpenInfoRequest | null {
+  if (!Array.isArray(reqs) || reqs.length === 0) return null;
+  const open = reqs.find((r) => {
+    const s = (r.status || "").toLowerCase();
+    const responded = !!r.response?.submitted_at && !r.response?.is_draft;
+    return !responded && s !== "completed" && s !== "closed" && s !== "resolved";
+  });
+  const chosen = open || reqs[reqs.length - 1];
+  if (!chosen) return null;
+  return {
+    items: (chosen.items || []).map((i) => ({ key: i.key, label: i.label })),
+    note: chosen.note || chosen.message,
+    deadline: chosen.resubmission_deadline || chosen.deadline,
+    createdAt: chosen.created_at,
+  };
+}
+
 // API → local status mapping (mirrors dashboard.decision_reviewer.tsx).
 const STATUS_MAP: Record<string, StatusKey> = {
   new: "submitted",
