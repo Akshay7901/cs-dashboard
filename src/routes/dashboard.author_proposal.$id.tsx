@@ -505,7 +505,28 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
 
       <ContractIssuedView ticket={proposal.ticket} proposal={proposal} authorFullName={authorFullName} />
 
-      {(status !== "contract" && status !== "signed") && (
+      {(status === "contract" || status === "signed") ? (
+        <details className="group mt-6 overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-6 py-4 font-serif text-base font-bold text-[#2C1A0E] [&::-webkit-details-marker]:hidden">
+            View original proposal details
+            <ChevronDown className="h-5 w-5 text-stone-500 transition-transform group-open:rotate-180" />
+          </summary>
+          <div className="border-t border-stone-200 px-2 pb-6 pt-4 md:px-4">
+            <div id="original-proposal-details">
+      {/* Tabs */}
+      <div className="mt-2 inline-flex gap-1 rounded-xl border border-stone-200 bg-white p-1 shadow-sm">
+        <button
+          className="rounded-lg px-5 py-1.5 font-sans text-sm font-medium text-white"
+          style={{ backgroundColor: "#00422F" }}
+        >
+          Proposal Details
+        </button>
+      </div>
+      <DetailsBlock />
+            </div>
+          </div>
+        </details>
+      ) : (
         <div id="original-proposal-details">
       {/* Tabs */}
       <div className="mt-6 inline-flex gap-1 rounded-xl border border-stone-200 bg-white p-1 shadow-sm">
