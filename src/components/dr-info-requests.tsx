@@ -13,6 +13,7 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
+  SquarePen,
 } from "lucide-react";
 
 type InfoRequestItem = { key?: string; label?: string; response_text?: string };
