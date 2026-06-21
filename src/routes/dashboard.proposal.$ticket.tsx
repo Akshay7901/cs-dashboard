@@ -1114,12 +1114,19 @@ function ProposalDetailPage() {
                     </p>
                   )}
                 </div>
-                <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1.5 font-sans text-xs font-medium text-indigo-700 ring-1 ring-indigo-200">
-                  <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
-                  {data.status?.toLowerCase().replace(/\s+/g, "_") === "awaiting_more_info"
-                    ? "Request Revision"
-                    : data.status}
-                </span>
+                {isContractSigned ? (
+                  <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-600 px-3 py-1.5 font-sans text-xs font-semibold text-white shadow-sm">
+                    <Check className="h-3.5 w-3.5" />
+                    Contract Signed
+                  </span>
+                ) : (
+                  <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1.5 font-sans text-xs font-medium text-indigo-700 ring-1 ring-indigo-200">
+                    <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                    {data.status?.toLowerCase().replace(/\s+/g, "_") === "awaiting_more_info"
+                      ? "Request Revision"
+                      : data.status}
+                  </span>
+                )}
               </div>
               <div className="mt-5 flex flex-wrap items-center gap-x-7 gap-y-2 font-sans text-sm text-stone-600">
                 {cd.corresponding_author_name && (
