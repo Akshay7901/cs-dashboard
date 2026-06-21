@@ -2292,6 +2292,11 @@ function InfoRequestPanel({
               const isDone =
                 (it.key && !!uploads[it.key]) ||
                 (it.response_text || "").trim().length > 0;
+              const isSupportingDocs =
+                it.key === "supporting_materials" ||
+                /supporting|material|document|file|attachment/i.test(
+                  it.label || "",
+                );
               return (
                 <div key={(it.key || "") + idx} className="relative">
                   <div className="mb-4 flex items-center gap-2">
@@ -2323,7 +2328,7 @@ function InfoRequestPanel({
                       />
                     </div>
 
-                    {it.key && (
+                    {it.key && isSupportingDocs && (
                       <div className="space-y-2">
                         <label className="block font-sans text-xs font-bold uppercase tracking-tight text-stone-500">
                           Supporting documents
