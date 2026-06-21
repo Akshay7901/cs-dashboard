@@ -1187,19 +1187,38 @@ function ContractIssuedView({
   };
 
   return (
-    <section className="mt-6 overflow-hidden rounded-2xl border border-violet-200 bg-gradient-to-b from-violet-50/70 to-white shadow-sm">
+    <section
+      className={`mt-6 overflow-hidden rounded-2xl border shadow-sm ${
+        isSigned
+          ? "border-emerald-200 bg-gradient-to-b from-emerald-50/70 to-white"
+          : "border-violet-200 bg-gradient-to-b from-violet-50/70 to-white"
+      }`}
+    >
       {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-violet-100 px-6 py-5 md:px-8 md:py-6">
+      <div
+        className={`flex flex-wrap items-start justify-between gap-3 border-b px-6 py-5 md:px-8 md:py-6 ${
+          isSigned ? "border-emerald-100" : "border-violet-100"
+        }`}
+      >
         <div className="min-w-0">
-          <p className="font-sans text-xs font-bold uppercase tracking-[0.14em] text-violet-700">
+          <p
+            className={`inline-flex items-center gap-1.5 font-sans text-xs font-bold uppercase tracking-[0.14em] ${
+              isSigned ? "text-emerald-700" : isDeclined ? "text-rose-700" : "text-violet-700"
+            }`}
+          >
+            {isSigned && <Check className="h-3.5 w-3.5" />}
             {isSigned ? "Contract Signed" : isDeclined ? "Contract Declined" : "Proposal Accepted"}
           </p>
           <h2 className="mt-1.5 font-serif text-xl font-bold leading-snug text-[#2C1A0E] md:text-[1.6rem]">
             {isSigned
-              ? "Thank you — your contract is signed"
+              ? "Thank you — your contract is confirmed"
               : "Read the reviewer's feedback, then sign your contract"}
           </h2>
-          <p className="mt-1.5 font-sans text-sm text-stone-600">
+          <p
+            className={`mt-1.5 font-sans text-sm ${
+              isSigned ? "text-violet-700" : "text-stone-600"
+            }`}
+          >
             Issued {formatDate(issuedAt)} · {contractTypeLabel}
           </p>
         </div>
@@ -1211,7 +1230,8 @@ function ContractIssuedView({
         </span>
       </div>
 
-      {/* Step 1 — Feedback */}
+      {/* Step 1 — Feedback (hidden once contract is signed) */}
+      {!isSigned && (
       <div className="border-b border-violet-100 px-6 py-6 md:px-8">
           <div className="flex items-center gap-3">
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-600 font-sans text-sm font-bold text-white">
@@ -1235,9 +1255,11 @@ function ContractIssuedView({
 
         <ReviewerCommentsList ticket={ticket} />
       </div>
+      )}
 
       {/* Step 2 — Sign */}
       <div className="px-6 py-6 md:px-8">
+        {!isSigned && (
         <div className="flex items-center gap-3">
           <span
             className={`flex h-8 w-8 items-center justify-center rounded-full font-sans text-sm font-bold text-white ${
@@ -1250,8 +1272,9 @@ function ContractIssuedView({
             Review and sign your publishing contract
           </h3>
         </div>
+        )}
 
-        {editorNote && (
+        {editorNote && !isSigned && (
           <div className="mt-5">
             <p className="font-sans text-[11px] font-bold uppercase tracking-wider text-stone-500">
               Note from your editor
@@ -1263,7 +1286,7 @@ function ContractIssuedView({
         )}
 
         {/* Contract preview */}
-        <div className="mt-6 rounded-2xl border border-stone-200 bg-white p-6 md:p-8">
+        <div className={`${isSigned ? "mt-2" : "mt-6"} rounded-2xl border border-stone-200 bg-white p-6 md:p-8`}>
           <p className="text-center font-sans text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500">
             Cambridge Scholars Publishing
           </p>
@@ -1271,7 +1294,11 @@ function ContractIssuedView({
             <div className="h-2 rounded-full bg-stone-200" />
             <div className="mx-auto h-2 w-2/3 rounded-full bg-stone-200" />
           </div>
-          <p className="mt-6 text-center font-sans text-[11px] font-semibold uppercase tracking-[0.18em] text-violet-700">
+          <p
+            className={`mt-6 text-center font-sans text-[11px] font-semibold uppercase tracking-[0.18em] ${
+              isSigned ? "text-emerald-700" : "text-violet-700"
+            }`}
+          >
             {contractTypeLabel}
           </p>
           <div className="mt-3 h-px bg-stone-200" />
@@ -1298,8 +1325,9 @@ function ContractIssuedView({
             </div>
             <div className="flex-1 text-right">
               {isSigned ? (
-                <p className="font-serif text-base italic text-emerald-700">
-                  {contract.recipient_name || authorFullName}
+                <p className="inline-flex items-center justify-end gap-1.5 font-sans text-sm font-semibold text-emerald-700">
+                  <Check className="h-4 w-4" />
+                  Signed
                 </p>
               ) : (
                 <div className="ml-auto h-1.5 w-3/5 rounded bg-stone-200" />
@@ -1312,13 +1340,48 @@ function ContractIssuedView({
         <button
           type="button"
           onClick={() => setPdfOpen(true)}
-          className="mx-auto mt-4 block font-sans text-sm font-medium text-violet-700 hover:underline"
+          className={`mx-auto mt-4 block font-sans text-sm font-medium hover:underline ${
+            isSigned ? "text-emerald-700" : "text-violet-700"
+          }`}
         >
           Download full contract for complete terms and conditions
         </button>
 
+        {/* Signed confirmation callout */}
+        {isSigned && (
+          <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50/80 px-5 py-4 md:px-6 md:py-5">
+            <div className="flex items-start gap-3">
+              <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white">
+                <Check className="h-3.5 w-3.5" />
+              </span>
+              <div className="min-w-0">
+                <p className="font-serif text-base font-bold text-emerald-900">
+                  Contract signed — welcome to the CSP family!
+                </p>
+                <p className="mt-1 font-sans text-sm leading-relaxed text-emerald-800/90">
+                  Our production team will be in touch shortly with the next steps for bringing your book to publication.
+                </p>
+                {contract.docusign_completed_at && (
+                  <p className="mt-2 font-sans text-xs text-emerald-700/80">
+                    Signed {formatDate(contract.docusign_completed_at)}
+                  </p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={handleDownload}
+                disabled={downloading}
+                className="ml-auto hidden shrink-0 items-center gap-1.5 rounded-lg border border-emerald-300 bg-white px-3 py-1.5 font-sans text-xs font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-60 sm:inline-flex"
+              >
+                <Download className="h-3.5 w-3.5" />
+                {downloading ? "Preparing…" : "Download"}
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* CTA bar */}
-        {!isDeclined && (
+        {!isDeclined && !isSigned && (
           <div className="mt-6 rounded-2xl border border-violet-200 bg-violet-50/50 p-5 md:p-6">
             {!isSigned && (
               <p className="text-center font-sans text-sm text-stone-700">
