@@ -19,7 +19,14 @@ import cspLogo from "@/assets/csp-logo.png";
 import { portalLogout, getPortalSession, getPortalToken } from "@/lib/auth";
 import { formatDate, initialsFromName, displayNameFromEmail } from "@/lib/proposals";
 import { proposalApiFetch } from "@/lib/proposalApi";
-import { getContract, voidContract, type ContractDetail } from "@/lib/contractsApi";
+import {
+  getContract,
+  voidContract,
+  getQueries,
+  respondQuery,
+  type ContractDetail,
+  type ContractQueryEntry,
+} from "@/lib/contractsApi";
 import { ContractPdfModal } from "@/components/contract-pdf-modal";
 import { ContractQueries } from "@/components/contract-queries";
 import { DrInfoRequests } from "@/components/dr-info-requests";
@@ -199,6 +206,12 @@ function ProposalDetailPage() {
   const [voidLoading, setVoidLoading] = useState(false);
   const [voidError, setVoidError] = useState<string | null>(null);
   const [contractsReloadKey, setContractsReloadKey] = useState(0);
+  const [queryThread, setQueryThread] = useState<ContractQueryEntry[]>([]);
+  const [queryProposalStatus, setQueryProposalStatus] = useState<string>("");
+  const [queryResponseText, setQueryResponseText] = useState("");
+  const [queryResponseSubmitting, setQueryResponseSubmitting] = useState(false);
+  const [queryResponseError, setQueryResponseError] = useState<string | null>(null);
+  const [queryResponseSuccess, setQueryResponseSuccess] = useState<string | null>(null);
   const [comments, setComments] = useState<ReviewComment[]>([]);
   const [commentsSeeded, setCommentsSeeded] = useState(false);
   const [editorialSummary, setEditorialSummary] = useState("");
