@@ -1225,17 +1225,23 @@ function ContractIssuedView({
     isSigned ? (
       <section className="mt-6">
         {/* Header */}
-        <div className="mb-6">
-          <p className="inline-flex items-center gap-1.5 font-sans text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-700">
-            <Check className="h-3.5 w-3.5" />
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="inline-flex items-center gap-1.5 font-sans text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-700">
+              <Check className="h-3.5 w-3.5" />
+              Contract Signed
+            </p>
+            <h2 className="mt-2 font-serif text-2xl font-bold leading-snug text-[#2C1A0E] md:text-[1.75rem]">
+              Thank you — your contract is confirmed
+            </h2>
+            <p className="mt-1.5 font-sans text-sm italic text-violet-700">
+              Issued {formatDate(issuedAt)}
+            </p>
+          </div>
+          <span className="inline-flex shrink-0 items-center gap-2 rounded-md bg-emerald-600 px-3.5 py-2 font-sans text-sm font-semibold text-white shadow-sm">
+            <span className="h-2 w-2 rounded-full bg-emerald-200" />
             Contract Signed
-          </p>
-          <h2 className="mt-2 font-serif text-2xl font-bold leading-snug text-[#2C1A0E] md:text-[1.75rem]">
-            Thank you — your contract is confirmed
-          </h2>
-          <p className="mt-1.5 font-sans text-sm italic text-violet-700">
-            Issued {formatDate(issuedAt)}
-          </p>
+          </span>
         </div>
 
         {/* Document Card */}
@@ -1292,15 +1298,15 @@ function ContractIssuedView({
           </div>
 
           {/* Signature footer */}
-          <div className="mt-10 grid grid-cols-2 gap-8 border-t border-stone-200/70 pt-6">
-            <div>
-              <div className="mb-2 h-1.5 w-3/5 rounded bg-stone-200" />
-              <p className="font-sans text-sm text-stone-600">Publisher</p>
+          <div className="mt-10 border-t border-stone-200/70 pt-6">
+            <div className="mb-3 flex items-center justify-between gap-6">
+              <div className="h-2 w-2/5 rounded bg-stone-200" />
+              <div className="h-2 w-1/5 rounded bg-stone-200" />
             </div>
-            <div className="text-right">
-              <div className="mb-2 ml-auto h-1.5 w-3/5 rounded bg-stone-200" />
+            <div className="flex items-center justify-between gap-6">
+              <p className="font-sans text-sm text-stone-600">Publisher</p>
               <p className="inline-flex items-center gap-1.5 font-sans text-sm font-semibold text-emerald-700">
-                <Check className="h-3.5 w-3.5" />
+                <Check className="h-3.5 w-3.5" strokeWidth={3} />
                 Signed
               </p>
             </div>
