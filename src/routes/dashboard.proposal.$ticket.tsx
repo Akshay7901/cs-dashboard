@@ -892,6 +892,10 @@ function ProposalDetailPage() {
     const cs = (latestContract?.status || "").toLowerCase();
     return cs === "sent" || cs === "draft";
   }, [latestContract]);
+  const isContractSigned = useMemo(() => {
+    const cs = (latestContract?.status || "").toLowerCase();
+    return cs === "signed";
+  }, [latestContract]);
 
   const primaryReview = reviews[0];
   const recommendationKey = (primaryReview?.review_data?.recommendation as string) || "";
