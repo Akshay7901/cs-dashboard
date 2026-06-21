@@ -485,22 +485,57 @@ function AuthorProposalDetails() {
           const b2 = (await r2.json().catch(() => ({}))) as Record<string, unknown>;
           if (!cancelled && r2.ok) {
             const raw = (b2.requests as Array<Record<string, unknown>>) || [];
-            const mapped: InfoRequest[] = raw.map((r) => ({
-              id: r.id as string | number | undefined,
-              status: r.status as string | undefined,
-              note: (r.note as string | undefined) ?? (r.message as string | undefined),
-              resubmission_deadline: r.resubmission_deadline as string | undefined,
-              deadline: r.deadline as string | undefined,
-              created_at: (r.requested_at as string | undefined) ?? (r.created_at as string | undefined),
-              items: (r.items as InfoRequestItem[]) || [],
-              response: r.responded_at
-                ? {
-                    note: r.response_note as string | undefined,
-                    submitted_at: r.responded_at as string | undefined,
-                  }
-                : null,
-              draft: (r.draft_data as InfoRequest["draft"]) || null,
-            }));
+            const normalizeDraft = (
+              raw: unknown,
+              items: InfoRequestItem[],
+            ): InfoRequest["draft"] => {
+              if (!raw || typeof raw !== "object") return null;
+              const obj = raw as Record<string, unknown>;
+              // Already in expected shape
+              if (Array.isArray(obj.items)) {
+                return {
+                  note: obj.note as string | undefined,
+                  items: obj.items as InfoRequestItem[],
+                  files: (obj.files as InfoRequestFile[]) || [],
+                };
+              }
+              // Shape stored as { updated_fields: { key: value } } or flat map
+              const fields =
+                (obj.updated_fields as Record<string, string> | undefined) ||
+                (obj.fields as Record<string, string> | undefined) ||
+                (obj as Record<string, string>);
+              const draftItems: InfoRequestItem[] = items.map((it) => ({
+                ...it,
+                response_text: (fields?.[it.key || ""] as string) || "",
+              }));
+              const files: InfoRequestFile[] = Array.isArray(obj.files)
+                ? (obj.files as InfoRequestFile[])
+                : [];
+              return {
+                note: typeof obj.note === "string" ? (obj.note as string) : undefined,
+                items: draftItems,
+                files,
+              };
+            };
+            const mapped: InfoRequest[] = raw.map((r) => {
+              const items = (r.items as InfoRequestItem[]) || [];
+              return {
+                id: r.id as string | number | undefined,
+                status: r.status as string | undefined,
+                note: (r.note as string | undefined) ?? (r.message as string | undefined),
+                resubmission_deadline: r.resubmission_deadline as string | undefined,
+                deadline: r.deadline as string | undefined,
+                created_at: (r.requested_at as string | undefined) ?? (r.created_at as string | undefined),
+                items,
+                response: r.responded_at
+                  ? {
+                      note: r.response_note as string | undefined,
+                      submitted_at: r.responded_at as string | undefined,
+                    }
+                  : null,
+                draft: normalizeDraft(r.draft_data ?? r.draft, items),
+              };
+            });
             setProposal((prev) => (prev ? { ...prev, infoRequests: mapped } : prev));
           }
         } catch {
