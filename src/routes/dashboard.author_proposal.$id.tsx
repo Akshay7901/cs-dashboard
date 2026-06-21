@@ -2215,33 +2215,67 @@ function InfoRequestPanel({
 
   const deadline = req.resubmission_deadline || req.deadline;
 
+  const totalItems = items.length;
+  const completedItems = items.filter(
+    (it) => (it.key && uploads[it.key]) || (it.response_text || "").trim().length > 0,
+  ).length;
+  const completionPct = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+
   return (
     <section
       id="section-info-request"
-      className="mt-6 overflow-hidden rounded-2xl border border-amber-200 bg-amber-50/60 shadow-sm scroll-mt-24"
+      className="mt-6 overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm scroll-mt-24"
     >
-      <div className="flex items-center gap-2 border-b border-amber-200 bg-amber-100/60 px-6 py-3">
-        <AlertCircle className="h-4 w-4 text-amber-700" />
-        <span className="font-sans text-sm font-semibold text-amber-800">
-          Awaiting More Info — Action Required
-        </span>
-        {deadline && (
-          <span className="ml-auto inline-flex items-center gap-1 font-sans text-xs text-amber-800">
-            <Calendar className="h-3.5 w-3.5" />
-            Respond by {formatDate(deadline)}
-          </span>
+      {/* Status banner */}
+      <div className="flex items-center justify-between gap-4 border-b border-amber-100 bg-amber-50 px-6 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-100">
+            <AlertCircle className="h-5 w-5 text-amber-600" />
+          </div>
+          <div>
+            <h2 className="font-sans text-sm font-semibold uppercase tracking-wider text-amber-900">
+              Awaiting More Info
+            </h2>
+            <p className="font-sans text-xs font-medium text-amber-700">
+              {deadline ? (
+                <span className="inline-flex items-center gap-1">
+                  <Calendar className="h-3 w-3" />
+                  Respond by {formatDate(deadline)}
+                </span>
+              ) : (
+                "Action required from author"
+              )}
+            </p>
+          </div>
+        </div>
+        {totalItems > 0 && (
+          <div className="flex flex-col items-end">
+            <span className="rounded bg-amber-200/60 px-2 py-1 font-sans text-xs font-bold text-amber-900">
+              {completedItems}/{totalItems} Completed
+            </span>
+            <div className="mt-1.5 h-1.5 w-24 overflow-hidden rounded-full bg-amber-200">
+              <div
+                className="h-full rounded-full bg-amber-500 transition-all duration-500"
+                style={{ width: `${completionPct}%` }}
+              />
+            </div>
+          </div>
         )}
       </div>
 
-      <div className="space-y-5 p-6">
+      <div className="space-y-8 p-8">
+        {/* Editor's request context */}
         <div>
-          <h2 className="font-serif text-xl font-bold text-stone-900">
+          <h1 className="mb-2 font-serif text-2xl font-bold text-stone-900">
             Editor needs additional information
-          </h2>
+          </h1>
           {(req.note || req.message) && (
-            <p className="mt-2 whitespace-pre-wrap font-sans text-sm leading-relaxed text-stone-700">
-              {req.note || req.message}
-            </p>
+            <div className="flex items-start gap-4">
+              <div className="w-1 shrink-0 self-stretch rounded-full bg-stone-200" />
+              <p className="whitespace-pre-wrap font-sans text-sm italic leading-relaxed text-stone-600">
+                {req.note || req.message}
+              </p>
+            </div>
           )}
         </div>
 
@@ -2251,79 +2285,99 @@ function InfoRequestPanel({
           </div>
         )}
 
-        {req.items && req.items.length > 0 && (
-          <div className="rounded-xl border border-amber-200 bg-white p-4">
-            <p className="font-sans text-sm font-semibold text-amber-800">
-              Information requested by the editor
-            </p>
-            <ul className="mt-2 list-disc space-y-1 pl-5 font-sans text-sm text-stone-700">
-              {req.items.map((it, i) => (
-                <li key={i}>{it.label || it.key || `Item ${i + 1}`}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-
+        {/* Numbered field cards */}
         {items.length > 0 && (
-          <div className="space-y-4">
-            <p className="font-sans text-sm font-semibold text-stone-900">Your response</p>
-            {items.map((it, idx) => (
-              <div key={(it.key || "") + idx} className="rounded-xl border border-stone-200 bg-white p-4">
-                <label className="block font-sans text-sm font-semibold text-stone-900">
-                  {it.label || it.key || `Item ${idx + 1}`}
-                </label>
-                <textarea
-                  value={it.response_text || ""}
-                  onChange={(e) => updateItem(idx, e.target.value)}
-                  placeholder="Your response…"
-                  rows={3}
-                  className="mt-2 w-full rounded-lg border border-stone-300 px-3 py-2 font-sans text-sm text-stone-900 placeholder-stone-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200"
-                />
-                {it.key && (
-                  <div className="mt-2 flex flex-wrap items-center gap-3">
-                    <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-stone-300 bg-white px-3 py-1.5 font-sans text-xs font-semibold text-stone-700 hover:bg-stone-50">
-                      <Upload className="h-3.5 w-3.5" />
-                      {uploadingKey === it.key ? "Uploading…" : "Upload file"}
-                      <input
-                        type="file"
-                        className="hidden"
-                        disabled={uploadingKey !== null}
-                        onChange={(e) => {
-                          const f = e.target.files?.[0];
-                          if (f && it.key) uploadFile(it.key, f);
-                          e.target.value = "";
-                        }}
+          <div className="space-y-8">
+            {items.map((it, idx) => {
+              const isDone =
+                (it.key && !!uploads[it.key]) ||
+                (it.response_text || "").trim().length > 0;
+              return (
+                <div key={(it.key || "") + idx} className="relative">
+                  <div className="mb-4 flex items-center gap-2">
+                    <div
+                      className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold transition-colors ${
+                        isDone
+                          ? "bg-emerald-600 text-white"
+                          : "bg-stone-900 text-white"
+                      }`}
+                    >
+                      {isDone ? "✓" : idx + 1}
+                    </div>
+                    <h3 className="font-sans text-sm font-semibold text-stone-800">
+                      {it.label || it.key || `Item ${idx + 1}`}
+                    </h3>
+                  </div>
+
+                  <div className="space-y-4 rounded-lg border border-stone-100 bg-stone-50 p-5">
+                    <div className="space-y-2">
+                      <label className="block font-sans text-xs font-bold uppercase tracking-tight text-stone-500">
+                        Your updated text
+                      </label>
+                      <textarea
+                        value={it.response_text || ""}
+                        onChange={(e) => updateItem(idx, e.target.value)}
+                        placeholder="Enter the requested information here…"
+                        rows={4}
+                        className="min-h-[120px] w-full rounded-md border border-stone-200 bg-white p-4 font-sans text-sm text-stone-700 placeholder-stone-400 shadow-sm transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-stone-900"
                       />
-                    </label>
-                    {uploads[it.key] && (
-                      <span className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-2 py-1 font-sans text-xs text-emerald-700">
-                        <Paperclip className="h-3.5 w-3.5" />
-                        <a
-                          href={uploads[it.key].url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="underline-offset-2 hover:underline"
-                        >
-                          {uploads[it.key].filename}
-                        </a>
-                        <button
-                          type="button"
-                          onClick={() => removeUpload(it.key!)}
-                          className="text-emerald-700/70 hover:text-rose-600"
-                          aria-label="Remove uploaded file"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </button>
-                      </span>
+                    </div>
+
+                    {it.key && (
+                      <div className="space-y-2">
+                        <label className="block font-sans text-xs font-bold uppercase tracking-tight text-stone-500">
+                          Supporting documents
+                        </label>
+                        <div className="flex flex-wrap items-center gap-3">
+                          <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-stone-200 bg-white px-4 py-2 font-sans text-sm font-medium text-stone-600 transition-colors hover:border-stone-300 hover:bg-stone-50">
+                            <Upload className="h-4 w-4 text-stone-400" />
+                            {uploadingKey === it.key ? "Uploading…" : "Upload file"}
+                            <input
+                              type="file"
+                              className="hidden"
+                              disabled={uploadingKey !== null}
+                              onChange={(e) => {
+                                const f = e.target.files?.[0];
+                                if (f && it.key) uploadFile(it.key, f);
+                                e.target.value = "";
+                              }}
+                            />
+                          </label>
+                          {!uploads[it.key] && (
+                            <span className="font-sans text-xs text-stone-400">
+                              Max file size: 10MB
+                            </span>
+                          )}
+                          {uploads[it.key] && (
+                            <span className="inline-flex items-center gap-2 rounded-md bg-emerald-50 px-2.5 py-1.5 font-sans text-xs text-emerald-700">
+                              <Paperclip className="h-3.5 w-3.5" />
+                              <a
+                                href={uploads[it.key].url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="underline-offset-2 hover:underline"
+                              >
+                                {uploads[it.key].filename}
+                              </a>
+                              <button
+                                type="button"
+                                onClick={() => removeUpload(it.key!)}
+                                className="text-emerald-700/70 hover:text-rose-600"
+                                aria-label="Remove uploaded file"
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </button>
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     )}
                   </div>
-                )}
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
         )}
-
-
 
         {error && (
           <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 font-sans text-sm text-rose-700">
@@ -2335,25 +2389,31 @@ function InfoRequestPanel({
             {success}
           </div>
         )}
+      </div>
 
-        <div className="flex flex-wrap items-center justify-end gap-3">
-          <button
-            type="button"
-            onClick={doSave}
-            disabled={busy !== ""}
-            className="inline-flex items-center gap-2 rounded-xl border border-stone-300 bg-white px-4 py-2 font-sans text-sm font-semibold text-stone-700 transition-colors hover:bg-stone-50 disabled:opacity-60"
-          >
-            <Save className="h-4 w-4" />
-            {busy === "save" ? "Saving…" : "Save draft"}
-          </button>
+      {/* Footer actions */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-stone-200 bg-stone-50 px-8 py-5">
+        <button
+          type="button"
+          onClick={doSave}
+          disabled={busy !== ""}
+          className="inline-flex items-center gap-2 font-sans text-sm font-semibold text-stone-500 transition-colors hover:text-stone-800 disabled:opacity-60"
+        >
+          <Save className="h-4 w-4" />
+          {busy === "save" ? "Saving…" : "Save draft"}
+        </button>
+        <div className="flex items-center gap-3">
+          <p className="hidden font-sans text-xs italic text-stone-400 sm:block">
+            All changes are autosaved locally
+          </p>
           <button
             type="button"
             onClick={doSubmit}
             disabled={busy !== ""}
-            className="inline-flex items-center gap-2 rounded-xl bg-amber-600 px-4 py-2 font-sans text-sm font-semibold text-white shadow-sm transition-colors hover:bg-amber-700 disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-lg bg-orange-600 px-6 py-2.5 font-sans text-sm font-bold text-white shadow-sm transition-all hover:bg-orange-700 disabled:opacity-60"
           >
-            <Send className="h-4 w-4" />
             {busy === "submit" ? "Submitting…" : "Submit response"}
+            <Send className="h-4 w-4" />
           </button>
         </div>
       </div>
