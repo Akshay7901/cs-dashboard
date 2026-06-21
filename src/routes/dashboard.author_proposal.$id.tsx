@@ -415,6 +415,8 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
   const { cd } = proposal;
   const status = normalizeStatus(proposal.status, proposal.displayStatus);
   const tint = STATUS_TINT[status];
+  const isContractView = status === "contract" || status === "signed";
+  const [showOriginal, setShowOriginal] = useState(false);
   const title = cd.main_title || proposal.ticket;
   const subtitle = cd.sub_title;
   const kind = cd.book_type || "Proposal";
@@ -505,7 +507,19 @@ function ProposalBody({ proposal }: { proposal: ProposalState }) {
 
       <ContractIssuedView ticket={proposal.ticket} proposal={proposal} authorFullName={authorFullName} />
 
-      {(status !== "contract" && status !== "signed") && (
+      {isContractView && (
+        <button
+          type="button"
+          onClick={() => setShowOriginal((v) => !v)}
+          className="mt-6 flex w-full items-center justify-between gap-3 rounded-2xl border border-stone-200 bg-white px-6 py-4 font-serif text-base font-bold text-[#2C1A0E] shadow-sm hover:bg-stone-50"
+          aria-expanded={showOriginal}
+        >
+          View original proposal details
+          <ChevronDown className={`h-5 w-5 text-stone-500 transition-transform ${showOriginal ? "rotate-180" : ""}`} />
+        </button>
+      )}
+
+      {(!isContractView || showOriginal) && (
         <div id="original-proposal-details">
       {/* Tabs */}
       <div className="mt-6 inline-flex gap-1 rounded-xl border border-stone-200 bg-white p-1 shadow-sm">
