@@ -1223,31 +1223,29 @@ function ContractIssuedView({
 
   return (
     isSigned ? (
-      <section className="mt-6 rounded-2xl border border-stone-200 bg-white p-6 shadow-sm md:p-8">
+      <section className="mt-6 overflow-hidden rounded-2xl border-2 border-violet-200 bg-white shadow-sm">
         {/* Header */}
-        <div className="mb-6 flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <p className="inline-flex items-center gap-1.5 font-sans text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-700">
-              <Check className="h-3.5 w-3.5" />
+        <div className="flex items-start justify-between gap-4 border-b border-violet-200 bg-gradient-to-br from-violet-50 to-violet-100/40 px-6 py-5">
+          <div className="min-w-0 flex-1">
+            <p className="mb-1 inline-flex items-center gap-1.5 font-sans text-xs font-bold uppercase tracking-wider text-emerald-600">
+              <Check className="h-3.5 w-3.5" strokeWidth={3} />
               Contract Signed
             </p>
-            <h2 className="mt-2 font-serif text-2xl font-bold leading-snug text-[#2C1A0E] md:text-[1.75rem]">
+            <h2 className="font-serif text-xl font-bold leading-snug text-[#2C1A0E]">
               Thank you — your contract is confirmed
             </h2>
-            <p className="mt-1.5 font-sans text-sm text-violet-700">
+            <p className="mt-1.5 font-sans text-sm text-violet-600">
               Issued {formatDate(issuedAt)}
             </p>
           </div>
-          <span className="inline-flex shrink-0 items-center gap-2 rounded-md bg-emerald-600 px-3.5 py-2 font-sans text-sm font-semibold text-white shadow-sm">
-            <span className="h-2 w-2 rounded-full bg-emerald-200" />
+          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-emerald-600 px-2.5 py-1 font-sans text-xs font-semibold text-white">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-200" />
             Contract Signed
           </span>
         </div>
 
-        <div className="mb-6 -mx-6 border-t border-stone-200 md:-mx-8" />
-
         {/* Document Card */}
-        <div className="rounded-sm border border-stone-200 bg-stone-50/40 p-6 sm:p-10 md:p-14">
+        <div className="bg-stone-50/40 p-6 sm:p-10 md:p-14">
           {/* Contract Heading */}
           <div className="mb-8 text-center">
             <p className="mb-5 font-sans text-[11px] font-semibold uppercase tracking-[0.3em] text-teal-700/70">
@@ -1316,7 +1314,7 @@ function ContractIssuedView({
         </div>
 
         {/* Download link below card */}
-        <div className="mt-5 text-center">
+        <div className="px-6 py-5 text-center">
           <button
             type="button"
             onClick={() => setPdfOpen(true)}
@@ -1326,10 +1324,8 @@ function ContractIssuedView({
           </button>
         </div>
 
-        <div className="mt-6 -mx-6 border-t border-stone-200 md:-mx-8" />
-
         {/* Welcome Footer (inside card) */}
-        <div className="mt-6 flex items-start gap-3 rounded-md border border-emerald-100 bg-emerald-50/60 px-5 py-4">
+        <div className="flex items-start gap-3 border-t border-emerald-100 bg-emerald-50/60 px-6 py-5">
           <Check className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" strokeWidth={2.5} />
           <div className="min-w-0">
             <h4 className="font-serif text-base font-bold text-emerald-900">
