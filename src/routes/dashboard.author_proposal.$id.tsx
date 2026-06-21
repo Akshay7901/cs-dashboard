@@ -1325,10 +1325,17 @@ function ContractIssuedView({
           <p className="text-center font-sans text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500">
             Cambridge Scholars Publishing
           </p>
-          <div className="mx-auto mt-4 max-w-xs space-y-1.5">
-            <div className="h-2 rounded-full bg-stone-200" />
-            <div className="mx-auto h-2 w-2/3 rounded-full bg-stone-200" />
-          </div>
+          {isSigned ? (
+            <p className="mx-auto mt-3 max-w-md text-center font-serif text-[13px] italic leading-relaxed text-stone-600">
+              This agreement is made between Cambridge Scholars Publishing and the Author
+              named below for the work described herein.
+            </p>
+          ) : (
+            <div className="mx-auto mt-4 max-w-xs space-y-1.5">
+              <div className="h-2 rounded-full bg-stone-200" />
+              <div className="mx-auto h-2 w-2/3 rounded-full bg-stone-200" />
+            </div>
+          )}
           <p
             className={`mt-6 text-center font-sans text-[11px] font-semibold uppercase tracking-[0.18em] ${
               isSigned ? "text-emerald-700" : "text-violet-700"
@@ -1343,31 +1350,63 @@ function ContractIssuedView({
             <PreviewRow label="Title" value={truncate(titleStr, 36)} />
             <PreviewRow label="Format" value={formatLabel} />
             <PreviewRow label="Expected Completion" value={expectedCompletion} />
+            {isSigned && (
+              <>
+                <PreviewRow label="Contract Version" value={`v${contract.contract_version}`} />
+                <PreviewRow label="Issued" value={formatDate(issuedAt)} />
+                <PreviewRow
+                  label="Signed"
+                  value={formatDate(contract.docusign_completed_at)}
+                />
+              </>
+            )}
           </dl>
 
-          <div className="mt-6 space-y-1.5">
-            <div className="h-2 rounded-full bg-stone-100" />
-            <div className="h-2 w-11/12 rounded-full bg-stone-100" />
-            <div className="h-2 w-10/12 rounded-full bg-stone-100" />
-            <div className="h-2 w-9/12 rounded-full bg-stone-100" />
-            <div className="h-2 w-11/12 rounded-full bg-stone-100" />
-          </div>
+          {isSigned ? (
+            <p className="mt-6 font-serif text-[13px] leading-relaxed text-stone-600">
+              The Publisher and the Author have agreed to the terms governing rights,
+              royalties, manuscript delivery, editorial standards, and publication of the
+              Work as set out in the full agreement. Both parties have executed this
+              contract electronically via DocuSign.
+            </p>
+          ) : (
+            <div className="mt-6 space-y-1.5">
+              <div className="h-2 rounded-full bg-stone-100" />
+              <div className="h-2 w-11/12 rounded-full bg-stone-100" />
+              <div className="h-2 w-10/12 rounded-full bg-stone-100" />
+              <div className="h-2 w-9/12 rounded-full bg-stone-100" />
+              <div className="h-2 w-11/12 rounded-full bg-stone-100" />
+            </div>
+          )}
 
           <div className="mt-8 flex items-end justify-between gap-6">
             <div className="flex-1">
-              <div className="h-1.5 w-3/5 rounded bg-stone-200" />
+              {isSigned ? (
+                <p className="font-serif text-sm font-semibold text-stone-800">
+                  Cambridge Scholars Publishing
+                </p>
+              ) : (
+                <div className="h-1.5 w-3/5 rounded bg-stone-200" />
+              )}
               <p className="mt-1.5 font-sans text-xs text-stone-500">Publisher</p>
             </div>
             <div className="flex-1 text-right">
               {isSigned ? (
-                <p className="inline-flex items-center justify-end gap-1.5 font-sans text-sm font-semibold text-emerald-700">
-                  <Check className="h-4 w-4" />
-                  Signed
-                </p>
+                <>
+                  <p className="font-serif text-sm font-semibold text-stone-800">
+                    {contract.recipient_name || authorFullName}
+                  </p>
+                  <p className="mt-0.5 inline-flex items-center justify-end gap-1 font-sans text-xs font-semibold text-emerald-700">
+                    <Check className="h-3.5 w-3.5" />
+                    Signed {formatDate(contract.docusign_completed_at)}
+                  </p>
+                </>
               ) : (
                 <div className="ml-auto h-1.5 w-3/5 rounded bg-stone-200" />
               )}
-              <p className="mt-1.5 font-sans text-xs text-stone-500">Your signature</p>
+              {!isSigned && (
+                <p className="mt-1.5 font-sans text-xs text-stone-500">Your signature</p>
+              )}
             </div>
           </div>
         </div>
